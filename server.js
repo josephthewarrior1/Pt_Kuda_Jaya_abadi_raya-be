@@ -8,6 +8,7 @@ require('./config/firebase');
 
 // Import routes
 const authRoutes = require('./routes/userRoutes');
+const customerRoutes = require('./routes/customerRoutes'); // Tambahkan ini
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       users: '/api/users',
+      customers: '/api/customers', // Tambahkan ini
     },
   });
 });
@@ -57,6 +59,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', authRoutes);
+app.use('/api', customerRoutes); // Tambahkan ini
 
 // 404 handler
 app.use((req, res) => {
@@ -96,6 +99,13 @@ app.listen(PORT, () => {
   console.log('  GET    /api/users/profile         - Get user profile (protected)');
   console.log('  PUT    /api/users/profile         - Update profile (protected)');
   console.log('  PUT    /api/users/change-password - Change password (protected)');
+  console.log('');
+  console.log('👥 CUSTOMER ENDPOINTS (User & Paid User Only):');
+  console.log('  GET    /api/customers             - Get all customers');
+  console.log('  GET    /api/customers/:id         - Get customer by ID');
+  console.log('  POST   /api/customers             - Create new customer');
+  console.log('  PUT    /api/customers/:id         - Update customer');
+  console.log('  DELETE /api/customers/:id         - Delete customer');
   console.log('');
 });
 

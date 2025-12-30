@@ -18,6 +18,9 @@ const authMiddleware = async (req, res, next) => {
 
     // Verify JWT token
     const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Debug: log decoded token
+    console.log('🔐 Decoded token payload:', decoded);
 
     // Get user from database
     const user = await userDAO.findById(decoded.id);
@@ -29,11 +32,15 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Attach user to request object
+    // ⭐⭐⭐ PERBAIKAN DI SINI ⭐⭐⭐
+    // Attach user to request object DENGAN ROLE
     req.user = {
       id: user.id,
       username: user.username,
+      role: user.role, // <-- TAMBAHKAN INI!
     };
+    
+    console.log('✅ Auth middleware passed for user:', req.user.username, 'Role:', req.user.role);
 
     next();
   } catch (error) {

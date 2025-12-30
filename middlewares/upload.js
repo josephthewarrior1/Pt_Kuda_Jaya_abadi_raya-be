@@ -5,7 +5,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit (dinaikkan untuk foto mobil)
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -16,4 +16,15 @@ const upload = multer({
   },
 });
 
-module.exports = upload;
+// Buat middleware khusus untuk upload 4 foto mobil
+const uploadCarPhotos = upload.fields([
+  { name: 'leftSide', maxCount: 1 },
+  { name: 'rightSide', maxCount: 1 },
+  { name: 'front', maxCount: 1 },
+  { name: 'back', maxCount: 1 }
+]);
+
+module.exports = {
+  upload, // export upload biasa
+  uploadCarPhotos // export middleware khusus untuk 4 foto
+};

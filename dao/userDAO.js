@@ -90,6 +90,16 @@ class UserDAO {
       throw new Error('Failed to check username: ' + error.message);
     }
   }
+
+  async deleteUser(username) {
+    try {
+      await this.usersRef.child(username).remove();
+      return true;
+    } catch (error) {
+      throw new Error('Failed to delete user: ' + error.message);
+    }
+  }
 }
+
 
 module.exports = new UserDAO();

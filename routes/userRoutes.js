@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { adminOnly, paidOnly } = require('../middlewares/roleMiddleware');
+const { adminOnly, paidOnly, userAndPaidUserOnly } = require('../middlewares/roleMiddleware');
 
 // ==================== PUBLIC ROUTES ====================
 router.post('/users/signup', (req, res) => userController.signUp(req, res));
@@ -21,5 +21,9 @@ router.delete('/users/:username', authMiddleware, adminOnly, (req, res) => userC
 // ==================== PAID USER + ADMIN ROUTES ====================
 // Contoh: Tambahkan route khusus paid user di sini
 // router.get('/premium/feature', authMiddleware, paidOnly, (req, res) => someController.premiumFeature(req, res));
+
+// ==================== USER & PAID_USER ONLY ROUTES ====================
+// Router khusus untuk customer (admin tidak bisa akses)
+// router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) => customerController.getAllCustomers(req, res));
 
 module.exports = router;
