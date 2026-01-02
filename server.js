@@ -8,32 +8,17 @@ require('./config/firebase');
 
 // Import routes
 const authRoutes = require('./routes/userRoutes');
-const customerRoutes = require('./routes/customerRoutes');
+const customerRoutes = require('./routes/customerRoutes'); // Tambahkan ini
 
 const app = express();
 
 // ==========================================
 // MIDDLEWARES
 // ==========================================
-
-// CORS Configuration - Allow all origins for development
 app.use(cors({
-  origin: '*',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin'
-  ],
-  exposedHeaders: ['Content-Length', 'X-JSON'],
-  maxAge: 86400, // 24 hours
 }));
-
-// Handle preflight requests
-app.options('*', cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,7 +43,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       users: '/api/users',
-      customers: '/api/customers',
+      customers: '/api/customers', // Tambahkan ini
     },
   });
 });
@@ -74,7 +59,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', authRoutes);
-app.use('/api', customerRoutes);
+app.use('/api', customerRoutes); // Tambahkan ini
 
 // 404 handler
 app.use((req, res) => {
@@ -91,7 +76,6 @@ app.use((error, req, res, next) => {
   res.status(500).json({
     success: false,
     error: 'Internal server error',
-    message: error.message,
   });
 });
 
@@ -118,12 +102,10 @@ app.listen(PORT, () => {
   console.log('');
   console.log('👥 CUSTOMER ENDPOINTS (User & Paid User Only):');
   console.log('  GET    /api/customers             - Get all customers');
-  console.log('  GET    /api/customers/stats       - Get customer statistics');
   console.log('  GET    /api/customers/:id         - Get customer by ID');
   console.log('  POST   /api/customers             - Create new customer');
   console.log('  PUT    /api/customers/:id         - Update customer');
   console.log('  DELETE /api/customers/:id         - Delete customer');
-  console.log('  POST   /api/customers/:id/upload-photos - Upload car photos');
   console.log('');
 });
 
