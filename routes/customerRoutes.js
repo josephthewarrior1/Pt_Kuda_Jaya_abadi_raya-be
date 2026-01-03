@@ -8,17 +8,24 @@ const { uploadCarPhotos } = require('../middlewares/upload');
 // ==================== CUSTOMER ROUTES (USER & PAID_USER ONLY) ====================
 // Admin TIDAK bisa akses
 
-// Get all customers (only for user & paid_user)
-router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) => 
-  customerController.getAllCustomers(req, res)
-);
+// ⚠️ IMPORTANT: Specific routes MUST come BEFORE parameterized routes!
 
-// Search customers
+// Search customers - HARUS DI ATAS /:id
 router.get('/customers/search', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.searchCustomers(req, res)
 );
 
-// Get customer by ID
+// Get customer statistics - HARUS DI ATAS /:id
+router.get('/customers/stats', authMiddleware, userAndPaidUserOnly, (req, res) => 
+  customerController.getCustomerStats(req, res)
+);
+
+// Get all customers
+router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) => 
+  customerController.getAllCustomers(req, res)
+);
+
+// Get customer by ID - HARUS DI BAWAH /search dan /stats
 router.get('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
   customerController.getCustomerById(req, res)
 );
@@ -44,11 +51,6 @@ router.post('/customers/:id/upload-photos',
 // Delete customer
 router.delete('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
   customerController.deleteCustomer(req, res)
-);
-
-// Get customer statistics
-router.get('/customers/stats', authMiddleware, userAndPaidUserOnly, (req, res) => 
-  customerController.getCustomerStats(req, res)
 );
 
 module.exports = router;
