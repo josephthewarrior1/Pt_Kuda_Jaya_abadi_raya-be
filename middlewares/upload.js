@@ -1,34 +1,26 @@
 const multer = require('multer');
 
-// Configure multer untuk memory storage
+// Gunakan memory storage untuk serverless
 const storage = multer.memoryStorage();
+
+// Configure untuk Vercel (kurangi limit karena memory terbatas)
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB limit per file
-    files: 4 // maksimal 4 files
+    fileSize: 5 * 1024 * 1024, // 5MB per file (dikurangi untuk Vercel)
+    files: 4,
+    fieldSize: 10 * 1024 * 1024 // 10MB untuk fields
   },
   fileFilter: (req, file, cb) => {
-    // Accept semua image types
-    const allowedMimes = [
-      'image/jpeg',
-      'image/jpg', 
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/bmp',
-      'image/svg+xml'
-    ];
-    
-    if (allowedMimes.includes(file.mimetype)) {
+    if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error(`File type ${file.mimetype} not allowed. Only image files are allowed!`), false);
+      cb(new Error('Only image files are allowed!'), false);
     }
-  },
+  }
 });
 
-// Buat middleware khusus untuk upload 4 foto mobil
+// Middleware untuk 4 foto mobil
 const uploadCarPhotos = upload.fields([
   { name: 'leftSide', maxCount: 1 },
   { name: 'rightSide', maxCount: 1 },
@@ -36,39 +28,32 @@ const uploadCarPhotos = upload.fields([
   { name: 'back', maxCount: 1 }
 ]);
 
-// Error handling middleware untuk multer
+// Error handler khusus multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    // A Multer error occurred when uploading
+    console.error('Multer error:', err.code);
+    
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({
         success: false,
-        error: `File too large. Maximum size is ${err.limit / 1024 / 1024}MB`
+        error: `File too large. Maximum size is 5MB per file`
       });
     }
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
-        success: false,
-        error: 'Too many files. Maximum 4 files allowed'
-      });
-    }
-    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({
-        success: false,
-        error: 'Unexpected file field'
-      });
-    }
+    
     return res.status(400).json({
       success: false,
-      error: 'File upload error: ' + err.message
+      error: `File upload error: ${err.message}`
     });
-  } else if (err) {
-    // An unknown error occurred
+  }
+  
+  if (err) {
+    console.error('Upload error:', err);
     return res.status(400).json({
       success: false,
       error: err.message || 'File upload failed'
     });
   }
+  
   next();
 };
 

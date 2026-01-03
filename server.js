@@ -13,21 +13,22 @@ const customerRoutes = require('./routes/customerRoutes');
 const app = express();
 
 // ==========================================
-// MIDDLEWARES
+// MIDDLEWARES - SESUAIKAN UNTUK VERCEL
 // ==========================================
+// Increase payload size limit untuk file upload
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 // CORS configuration
 app.use(cors({
-  origin: '*', // Allow all origins for now
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Content-Length']
 }));
 
 // Handle preflight requests
 app.options('*', cors());
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // ==========================================
 // ROUTES
@@ -40,7 +41,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ success: true });
+  res.status(200).json({ 
+    success: true,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API routes
@@ -57,20 +61,12 @@ app.use((req, res) => {
 
 // Error handler
 app.use((error, req, res, next) => {
-  console.error('Server error:', error);
+  console.error('Server error:', error.message || error);
   res.status(500).json({
     success: false,
     error: 'Internal server error'
   });
 });
 
-// ==========================================
-// START SERVER
-// ==========================================
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+// Export untuk Vercel
 module.exports = app;
