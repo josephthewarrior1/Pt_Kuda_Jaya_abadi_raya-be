@@ -92,11 +92,11 @@ class CustomerController {
         dueDate
       } = req.body;
 
-      // Validation
-      if (!name || !email) {
+      // Validation - Hanya name yang required
+      if (!name || name.trim() === '') {
         return res.status(400).json({
           success: false,
-          error: 'Name and email are required',
+          error: 'Customer name is required',
         });
       }
 
@@ -107,14 +107,14 @@ class CustomerController {
       const customerData = {
         // Personal data
         name: name.trim(),
-        email: email.trim(),
+        email: email ? email.trim() : '',
         phone: phone ? phone.trim() : '',
         address: address ? address.trim() : '',
         notes: notes ? notes.trim() : '',
         
         // Car data
         carData: {
-          ownerName: carOwnerName ? carOwnerName.trim() : '',
+          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(), // Default ke nama pelanggan
           carBrand: carBrand ? carBrand.trim() : '',
           carModel: carModel ? carModel.trim() : '',
           plateNumber: plateNumber ? plateNumber.trim() : '',
@@ -192,23 +192,31 @@ class CustomerController {
         dueDate
       } = req.body;
 
+      // Validation untuk update - jika name dikirim, harus valid
+      if (name !== undefined && name.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          error: 'Customer name cannot be empty',
+        });
+      }
+
       const updateData = {
         // Personal data
-        name: name ? name.trim() : undefined,
-        email: email ? email.trim() : undefined,
-        phone: phone ? phone.trim() : undefined,
-        address: address ? address.trim() : undefined,
-        notes: notes ? notes.trim() : undefined,
+        name: name !== undefined ? name.trim() : undefined,
+        email: email !== undefined ? email.trim() : undefined,
+        phone: phone !== undefined ? phone.trim() : undefined,
+        address: address !== undefined ? address.trim() : undefined,
+        notes: notes !== undefined ? notes.trim() : undefined,
         
         // Car data
         carData: {
-          ownerName: carOwnerName ? carOwnerName.trim() : undefined,
-          carBrand: carBrand ? carBrand.trim() : undefined,
-          carModel: carModel ? carModel.trim() : undefined,
-          plateNumber: plateNumber ? plateNumber.trim() : undefined,
-          chassisNumber: chassisNumber ? chassisNumber.trim() : undefined,
-          engineNumber: engineNumber ? engineNumber.trim() : undefined,
-          dueDate: dueDate || undefined,
+          ownerName: carOwnerName !== undefined ? carOwnerName.trim() : undefined,
+          carBrand: carBrand !== undefined ? carBrand.trim() : undefined,
+          carModel: carModel !== undefined ? carModel.trim() : undefined,
+          plateNumber: plateNumber !== undefined ? plateNumber.trim() : undefined,
+          chassisNumber: chassisNumber !== undefined ? chassisNumber.trim() : undefined,
+          engineNumber: engineNumber !== undefined ? engineNumber.trim() : undefined,
+          dueDate: dueDate !== undefined ? dueDate : undefined,
         },
         
         updatedAt: Date.now(),
@@ -228,6 +236,11 @@ class CustomerController {
             delete updateData.carData[key];
           }
         });
+        
+        // Jika carData kosong setelah dihapus, hapus objek carData
+        if (Object.keys(updateData.carData).length === 0) {
+          delete updateData.carData;
+        }
       }
 
       const updatedCustomer = await customerDAO.updateCustomer(id, updateData, userId);
@@ -493,6 +506,48 @@ class CustomerController {
       res.status(500).json({
         success: false,
         error: 'Server error while fetching stats',
+      });
+    }
+  }
+
+  // Search customers
+  async searchCustomers(req, res) {
+    try {
+      const userId = req.user.username;
+      const { query } = req.query;
+
+      if (!query || query.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          error: 'Search query is required',
+        });
+      }
+
+      const searchTerm = query.toLowerCase().trim();
+      const allCustomers = await customerDAO.getAllCustomersByUser(userId);
+
+      const filteredCustomers = allCustomers.filter(customer => {
+        // Search in multiple fields
+        return (
+          (customer.name && customer.name.toLowerCase().includes(searchTerm)) ||
+          (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
+          (customer.phone && customer.phone.includes(searchTerm)) ||
+          (customer.carData?.plateNumber && customer.carData.plateNumber.toLowerCase().includes(searchTerm)) ||
+          (customer.carData?.carBrand && customer.carData.carBrand.toLowerCase().includes(searchTerm)) ||
+          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm))
+        );
+      });
+
+      res.status(200).json({
+        success: true,
+        count: filteredCustomers.length,
+        customers: filteredCustomers,
+      });
+    } catch (error) {
+      console.error('❌ Search customers error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error while searching customers',
       });
     }
   }

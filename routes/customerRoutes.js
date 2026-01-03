@@ -13,6 +13,11 @@ router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.getAllCustomers(req, res)
 );
 
+// Search customers
+router.get('/customers/search', authMiddleware, userAndPaidUserOnly, (req, res) =>
+  customerController.searchCustomers(req, res)
+);
+
 // Get customer by ID
 router.get('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
   customerController.getCustomerById(req, res)

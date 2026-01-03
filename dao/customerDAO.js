@@ -51,9 +51,34 @@ class CustomerDAO {
       
       const customers = [];
       snapshot.forEach((childSnapshot) => {
+        const customerData = childSnapshot.val();
+        
+        // Ensure all fields have defaults
         customers.push({
           id: childSnapshot.key,
-          ...childSnapshot.val(),
+          name: customerData.name || '',
+          email: customerData.email || '',
+          phone: customerData.phone || '',
+          address: customerData.address || '',
+          notes: customerData.notes || '',
+          carData: customerData.carData || {
+            ownerName: '',
+            carBrand: '',
+            carModel: '',
+            plateNumber: '',
+            chassisNumber: '',
+            engineNumber: '',
+            dueDate: null
+          },
+          carPhotos: customerData.carPhotos || {
+            leftSide: '',
+            rightSide: '',
+            front: '',
+            back: ''
+          },
+          createdBy: customerData.createdBy || userId,
+          createdAt: customerData.createdAt || Date.now(),
+          updatedAt: customerData.updatedAt || Date.now(),
         });
       });
       
@@ -80,9 +105,33 @@ class CustomerDAO {
         return null;
       }
       
+      const customerData = snapshot.val();
+      
       return {
         id: customerId,
-        ...snapshot.val(),
+        name: customerData.name || '',
+        email: customerData.email || '',
+        phone: customerData.phone || '',
+        address: customerData.address || '',
+        notes: customerData.notes || '',
+        carData: customerData.carData || {
+          ownerName: '',
+          carBrand: '',
+          carModel: '',
+          plateNumber: '',
+          chassisNumber: '',
+          engineNumber: '',
+          dueDate: null
+        },
+        carPhotos: customerData.carPhotos || {
+          leftSide: '',
+          rightSide: '',
+          front: '',
+          back: ''
+        },
+        createdBy: customerData.createdBy || userId,
+        createdAt: customerData.createdAt || Date.now(),
+        updatedAt: customerData.updatedAt || Date.now(),
       };
     } catch (error) {
       throw new Error('Failed to fetch customer: ' + error.message);
@@ -105,12 +154,38 @@ class CustomerDAO {
       
       const userCustomersRef = this.getUserCustomersRef(createdBy);
       
+      // Ensure all fields have values
+      const customerToSave = {
+        name: customerDataWithoutCreatedBy.name || '',
+        email: customerDataWithoutCreatedBy.email || '',
+        phone: customerDataWithoutCreatedBy.phone || '',
+        address: customerDataWithoutCreatedBy.address || '',
+        notes: customerDataWithoutCreatedBy.notes || '',
+        carData: customerDataWithoutCreatedBy.carData || {
+          ownerName: customerDataWithoutCreatedBy.name || '',
+          carBrand: '',
+          carModel: '',
+          plateNumber: '',
+          chassisNumber: '',
+          engineNumber: '',
+          dueDate: null
+        },
+        carPhotos: customerDataWithoutCreatedBy.carPhotos || {
+          leftSide: '',
+          rightSide: '',
+          front: '',
+          back: ''
+        },
+        createdAt: customerDataWithoutCreatedBy.createdAt || Date.now(),
+        updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
+      };
+      
       // Simpan customer di path: customer_data/{userId}/{customerId}
-      await userCustomersRef.child(customerId).set(customerDataWithoutCreatedBy);
+      await userCustomersRef.child(customerId).set(customerToSave);
       
       return {
         id: customerId,
-        ...customerData,
+        ...customerToSave,
       };
     } catch (error) {
       throw new Error('Failed to create customer: ' + error.message);
@@ -130,21 +205,30 @@ class CustomerDAO {
       
       const existingCustomer = snapshot.val();
       
-      // Handle nested carData update
+      // Handle nested updates with defaults
       let dataToUpdate = { ...updateData };
       
       // If updating carData, merge with existing carData
-      if (updateData.carData && existingCustomer.carData) {
+      if (updateData.carData) {
         dataToUpdate.carData = {
-          ...existingCustomer.carData,
+          ownerName: existingCustomer.carData?.ownerName || '',
+          carBrand: existingCustomer.carData?.carBrand || '',
+          carModel: existingCustomer.carData?.carModel || '',
+          plateNumber: existingCustomer.carData?.plateNumber || '',
+          chassisNumber: existingCustomer.carData?.chassisNumber || '',
+          engineNumber: existingCustomer.carData?.engineNumber || '',
+          dueDate: existingCustomer.carData?.dueDate || null,
           ...updateData.carData
         };
       }
       
       // If updating carPhotos, merge with existing carPhotos
-      if (updateData.carPhotos && existingCustomer.carPhotos) {
+      if (updateData.carPhotos) {
         dataToUpdate.carPhotos = {
-          ...existingCustomer.carPhotos,
+          leftSide: existingCustomer.carPhotos?.leftSide || '',
+          rightSide: existingCustomer.carPhotos?.rightSide || '',
+          front: existingCustomer.carPhotos?.front || '',
+          back: existingCustomer.carPhotos?.back || '',
           ...updateData.carPhotos
         };
       }
