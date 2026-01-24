@@ -55,12 +55,12 @@ class CustomerDAO {
           phone: customerData.phone || '',
           address: customerData.address || '',
           
-          // Document - KTP NUMBER OPTIONAL
+          // Document
           ktpNumber: customerData.ktpNumber || '',
           ktpPhoto: customerData.ktpPhoto || '',
           
           // Insurance info
-          insuranceType: customerData.insuranceType || 'kendaraan',
+          insuranceType: customerData.insuranceType || 'kendaraan', // kendaraan, kesehatan, jiwa, properti
           
           // Car data (only for kendaraan)
           carData: customerData.carData || {
@@ -72,17 +72,8 @@ class CustomerDAO {
             carModel: '',
             carYear: '',
             carPrice: '',
-            coverageType: 'TLO',
-            dueDate: null,
-            // New fields for insurance policy
-            policyNumber: '',
-            insuranceCompany: '',
-            startDate: null,
-            endDate: null,
-            premium: '',
-            sumInsured: '',
-            paymentMethod: '',
-            notes: ''
+            coverageType: 'TLO', // TLO atau ALL_RISK
+            dueDate: null
           },
           
           // Car photos
@@ -94,9 +85,6 @@ class CustomerDAO {
             back: '',
             dashboard: ''
           },
-          
-          // Insurance documents array
-          insuranceDocuments: customerData.insuranceDocuments || [],
           
           createdBy: customerData.createdBy || userId,
           createdAt: customerData.createdAt || Date.now(),
@@ -145,15 +133,7 @@ class CustomerDAO {
           carYear: '',
           carPrice: '',
           coverageType: 'TLO',
-          dueDate: null,
-          policyNumber: '',
-          insuranceCompany: '',
-          startDate: null,
-          endDate: null,
-          premium: '',
-          sumInsured: '',
-          paymentMethod: '',
-          notes: ''
+          dueDate: null
         },
         carPhotos: customerData.carPhotos || {
           stnk: '',
@@ -163,7 +143,6 @@ class CustomerDAO {
           back: '',
           dashboard: ''
         },
-        insuranceDocuments: customerData.insuranceDocuments || [],
         createdBy: customerData.createdBy || userId,
         createdAt: customerData.createdAt || Date.now(),
         updatedAt: customerData.updatedAt || Date.now(),
@@ -201,15 +180,7 @@ class CustomerDAO {
           carYear: '',
           carPrice: '',
           coverageType: 'TLO',
-          dueDate: null,
-          policyNumber: '',
-          insuranceCompany: '',
-          startDate: null,
-          endDate: null,
-          premium: '',
-          sumInsured: '',
-          paymentMethod: '',
-          notes: ''
+          dueDate: null
         },
         carPhotos: customerDataWithoutCreatedBy.carPhotos || {
           stnk: '',
@@ -219,7 +190,6 @@ class CustomerDAO {
           back: '',
           dashboard: ''
         },
-        insuranceDocuments: customerDataWithoutCreatedBy.insuranceDocuments || [],
         createdAt: customerDataWithoutCreatedBy.createdAt || Date.now(),
         updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
       };
@@ -260,14 +230,6 @@ class CustomerDAO {
           carPrice: existingCustomer.carData?.carPrice || '',
           coverageType: existingCustomer.carData?.coverageType || 'TLO',
           dueDate: existingCustomer.carData?.dueDate || null,
-          policyNumber: existingCustomer.carData?.policyNumber || '',
-          insuranceCompany: existingCustomer.carData?.insuranceCompany || '',
-          startDate: existingCustomer.carData?.startDate || null,
-          endDate: existingCustomer.carData?.endDate || null,
-          premium: existingCustomer.carData?.premium || '',
-          sumInsured: existingCustomer.carData?.sumInsured || '',
-          paymentMethod: existingCustomer.carData?.paymentMethod || '',
-          notes: existingCustomer.carData?.notes || '',
           ...updateData.carData
         };
       }
@@ -282,15 +244,6 @@ class CustomerDAO {
           dashboard: existingCustomer.carPhotos?.dashboard || '',
           ...updateData.carPhotos
         };
-      }
-      
-      if (updateData.insuranceDocuments) {
-        dataToUpdate.insuranceDocuments = [
-          ...(existingCustomer.insuranceDocuments || []),
-          ...(Array.isArray(updateData.insuranceDocuments) 
-            ? updateData.insuranceDocuments 
-            : [updateData.insuranceDocuments])
-        ];
       }
       
       dataToUpdate.updatedAt = Date.now();
