@@ -3,12 +3,7 @@ const router = express.Router();
 const customerController = require('../controllers/customerController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const { userAndPaidUserOnly } = require('../middlewares/roleMiddleware');
-const { 
-  uploadCarPhotos, 
-  uploadKtpPhoto, 
-  uploadInsuranceDocuments, 
-  handleMulterError 
-} = require('../middlewares/upload');
+const { uploadCarPhotos } = require('../middlewares/upload');
 
 // ==================== CUSTOMER ROUTES (USER & PAID_USER ONLY) ====================
 // Admin TIDAK bisa akses
@@ -45,31 +40,12 @@ router.put('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.updateCustomer(req, res)
 );
 
-// Upload KTP photo
-router.post('/customers/:id/upload-ktp', 
-  authMiddleware, 
-  userAndPaidUserOnly,
-  uploadKtpPhoto,
-  handleMulterError, // Tambah error handler
-  (req, res) => customerController.uploadKtpPhoto(req, res)
-);
-
-// Upload car photos (6 photos: stnk, left, right, front, back, dashboard)
+// Upload car photos (4 photos: left, right, front, back)
 router.post('/customers/:id/upload-photos', 
   authMiddleware, 
   userAndPaidUserOnly,
   uploadCarPhotos,
-  handleMulterError, // Tambah error handler
   (req, res) => customerController.uploadCarPhotos(req, res)
-);
-
-// Upload insurance documents (policy, STNK, etc)
-router.post('/customers/:id/upload-documents', 
-  authMiddleware, 
-  userAndPaidUserOnly,
-  uploadInsuranceDocuments,
-  handleMulterError, // Tambah error handler
-  (req, res) => customerController.uploadInsuranceDocuments(req, res)
 );
 
 // Delete customer

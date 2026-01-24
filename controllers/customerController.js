@@ -79,7 +79,7 @@ class CustomerController {
         phone, 
         address,
         
-        // Document - KTP NUMBER OPTIONAL
+        // Document
         ktpNumber,
         
         // Insurance type
@@ -95,17 +95,7 @@ class CustomerController {
         carYear,
         carPrice,
         coverageType, // TLO atau ALL_RISK
-        dueDate,
-        
-        // Insurance policy data
-        policyNumber,
-        insuranceCompany,
-        startDate,
-        endDate,
-        premium,
-        sumInsured,
-        paymentMethod,
-        notes
+        dueDate
       } = req.body;
 
       // Validation - hanya name yang required
@@ -147,7 +137,7 @@ class CustomerController {
         phone: phone ? phone.trim() : '',
         address: address ? address.trim() : '',
         
-        // Document - KTP NUMBER OPTIONAL
+        // Document
         ktpNumber: ktpNumber ? ktpNumber.trim() : '',
         ktpPhoto: '', // Will be uploaded separately
         
@@ -166,16 +156,6 @@ class CustomerController {
           carPrice: carPrice ? carPrice.trim() : '',
           coverageType: selectedCoverageType,
           dueDate: dueDate || null,
-          
-          // Insurance policy data
-          policyNumber: policyNumber ? policyNumber.trim() : '',
-          insuranceCompany: insuranceCompany ? insuranceCompany.trim() : '',
-          startDate: startDate || null,
-          endDate: endDate || null,
-          premium: premium ? premium.trim() : '',
-          sumInsured: sumInsured ? sumInsured.trim() : '',
-          paymentMethod: paymentMethod ? paymentMethod.trim() : '',
-          notes: notes ? notes.trim() : ''
         } : {
           ownerName: '',
           plateNumber: '',
@@ -186,15 +166,7 @@ class CustomerController {
           carYear: '',
           carPrice: '',
           coverageType: 'TLO',
-          dueDate: null,
-          policyNumber: '',
-          insuranceCompany: '',
-          startDate: null,
-          endDate: null,
-          premium: '',
-          sumInsured: '',
-          paymentMethod: '',
-          notes: ''
+          dueDate: null
         },
         
         // Car photos
@@ -206,9 +178,6 @@ class CustomerController {
           back: '',
           dashboard: ''
         },
-        
-        // Insurance documents array
-        insuranceDocuments: [],
         
         createdBy: userId,
         createdAt: Date.now(),
@@ -270,16 +239,7 @@ class CustomerController {
         carYear,
         carPrice,
         coverageType,
-        dueDate,
-        // Insurance policy data
-        policyNumber,
-        insuranceCompany,
-        startDate,
-        endDate,
-        premium,
-        sumInsured,
-        paymentMethod,
-        notes
+        dueDate
       } = req.body;
 
       if (name !== undefined && name.trim() === '') {
@@ -329,14 +289,6 @@ class CustomerController {
           carPrice: carPrice !== undefined ? carPrice.trim() : undefined,
           coverageType: coverageType !== undefined ? coverageType : undefined,
           dueDate: dueDate !== undefined ? dueDate : undefined,
-          policyNumber: policyNumber !== undefined ? policyNumber.trim() : undefined,
-          insuranceCompany: insuranceCompany !== undefined ? insuranceCompany.trim() : undefined,
-          startDate: startDate !== undefined ? startDate : undefined,
-          endDate: endDate !== undefined ? endDate : undefined,
-          premium: premium !== undefined ? premium.trim() : undefined,
-          sumInsured: sumInsured !== undefined ? sumInsured.trim() : undefined,
-          paymentMethod: paymentMethod !== undefined ? paymentMethod.trim() : undefined,
-          notes: notes !== undefined ? notes.trim() : undefined,
         },
         
         updatedAt: Date.now(),
@@ -379,89 +331,6 @@ class CustomerController {
       res.status(500).json({
         success: false,
         error: 'Server error while updating customer',
-      });
-    }
-  }
-
-  // Upload KTP Photo
-  async uploadKtpPhoto(req, res) {
-    try {
-      const userId = req.user.username;
-      const { id: customerId } = req.params;
-      
-      if (!customerId.includes('-')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid customer ID format'
-        });
-      }
-
-      const idUsername = customerId.split('-')[0];
-      
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer'
-        });
-      }
-      
-      console.log('📸 Uploading KTP photo for customer:', customerId);
-
-      const customer = await customerDAO.getCustomerById(customerId, userId);
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Customer not found'
-        });
-      }
-
-      // Upload KTP ke Cloudinary
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No KTP photo uploaded'
-        });
-      }
-
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: `car_insurance/${customerId}`,
-            public_id: `${customerId}_ktp`,
-            resource_type: 'image'
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        stream.end(req.file.buffer);
-      });
-
-      // Update database - hanya field ktpPhoto
-      const updatedCustomer = await customerDAO.updateCustomer(
-        customerId,
-        { 
-          ktpPhoto: uploadResult.secure_url,
-          updatedAt: Date.now()
-        },
-        userId
-      );
-
-      console.log('✅ KTP photo uploaded for customer:', customerId);
-
-      res.status(200).json({
-        success: true,
-        message: 'KTP photo uploaded successfully',
-        ktpPhoto: uploadResult.secure_url,
-        customer: updatedCustomer
-      });
-
-    } catch (error) {
-      console.error('❌ Upload KTP photo error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Server error while uploading KTP photo'
       });
     }
   }
@@ -675,116 +544,6 @@ class CustomerController {
     }
   }
 
-  // Upload Insurance Documents
-  async uploadInsuranceDocuments(req, res) {
-    try {
-      const userId = req.user.username;
-      const { id: customerId } = req.params;
-      const { documentType } = req.body; // optional: 'policy', 'stnk', 'other'
-      
-      if (!customerId.includes('-')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid customer ID format'
-        });
-      }
-
-      const idUsername = customerId.split('-')[0];
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied'
-        });
-      }
-      
-      console.log('📄 Uploading insurance documents for customer:', customerId);
-
-      const customer = await customerDAO.getCustomerById(customerId, userId);
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Customer not found'
-        });
-      }
-
-      // Hanya untuk asuransi kendaraan
-      if (customer.insuranceType !== 'kendaraan') {
-        return res.status(400).json({
-          success: false,
-          error: 'Only for vehicle insurance customers'
-        });
-      }
-
-      const files = req.files;
-      if (!files || files.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'No files uploaded'
-        });
-      }
-
-      // Upload semua files ke Cloudinary
-      const uploadPromises = files.map((file, index) => {
-        return new Promise((resolve, reject) => {
-          const timestamp = Date.now();
-          const fileName = documentType 
-            ? `${customerId}_${documentType}_${timestamp}_${index}` 
-            : `${customerId}_doc_${timestamp}_${index}`;
-          
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: `car_insurance/${customerId}/documents`,
-              public_id: fileName,
-              resource_type: 'auto' // auto detect PDF atau image
-            },
-            (error, result) => {
-              if (error) {
-                reject(error);
-              } else {
-                resolve({
-                  url: result.secure_url,
-                  type: documentType || 'other',
-                  fileName: file.originalname,
-                  fileType: file.mimetype,
-                  uploadedAt: timestamp
-                });
-              }
-            }
-          );
-          stream.end(file.buffer);
-        });
-      });
-
-      const uploadedDocs = await Promise.all(uploadPromises);
-
-      // Update database dengan dokumen baru
-      const updatedCustomer = await customerDAO.updateCustomer(
-        customerId,
-        {
-          insuranceDocuments: uploadedDocs,
-          updatedAt: Date.now()
-        },
-        userId
-      );
-
-      console.log('✅ Insurance documents uploaded for customer:', customerId);
-
-      res.status(200).json({
-        success: true,
-        message: `${uploadedDocs.length} document(s) uploaded successfully`,
-        documents: uploadedDocs,
-        customer: updatedCustomer
-      });
-
-    } catch (error) {
-      console.error('❌ Upload insurance documents error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Server error while uploading documents'
-      });
-    }
-  }
-
   // Delete customer
   async deleteCustomer(req, res) {
     try {
@@ -878,8 +637,7 @@ class CustomerController {
           (customer.ktpNumber && customer.ktpNumber.includes(searchTerm)) ||
           (customer.carData?.plateNumber && customer.carData.plateNumber.toLowerCase().includes(searchTerm)) ||
           (customer.carData?.carBrand && customer.carData.carBrand.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.policyNumber && customer.carData.policyNumber.toLowerCase().includes(searchTerm))
+          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm))
         );
       });
 
