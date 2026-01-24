@@ -3,13 +3,15 @@ const { db } = require('../config/firebase');
 class CustomerDAO {
   constructor() {
     this.customersRootRef = db.ref('customer_data');
-    this.customerCountRef = db.ref('customer_counters');
+    this.customerCountRef = db.ref('customer_counters'); // Untuk tracking jumlah customer per user
   }
 
+  // Get reference untuk customer collection user tertentu
   getUserCustomersRef(userId) {
     return this.customersRootRef.child(userId);
   }
 
+  // Get next customer number untuk user
   async getNextCustomerNumber(userId) {
     try {
       const counterRef = this.customerCountRef.child(userId);
@@ -20,6 +22,7 @@ class CustomerDAO {
         nextNumber = snapshot.val() + 1;
       }
       
+      // Update counter
       await counterRef.set(nextNumber);
       
       return nextNumber;
@@ -28,6 +31,7 @@ class CustomerDAO {
     }
   }
 
+  // Get current customer number (tanpa increment)
   async getCurrentCustomerNumber(userId) {
     try {
       const counterRef = this.customerCountRef.child(userId);
@@ -39,6 +43,7 @@ class CustomerDAO {
     }
   }
 
+  // Get all customers by user ID
   async getAllCustomersByUser(userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
@@ -48,50 +53,36 @@ class CustomerDAO {
       snapshot.forEach((childSnapshot) => {
         const customerData = childSnapshot.val();
         
+        // Ensure all fields have defaults
         customers.push({
           id: childSnapshot.key,
-          // Personal info
           name: customerData.name || '',
+          email: customerData.email || '',
           phone: customerData.phone || '',
           address: customerData.address || '',
-          
-          // Document
-          ktpNumber: customerData.ktpNumber || '',
-          ktpPhoto: customerData.ktpPhoto || '',
-          
-          // Insurance info
-          insuranceType: customerData.insuranceType || 'kendaraan', // kendaraan, kesehatan, jiwa, properti
-          
-          // Car data (only for kendaraan)
+          notes: customerData.notes || '',
           carData: customerData.carData || {
             ownerName: '',
+            carBrand: '',
+            carModel: '',
             plateNumber: '',
             chassisNumber: '',
             engineNumber: '',
-            carBrand: '',
-            carModel: '',
-            carYear: '',
-            carPrice: '',
-            coverageType: 'TLO', // TLO atau ALL_RISK
             dueDate: null
           },
-          
-          // Car photos
           carPhotos: customerData.carPhotos || {
-            stnk: '',
             leftSide: '',
             rightSide: '',
             front: '',
-            back: '',
-            dashboard: ''
+            back: ''
           },
-          
           createdBy: customerData.createdBy || userId,
           createdAt: customerData.createdAt || Date.now(),
           updatedAt: customerData.updatedAt || Date.now(),
         });
       });
       
+      // Sort by customer number
       customers.sort((a, b) => {
         const numA = parseInt(a.id.split('-')[1] || 0);
         const numB = parseInt(b.id.split('-')[1] || 0);
@@ -104,6 +95,7 @@ class CustomerDAO {
     }
   }
 
+  // Get customer by ID and user ID
   async getCustomerById(customerId, userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
@@ -118,30 +110,24 @@ class CustomerDAO {
       return {
         id: customerId,
         name: customerData.name || '',
+        email: customerData.email || '',
         phone: customerData.phone || '',
         address: customerData.address || '',
-        ktpNumber: customerData.ktpNumber || '',
-        ktpPhoto: customerData.ktpPhoto || '',
-        insuranceType: customerData.insuranceType || 'kendaraan',
+        notes: customerData.notes || '',
         carData: customerData.carData || {
           ownerName: '',
+          carBrand: '',
+          carModel: '',
           plateNumber: '',
           chassisNumber: '',
           engineNumber: '',
-          carBrand: '',
-          carModel: '',
-          carYear: '',
-          carPrice: '',
-          coverageType: 'TLO',
           dueDate: null
         },
         carPhotos: customerData.carPhotos || {
-          stnk: '',
           leftSide: '',
           rightSide: '',
           front: '',
-          back: '',
-          dashboard: ''
+          back: ''
         },
         createdBy: customerData.createdBy || userId,
         createdAt: customerData.createdAt || Date.now(),
@@ -152,48 +138,49 @@ class CustomerDAO {
     }
   }
 
+  // Create new customer dengan ID format: {username}-{number}
   async createCustomer(customerData) {
     try {
       const { createdBy } = customerData;
       
+      // Get next customer number untuk user ini
       const nextNumber = await this.getNextCustomerNumber(createdBy);
+      
+      // Generate customer ID: {username}-{number}
       const customerId = `${createdBy}-${nextNumber}`;
       
+      // Hapus createdBy dari customerData karena sudah di path
       const { createdBy: _, ...customerDataWithoutCreatedBy } = customerData;
       
       const userCustomersRef = this.getUserCustomersRef(createdBy);
       
+      // Ensure all fields have values
       const customerToSave = {
         name: customerDataWithoutCreatedBy.name || '',
+        email: customerDataWithoutCreatedBy.email || '',
         phone: customerDataWithoutCreatedBy.phone || '',
         address: customerDataWithoutCreatedBy.address || '',
-        ktpNumber: customerDataWithoutCreatedBy.ktpNumber || '',
-        ktpPhoto: customerDataWithoutCreatedBy.ktpPhoto || '',
-        insuranceType: customerDataWithoutCreatedBy.insuranceType || 'kendaraan',
+        notes: customerDataWithoutCreatedBy.notes || '',
         carData: customerDataWithoutCreatedBy.carData || {
           ownerName: customerDataWithoutCreatedBy.name || '',
+          carBrand: '',
+          carModel: '',
           plateNumber: '',
           chassisNumber: '',
           engineNumber: '',
-          carBrand: '',
-          carModel: '',
-          carYear: '',
-          carPrice: '',
-          coverageType: 'TLO',
           dueDate: null
         },
         carPhotos: customerDataWithoutCreatedBy.carPhotos || {
-          stnk: '',
           leftSide: '',
           rightSide: '',
           front: '',
-          back: '',
-          dashboard: ''
+          back: ''
         },
         createdAt: customerDataWithoutCreatedBy.createdAt || Date.now(),
         updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
       };
       
+      // Simpan customer di path: customer_data/{userId}/{customerId}
       await userCustomersRef.child(customerId).set(customerToSave);
       
       return {
@@ -205,10 +192,12 @@ class CustomerDAO {
     }
   }
 
+  // Update customer
   async updateCustomer(customerId, updateData, userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
       
+      // Cek apakah customer ada
       const snapshot = await userCustomersRef.child(customerId).once('value');
       if (!snapshot.exists()) {
         throw new Error('Customer not found');
@@ -216,36 +205,35 @@ class CustomerDAO {
       
       const existingCustomer = snapshot.val();
       
+      // Handle nested updates with defaults
       let dataToUpdate = { ...updateData };
       
+      // If updating carData, merge with existing carData
       if (updateData.carData) {
         dataToUpdate.carData = {
           ownerName: existingCustomer.carData?.ownerName || '',
+          carBrand: existingCustomer.carData?.carBrand || '',
+          carModel: existingCustomer.carData?.carModel || '',
           plateNumber: existingCustomer.carData?.plateNumber || '',
           chassisNumber: existingCustomer.carData?.chassisNumber || '',
           engineNumber: existingCustomer.carData?.engineNumber || '',
-          carBrand: existingCustomer.carData?.carBrand || '',
-          carModel: existingCustomer.carData?.carModel || '',
-          carYear: existingCustomer.carData?.carYear || '',
-          carPrice: existingCustomer.carData?.carPrice || '',
-          coverageType: existingCustomer.carData?.coverageType || 'TLO',
           dueDate: existingCustomer.carData?.dueDate || null,
           ...updateData.carData
         };
       }
       
+      // If updating carPhotos, merge with existing carPhotos
       if (updateData.carPhotos) {
         dataToUpdate.carPhotos = {
-          stnk: existingCustomer.carPhotos?.stnk || '',
           leftSide: existingCustomer.carPhotos?.leftSide || '',
           rightSide: existingCustomer.carPhotos?.rightSide || '',
           front: existingCustomer.carPhotos?.front || '',
           back: existingCustomer.carPhotos?.back || '',
-          dashboard: existingCustomer.carPhotos?.dashboard || '',
           ...updateData.carPhotos
         };
       }
       
+      // Add updatedAt timestamp
       dataToUpdate.updatedAt = Date.now();
       
       await userCustomersRef.child(customerId).update(dataToUpdate);
@@ -260,10 +248,12 @@ class CustomerDAO {
     }
   }
 
+  // Delete customer
   async deleteCustomer(customerId, userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
       
+      // Cek apakah customer ada
       const snapshot = await userCustomersRef.child(customerId).once('value');
       if (!snapshot.exists()) {
         throw new Error('Customer not found');
@@ -271,12 +261,16 @@ class CustomerDAO {
       
       await userCustomersRef.child(customerId).remove();
       
+      // Note: Kita TIDAK mengurangi counter karena nomor harus tetap sequential
+      // Meskipun customer dihapus, nomor berikutnya tetap increment
+      
       return true;
     } catch (error) {
       throw new Error('Failed to delete customer: ' + error.message);
     }
   }
 
+  // Get customer count for user
   async getCustomerCount(userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
