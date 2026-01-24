@@ -448,7 +448,7 @@ class PropertyDAO {
       
       return expiredProperties.length;
     } catch (error) {
-      throw new Error('Failed to check expired policies: ' + error.message);
+      throw new Error('Failed to check expired policies1: ' + error.message);
     }
   }
 }
