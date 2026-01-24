@@ -126,7 +126,7 @@ class PropertyDAO {
       
       return properties;
     } catch (error) {
-      throw new Error('Failed to fetch properties by user: ' + error.message);
+      throw new Error('Failed to fetch properties by user1: ' + error.message);
     }
   }
 
