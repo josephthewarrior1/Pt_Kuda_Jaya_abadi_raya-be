@@ -31,7 +31,6 @@ class CustomerController {
       const userId = req.user.username;
       const { id } = req.params;
 
-      // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
           success: false,
@@ -39,10 +38,8 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
       
-      // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
           success: false,
@@ -72,27 +69,36 @@ class CustomerController {
     }
   }
 
-  // Create new customer with car data
+  // Create new customer with simplified data
   async createCustomer(req, res) {
     try {
       const userId = req.user.username;
       const { 
+        // Personal info
         name, 
-        email, 
         phone, 
-        address, 
-        notes,
-        // Car data
+        address,
+        
+        // Document
+        ktpNumber,
+        
+        // Insurance type
+        insuranceType, // kendaraan, kesehatan, jiwa, properti
+        
+        // Car data (only for kendaraan insurance)
         carOwnerName,
-        carBrand,
-        carModel,
         plateNumber,
         chassisNumber,
         engineNumber,
+        carBrand,
+        carModel,
+        carYear,
+        carPrice,
+        coverageType, // TLO atau ALL_RISK
         dueDate
       } = req.body;
 
-      // Validation - Hanya name yang required
+      // Validation - hanya name yang required
       if (!name || name.trim() === '') {
         return res.status(400).json({
           success: false,
@@ -100,35 +106,77 @@ class CustomerController {
         });
       }
 
-      // Get current customer count untuk tahu nomor berikutnya
+      // Validation - insurance type harus valid
+      const validInsuranceTypes = ['kendaraan', 'kesehatan', 'jiwa', 'properti'];
+      const selectedInsuranceType = insuranceType || 'kendaraan';
+      
+      if (!validInsuranceTypes.includes(selectedInsuranceType)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid insurance type. Must be: kendaraan, kesehatan, jiwa, or properti',
+        });
+      }
+
+      // Validation - coverage type harus valid (untuk asuransi kendaraan)
+      const validCoverageTypes = ['TLO', 'ALL_RISK'];
+      const selectedCoverageType = coverageType || 'TLO';
+      
+      if (selectedInsuranceType === 'kendaraan' && !validCoverageTypes.includes(selectedCoverageType)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid coverage type. Must be: TLO or ALL_RISK',
+        });
+      }
+
       const currentCount = await customerDAO.getCurrentCustomerNumber(userId);
       const nextCustomerNumber = currentCount + 1;
 
       const customerData = {
-        // Personal data
+        // Personal info
         name: name.trim(),
-        email: email ? email.trim() : '',
         phone: phone ? phone.trim() : '',
         address: address ? address.trim() : '',
-        notes: notes ? notes.trim() : '',
         
-        // Car data
-        carData: {
-          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(), // Default ke nama pelanggan
-          carBrand: carBrand ? carBrand.trim() : '',
-          carModel: carModel ? carModel.trim() : '',
+        // Document
+        ktpNumber: ktpNumber ? ktpNumber.trim() : '',
+        ktpPhoto: '', // Will be uploaded separately
+        
+        // Insurance type
+        insuranceType: selectedInsuranceType,
+        
+        // Car data (hanya untuk asuransi kendaraan)
+        carData: selectedInsuranceType === 'kendaraan' ? {
+          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(),
           plateNumber: plateNumber ? plateNumber.trim() : '',
           chassisNumber: chassisNumber ? chassisNumber.trim() : '',
           engineNumber: engineNumber ? engineNumber.trim() : '',
+          carBrand: carBrand ? carBrand.trim() : '',
+          carModel: carModel ? carModel.trim() : '',
+          carYear: carYear ? carYear.trim() : '',
+          carPrice: carPrice ? carPrice.trim() : '',
+          coverageType: selectedCoverageType,
           dueDate: dueDate || null,
+        } : {
+          ownerName: '',
+          plateNumber: '',
+          chassisNumber: '',
+          engineNumber: '',
+          carBrand: '',
+          carModel: '',
+          carYear: '',
+          carPrice: '',
+          coverageType: 'TLO',
+          dueDate: null
         },
         
-        // Car photos (will be uploaded separately)
+        // Car photos
         carPhotos: {
+          stnk: '',
           leftSide: '',
           rightSide: '',
           front: '',
-          back: ''
+          back: '',
+          dashboard: ''
         },
         
         createdBy: userId,
@@ -155,13 +203,12 @@ class CustomerController {
     }
   }
 
-  // Update customer with car data
+  // Update customer
   async updateCustomer(req, res) {
     try {
       const userId = req.user.username;
       const { id } = req.params;
       
-      // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
           success: false,
@@ -169,10 +216,8 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
       
-      // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
           success: false,
@@ -181,18 +226,22 @@ class CustomerController {
       }
 
       const { 
-        name, email, phone, address, notes,
+        name, phone, address,
+        ktpNumber,
+        insuranceType,
         // Car data
         carOwnerName,
-        carBrand,
-        carModel,
         plateNumber,
         chassisNumber,
         engineNumber,
+        carBrand,
+        carModel,
+        carYear,
+        carPrice,
+        coverageType,
         dueDate
       } = req.body;
 
-      // Validation untuk update - jika name dikirim, harus valid
       if (name !== undefined && name.trim() === '') {
         return res.status(400).json({
           success: false,
@@ -200,22 +249,45 @@ class CustomerController {
         });
       }
 
+      // Validation - insurance type harus valid jika dikirim
+      if (insuranceType !== undefined) {
+        const validInsuranceTypes = ['kendaraan', 'kesehatan', 'jiwa', 'properti'];
+        if (!validInsuranceTypes.includes(insuranceType)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid insurance type. Must be: kendaraan, kesehatan, jiwa, or properti',
+          });
+        }
+      }
+
+      // Validation - coverage type harus valid jika dikirim
+      if (coverageType !== undefined) {
+        const validCoverageTypes = ['TLO', 'ALL_RISK'];
+        if (!validCoverageTypes.includes(coverageType)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid coverage type. Must be: TLO or ALL_RISK',
+          });
+        }
+      }
+
       const updateData = {
-        // Personal data
         name: name !== undefined ? name.trim() : undefined,
-        email: email !== undefined ? email.trim() : undefined,
         phone: phone !== undefined ? phone.trim() : undefined,
         address: address !== undefined ? address.trim() : undefined,
-        notes: notes !== undefined ? notes.trim() : undefined,
+        ktpNumber: ktpNumber !== undefined ? ktpNumber.trim() : undefined,
+        insuranceType: insuranceType !== undefined ? insuranceType : undefined,
         
-        // Car data
         carData: {
           ownerName: carOwnerName !== undefined ? carOwnerName.trim() : undefined,
-          carBrand: carBrand !== undefined ? carBrand.trim() : undefined,
-          carModel: carModel !== undefined ? carModel.trim() : undefined,
           plateNumber: plateNumber !== undefined ? plateNumber.trim() : undefined,
           chassisNumber: chassisNumber !== undefined ? chassisNumber.trim() : undefined,
           engineNumber: engineNumber !== undefined ? engineNumber.trim() : undefined,
+          carBrand: carBrand !== undefined ? carBrand.trim() : undefined,
+          carModel: carModel !== undefined ? carModel.trim() : undefined,
+          carYear: carYear !== undefined ? carYear.trim() : undefined,
+          carPrice: carPrice !== undefined ? carPrice.trim() : undefined,
+          coverageType: coverageType !== undefined ? coverageType : undefined,
           dueDate: dueDate !== undefined ? dueDate : undefined,
         },
         
@@ -229,7 +301,6 @@ class CustomerController {
         }
       });
 
-      // Hapus undefined fields dalam carData
       if (updateData.carData) {
         Object.keys(updateData.carData).forEach(key => {
           if (updateData.carData[key] === undefined) {
@@ -237,7 +308,6 @@ class CustomerController {
           }
         });
         
-        // Jika carData kosong setelah dihapus, hapus objek carData
         if (Object.keys(updateData.carData).length === 0) {
           delete updateData.carData;
         }
@@ -265,13 +335,12 @@ class CustomerController {
     }
   }
 
-  // Upload car photos for customer
+  // Upload car photos
   async uploadCarPhotos(req, res) {
     try {
       const userId = req.user.username;
       const { id: customerId } = req.params;
       
-      // Validasi format ID
       if (!customerId.includes('-')) {
         return res.status(400).json({
           success: false,
@@ -279,10 +348,8 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
       const idUsername = customerId.split('-')[0];
       
-      // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
           success: false,
@@ -292,7 +359,6 @@ class CustomerController {
       
       console.log('📸 Uploading car photos for customer:', customerId);
 
-      // Check if customer exists
       const customer = await customerDAO.getCustomerById(customerId, userId);
       if (!customer) {
         return res.status(404).json({
@@ -304,8 +370,31 @@ class CustomerController {
       const files = req.files;
       const uploadedPhotos = {};
 
-      // Upload each photo to Cloudinary
       const uploadPromises = [];
+
+      // STNK Photo
+      if (files.stnk && files.stnk[0]) {
+        uploadPromises.push(
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `car_insurance/customers/${customerId}`,
+                public_id: `${customerId}_stnk`,
+                resource_type: 'image'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  uploadedPhotos.stnk = result.secure_url;
+                  resolve();
+                }
+              }
+            );
+            stream.end(files.stnk[0].buffer);
+          })
+        );
+      }
 
       // Left Side Photo
       if (files.leftSide && files.leftSide[0]) {
@@ -326,7 +415,6 @@ class CustomerController {
                 }
               }
             );
-            
             stream.end(files.leftSide[0].buffer);
           })
         );
@@ -351,7 +439,6 @@ class CustomerController {
                 }
               }
             );
-            
             stream.end(files.rightSide[0].buffer);
           })
         );
@@ -376,7 +463,6 @@ class CustomerController {
                 }
               }
             );
-            
             stream.end(files.front[0].buffer);
           })
         );
@@ -401,16 +487,37 @@ class CustomerController {
                 }
               }
             );
-            
             stream.end(files.back[0].buffer);
           })
         );
       }
 
-      // Wait for all uploads to complete
+      // Dashboard Photo
+      if (files.dashboard && files.dashboard[0]) {
+        uploadPromises.push(
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `car_insurance/customers/${customerId}`,
+                public_id: `${customerId}_dashboard`,
+                resource_type: 'image'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  uploadedPhotos.dashboard = result.secure_url;
+                  resolve();
+                }
+              }
+            );
+            stream.end(files.dashboard[0].buffer);
+          })
+        );
+      }
+
       await Promise.all(uploadPromises);
 
-      // Update customer with photo URLs
       const updatedCustomer = await customerDAO.updateCustomer(
         customerId, 
         { 
@@ -443,7 +550,6 @@ class CustomerController {
       const userId = req.user.username;
       const { id } = req.params;
 
-      // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
           success: false,
@@ -451,10 +557,8 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
       
-      // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
           success: false,
@@ -527,11 +631,10 @@ class CustomerController {
       const allCustomers = await customerDAO.getAllCustomersByUser(userId);
 
       const filteredCustomers = allCustomers.filter(customer => {
-        // Search in multiple fields
         return (
           (customer.name && customer.name.toLowerCase().includes(searchTerm)) ||
-          (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
           (customer.phone && customer.phone.includes(searchTerm)) ||
+          (customer.ktpNumber && customer.ktpNumber.includes(searchTerm)) ||
           (customer.carData?.plateNumber && customer.carData.plateNumber.toLowerCase().includes(searchTerm)) ||
           (customer.carData?.carBrand && customer.carData.carBrand.toLowerCase().includes(searchTerm)) ||
           (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm))
