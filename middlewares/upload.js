@@ -28,6 +28,25 @@ const uploadCarPhotos = upload.fields([
   { name: 'back', maxCount: 1 }
 ]);
 
+// Upload property photos (8 photos)
+const uploadPropertyPhotos = upload.fields([
+  { name: 'front', maxCount: 1 },
+  { name: 'back', maxCount: 1 },
+  { name: 'left', maxCount: 1 },
+  { name: 'right', maxCount: 1 },
+  { name: 'interior1', maxCount: 1 },
+  { name: 'interior2', maxCount: 1 },
+  { name: 'interior3', maxCount: 1 },
+  { name: 'interior4', maxCount: 1 },
+]);
+
+// Upload property documents (4 documents)
+const uploadPropertyDocuments = upload.fields([
+  { name: 'certificate', maxCount: 1 }, // Sertifikat tanah
+  { name: 'imb', maxCount: 1 },         // IMB
+  { name: 'pbb', maxCount: 1 },         // PBB
+  { name: 'other', maxCount: 1 },       // Dokumen lainnya
+]);
 // Error handler khusus multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -60,5 +79,7 @@ const handleMulterError = (err, req, res, next) => {
 module.exports = {
   upload,
   uploadCarPhotos,
+  uploadPropertyPhotos,
+  uploadPropertyDocuments,
   handleMulterError
 };

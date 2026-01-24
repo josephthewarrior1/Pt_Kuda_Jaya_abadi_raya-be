@@ -9,6 +9,7 @@ require('./config/firebase');
 // Import routes
 const authRoutes = require('./routes/userRoutes');
 const customerRoutes = require('./routes/customerRoutes'); // Tambahkan ini
+const propertyRoutes = require('./routes/propertyRoutes');
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api', authRoutes);
 app.use('/api', customerRoutes); // Tambahkan ini
+app.use('/api', propertyRoutes);
 
 // 404 handler
 app.use((req, res) => {
