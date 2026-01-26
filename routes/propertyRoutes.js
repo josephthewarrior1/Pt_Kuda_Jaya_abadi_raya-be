@@ -39,7 +39,7 @@ router.get('/properties/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
   propertyController.getPropertyById(req, res)
 );
 
-// Create new property
+// Create new property1
 router.post('/properties', authMiddleware, userAndPaidUserOnly, (req, res) => 
   propertyController.createProperty(req, res)
 );

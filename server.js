@@ -8,8 +8,8 @@ require('./config/firebase');
 
 // Import routes
 const authRoutes = require('./routes/userRoutes');
-const customerRoutes = require('./routes/customerRoutes');
-// const propertyRoutes = require('./routes/propertyRoutes'); // ← COMMENT INI DULU
+const customerRoutes = require('./routes/customerRoutes'); // Tambahkan ini
+const propertyRoutes = require('./routes/propertyRoutes');
 
 const app = express();
 
@@ -44,8 +44,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       users: '/api/users',
-      customers: '/api/customers',
-      // properties: '/api/properties', // ← COMMENT INI
+      customers: '/api/customers', // Tambahkan ini
     },
   });
 });
@@ -61,8 +60,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', authRoutes);
-app.use('/api', customerRoutes);
-// app.use('/api', propertyRoutes); // ← COMMENT INI DULU
+app.use('/api', customerRoutes); // Tambahkan ini
+app.use('/api', propertyRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -110,8 +109,6 @@ app.listen(PORT, () => {
   console.log('  PUT    /api/customers/:id         - Update customer');
   console.log('  DELETE /api/customers/:id         - Delete customer');
   console.log('');
-  // console.log('🏠 PROPERTY ENDPOINTS (User & Paid User Only):'); // ← COMMENT JUGA
-  // console.log('  GET    /api/properties            - Get all properties');
 });
 
 module.exports = app;
