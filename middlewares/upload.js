@@ -8,14 +8,15 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB per file (dikurangi untuk Vercel)
-    files: 4,
+    files: 8, // Maksimum 8 file untuk semua upload
     fieldSize: 10 * 1024 * 1024 // 10MB untuk fields
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    // Terima image dan PDF untuk dokumen
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'), false);
+      cb(new Error('Only image and PDF files are allowed!'), false);
     }
   }
 });
@@ -26,6 +27,13 @@ const uploadCarPhotos = upload.fields([
   { name: 'rightSide', maxCount: 1 },
   { name: 'front', maxCount: 1 },
   { name: 'back', maxCount: 1 }
+]);
+
+// Middleware untuk dokumen (STNK, SIM, KTP) - OPSIONAL
+const uploadDocuments = upload.fields([
+  { name: 'stnk', maxCount: 1 },
+  { name: 'sim', maxCount: 1 },
+  { name: 'ktp', maxCount: 1 }
 ]);
 
 // Upload property photos (8 photos)
@@ -47,6 +55,7 @@ const uploadPropertyDocuments = upload.fields([
   { name: 'pbb', maxCount: 1 },         // PBB
   { name: 'other', maxCount: 1 },       // Dokumen lainnya
 ]);
+
 // Error handler khusus multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -56,6 +65,13 @@ const handleMulterError = (err, req, res, next) => {
       return res.status(413).json({
         success: false,
         error: `File too large. Maximum size is 5MB per file`
+      });
+    }
+    
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        error: `Too many files uploaded. Maximum is ${err.limit} files`
       });
     }
     
@@ -79,6 +95,7 @@ const handleMulterError = (err, req, res, next) => {
 module.exports = {
   upload,
   uploadCarPhotos,
+  uploadDocuments,
   uploadPropertyPhotos,
   uploadPropertyDocuments,
   handleMulterError

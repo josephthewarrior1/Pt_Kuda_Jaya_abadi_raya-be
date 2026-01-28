@@ -89,7 +89,12 @@ class CustomerController {
         plateNumber,
         chassisNumber,
         engineNumber,
-        dueDate
+        dueDate,
+        carPrice, // Tambahan: harga kendaraan
+        // Document data (opsional)
+        hasSTNK,
+        hasSIM,
+        hasKTP
       } = req.body;
 
       // Validation - Hanya name yang required
@@ -121,6 +126,14 @@ class CustomerController {
           chassisNumber: chassisNumber ? chassisNumber.trim() : '',
           engineNumber: engineNumber ? engineNumber.trim() : '',
           dueDate: dueDate || null,
+          carPrice: carPrice ? parseFloat(carPrice) : 0, // Tambahan: harga kendaraan (default 0)
+        },
+        
+        // Document status (opsional)
+        documentStatus: {
+          hasSTNK: hasSTNK === 'true' || hasSTNK === true,
+          hasSIM: hasSIM === 'true' || hasSIM === true,
+          hasKTP: hasKTP === 'true' || hasKTP === true,
         },
         
         // Car photos (will be uploaded separately)
@@ -129,6 +142,13 @@ class CustomerController {
           rightSide: '',
           front: '',
           back: ''
+        },
+        
+        // Document photos (opsional, akan diupload terpisah)
+        documentPhotos: {
+          stnk: '',
+          sim: '',
+          ktp: ''
         },
         
         createdBy: userId,
@@ -189,7 +209,12 @@ class CustomerController {
         plateNumber,
         chassisNumber,
         engineNumber,
-        dueDate
+        dueDate,
+        carPrice, // Tambahan: harga kendaraan
+        // Document status (opsional)
+        hasSTNK,
+        hasSIM,
+        hasKTP
       } = req.body;
 
       // Validation untuk update - jika name dikirim, harus valid
@@ -217,6 +242,14 @@ class CustomerController {
           chassisNumber: chassisNumber !== undefined ? chassisNumber.trim() : undefined,
           engineNumber: engineNumber !== undefined ? engineNumber.trim() : undefined,
           dueDate: dueDate !== undefined ? dueDate : undefined,
+          carPrice: carPrice !== undefined ? parseFloat(carPrice) : undefined,
+        },
+        
+        // Document status
+        documentStatus: {
+          hasSTNK: hasSTNK !== undefined ? (hasSTNK === 'true' || hasSTNK === true) : undefined,
+          hasSIM: hasSIM !== undefined ? (hasSIM === 'true' || hasSIM === true) : undefined,
+          hasKTP: hasKTP !== undefined ? (hasKTP === 'true' || hasKTP === true) : undefined,
         },
         
         updatedAt: Date.now(),
@@ -240,6 +273,20 @@ class CustomerController {
         // Jika carData kosong setelah dihapus, hapus objek carData
         if (Object.keys(updateData.carData).length === 0) {
           delete updateData.carData;
+        }
+      }
+
+      // Hapus undefined fields dalam documentStatus
+      if (updateData.documentStatus) {
+        Object.keys(updateData.documentStatus).forEach(key => {
+          if (updateData.documentStatus[key] === undefined) {
+            delete updateData.documentStatus[key];
+          }
+        });
+        
+        // Jika documentStatus kosong setelah dihapus, hapus objek documentStatus
+        if (Object.keys(updateData.documentStatus).length === 0) {
+          delete updateData.documentStatus;
         }
       }
 
@@ -437,6 +484,153 @@ class CustomerController {
     }
   }
 
+  // Upload document photos (STNK, SIM, KTP) - OPSIONAL
+  async uploadDocuments(req, res) {
+    try {
+      const userId = req.user.username;
+      const { id: customerId } = req.params;
+      
+      // Validasi format ID
+      if (!customerId.includes('-')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid customer ID format. Expected: {username}-{number}',
+        });
+      }
+
+      // Extract username dari ID untuk verifikasi
+      const idUsername = customerId.split('-')[0];
+      
+      // Pastikan customer ID milik user yang sedang login
+      if (idUsername !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied to this customer',
+        });
+      }
+      
+      console.log('📄 Uploading documents for customer:', customerId);
+
+      // Check if customer exists
+      const customer = await customerDAO.getCustomerById(customerId, userId);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          error: 'Customer not found',
+        });
+      }
+
+      const files = req.files;
+      const uploadedDocuments = {};
+
+      // Upload each document to Cloudinary
+      const uploadPromises = [];
+
+      // STNK Photo
+      if (files.stnk && files.stnk[0]) {
+        uploadPromises.push(
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `car_insurance/customers/${customerId}/documents`,
+                public_id: `${customerId}_stnk`,
+                resource_type: 'image'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  uploadedDocuments.stnk = result.secure_url;
+                  resolve();
+                }
+              }
+            );
+            
+            stream.end(files.stnk[0].buffer);
+          })
+        );
+      }
+
+      // SIM Photo
+      if (files.sim && files.sim[0]) {
+        uploadPromises.push(
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `car_insurance/customers/${customerId}/documents`,
+                public_id: `${customerId}_sim`,
+                resource_type: 'image'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  uploadedDocuments.sim = result.secure_url;
+                  resolve();
+                }
+              }
+            );
+            
+            stream.end(files.sim[0].buffer);
+          })
+        );
+      }
+
+      // KTP Photo
+      if (files.ktp && files.ktp[0]) {
+        uploadPromises.push(
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: `car_insurance/customers/${customerId}/documents`,
+                public_id: `${customerId}_ktp`,
+                resource_type: 'image'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  uploadedDocuments.ktp = result.secure_url;
+                  resolve();
+                }
+              }
+            );
+            
+            stream.end(files.ktp[0].buffer);
+          })
+        );
+      }
+
+      // Wait for all uploads to complete
+      await Promise.all(uploadPromises);
+
+      // Update customer with document URLs
+      const updatedCustomer = await customerDAO.updateCustomer(
+        customerId, 
+        { 
+          documentPhotos: uploadedDocuments,
+          updatedAt: Date.now()
+        }, 
+        userId
+      );
+
+      console.log('✅ Documents uploaded for customer:', customerId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Documents uploaded successfully',
+        documents: uploadedDocuments,
+        customer: updatedCustomer,
+      });
+    } catch (error) {
+      console.error('❌ Upload documents error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error while uploading documents',
+      });
+    }
+  }
+
   // Delete customer
   async deleteCustomer(req, res) {
     try {
@@ -534,7 +728,8 @@ class CustomerController {
           (customer.phone && customer.phone.includes(searchTerm)) ||
           (customer.carData?.plateNumber && customer.carData.plateNumber.toLowerCase().includes(searchTerm)) ||
           (customer.carData?.carBrand && customer.carData.carBrand.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm))
+          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm)) ||
+          (customer.carData?.carPrice && customer.carData.carPrice.toString().includes(searchTerm))
         );
       });
 

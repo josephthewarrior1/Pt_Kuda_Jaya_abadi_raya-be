@@ -68,13 +68,24 @@ class CustomerDAO {
             plateNumber: '',
             chassisNumber: '',
             engineNumber: '',
-            dueDate: null
+            dueDate: null,
+            carPrice: 0 // Tambahan: harga kendaraan
+          },
+          documentStatus: customerData.documentStatus || {
+            hasSTNK: false,
+            hasSIM: false,
+            hasKTP: false
           },
           carPhotos: customerData.carPhotos || {
             leftSide: '',
             rightSide: '',
             front: '',
             back: ''
+          },
+          documentPhotos: customerData.documentPhotos || {
+            stnk: '',
+            sim: '',
+            ktp: ''
           },
           createdBy: customerData.createdBy || userId,
           createdAt: customerData.createdAt || Date.now(),
@@ -121,13 +132,24 @@ class CustomerDAO {
           plateNumber: '',
           chassisNumber: '',
           engineNumber: '',
-          dueDate: null
+          dueDate: null,
+          carPrice: 0 // Tambahan: harga kendaraan
+        },
+        documentStatus: customerData.documentStatus || {
+          hasSTNK: false,
+          hasSIM: false,
+          hasKTP: false
         },
         carPhotos: customerData.carPhotos || {
           leftSide: '',
           rightSide: '',
           front: '',
           back: ''
+        },
+        documentPhotos: customerData.documentPhotos || {
+          stnk: '',
+          sim: '',
+          ktp: ''
         },
         createdBy: customerData.createdBy || userId,
         createdAt: customerData.createdAt || Date.now(),
@@ -168,13 +190,24 @@ class CustomerDAO {
           plateNumber: '',
           chassisNumber: '',
           engineNumber: '',
-          dueDate: null
+          dueDate: null,
+          carPrice: 0 // Tambahan: harga kendaraan
+        },
+        documentStatus: customerDataWithoutCreatedBy.documentStatus || {
+          hasSTNK: false,
+          hasSIM: false,
+          hasKTP: false
         },
         carPhotos: customerDataWithoutCreatedBy.carPhotos || {
           leftSide: '',
           rightSide: '',
           front: '',
           back: ''
+        },
+        documentPhotos: customerDataWithoutCreatedBy.documentPhotos || {
+          stnk: '',
+          sim: '',
+          ktp: ''
         },
         createdAt: customerDataWithoutCreatedBy.createdAt || Date.now(),
         updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
@@ -218,7 +251,18 @@ class CustomerDAO {
           chassisNumber: existingCustomer.carData?.chassisNumber || '',
           engineNumber: existingCustomer.carData?.engineNumber || '',
           dueDate: existingCustomer.carData?.dueDate || null,
+          carPrice: existingCustomer.carData?.carPrice || 0,
           ...updateData.carData
+        };
+      }
+      
+      // If updating documentStatus, merge with existing documentStatus
+      if (updateData.documentStatus) {
+        dataToUpdate.documentStatus = {
+          hasSTNK: existingCustomer.documentStatus?.hasSTNK || false,
+          hasSIM: existingCustomer.documentStatus?.hasSIM || false,
+          hasKTP: existingCustomer.documentStatus?.hasKTP || false,
+          ...updateData.documentStatus
         };
       }
       
@@ -230,6 +274,16 @@ class CustomerDAO {
           front: existingCustomer.carPhotos?.front || '',
           back: existingCustomer.carPhotos?.back || '',
           ...updateData.carPhotos
+        };
+      }
+      
+      // If updating documentPhotos, merge with existing documentPhotos
+      if (updateData.documentPhotos) {
+        dataToUpdate.documentPhotos = {
+          stnk: existingCustomer.documentPhotos?.stnk || '',
+          sim: existingCustomer.documentPhotos?.sim || '',
+          ktp: existingCustomer.documentPhotos?.ktp || '',
+          ...updateData.documentPhotos
         };
       }
       

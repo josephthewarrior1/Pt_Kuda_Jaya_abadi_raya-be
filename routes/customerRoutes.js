@@ -3,7 +3,7 @@ const router = express.Router();
 const customerController = require('../controllers/customerController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const { userAndPaidUserOnly } = require('../middlewares/roleMiddleware');
-const { uploadCarPhotos } = require('../middlewares/upload');
+const { uploadCarPhotos, uploadDocuments } = require('../middlewares/upload');
 
 // ==================== CUSTOMER ROUTES (USER & PAID_USER ONLY) ====================
 // Admin TIDAK bisa akses
@@ -46,6 +46,14 @@ router.post('/customers/:id/upload-photos',
   userAndPaidUserOnly,
   uploadCarPhotos,
   (req, res) => customerController.uploadCarPhotos(req, res)
+);
+
+// Upload document photos (STNK, SIM, KTP) - OPSIONAL
+router.post('/customers/:id/upload-documents', 
+  authMiddleware, 
+  userAndPaidUserOnly,
+  uploadDocuments,
+  (req, res) => customerController.uploadDocuments(req, res)
 );
 
 // Delete customer
