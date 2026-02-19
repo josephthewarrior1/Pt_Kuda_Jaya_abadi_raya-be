@@ -90,7 +90,7 @@ class CustomerController {
         chassisNumber,
         engineNumber,
         dueDate,
-        carPrice, // Tambahan: harga kendaraan
+        carPrice,
         // Document data (opsional)
         hasSTNK,
         hasSIM,
@@ -117,16 +117,19 @@ class CustomerController {
         address: address ? address.trim() : '',
         notes: notes ? notes.trim() : '',
         
+        // Status - default null (akan dihitung dari dueDate di frontend)
+        status: null,
+        
         // Car data
         carData: {
-          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(), // Default ke nama pelanggan
+          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(),
           carBrand: carBrand ? carBrand.trim() : '',
           carModel: carModel ? carModel.trim() : '',
           plateNumber: plateNumber ? plateNumber.trim() : '',
           chassisNumber: chassisNumber ? chassisNumber.trim() : '',
           engineNumber: engineNumber ? engineNumber.trim() : '',
           dueDate: dueDate || null,
-          carPrice: carPrice ? parseFloat(carPrice) : 0, // Tambahan: harga kendaraan (default 0)
+          carPrice: carPrice ? parseFloat(carPrice) : 0,
         },
         
         // Document status (opsional)
@@ -202,6 +205,8 @@ class CustomerController {
 
       const { 
         name, email, phone, address, notes,
+        // ✅ TAMBAHAN: status field
+        status,
         // Car data
         carOwnerName,
         carBrand,
@@ -210,7 +215,7 @@ class CustomerController {
         chassisNumber,
         engineNumber,
         dueDate,
-        carPrice, // Tambahan: harga kendaraan
+        carPrice,
         // Document status (opsional)
         hasSTNK,
         hasSIM,
@@ -225,6 +230,15 @@ class CustomerController {
         });
       }
 
+      // ✅ Validasi status yang diperbolehkan
+      const allowedStatuses = ['Cancelled', null, undefined];
+      if (status !== undefined && !allowedStatuses.includes(status) && status !== 'null') {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid status value. Allowed: Cancelled or null (to reset)',
+        });
+      }
+
       const updateData = {
         // Personal data
         name: name !== undefined ? name.trim() : undefined,
@@ -232,6 +246,10 @@ class CustomerController {
         phone: phone !== undefined ? phone.trim() : undefined,
         address: address !== undefined ? address.trim() : undefined,
         notes: notes !== undefined ? notes.trim() : undefined,
+        
+        // ✅ TAMBAHAN: status - bisa di-set ke 'Cancelled' atau null (reset ke date-based)
+        // Kita handle 'null' string juga karena JSON kadang kirim string
+        status: status !== undefined ? (status === 'null' ? null : status) : undefined,
         
         // Car data
         carData: {
@@ -721,7 +739,6 @@ class CustomerController {
       const allCustomers = await customerDAO.getAllCustomersByUser(userId);
 
       const filteredCustomers = allCustomers.filter(customer => {
-        // Search in multiple fields
         return (
           (customer.name && customer.name.toLowerCase().includes(searchTerm)) ||
           (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||

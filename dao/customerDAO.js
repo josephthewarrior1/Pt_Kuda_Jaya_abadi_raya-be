@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class CustomerDAO {
   constructor() {
     this.customersRootRef = db.ref('customer_data');
-    this.customerCountRef = db.ref('customer_counters'); // Untuk tracking jumlah customer per user
+    this.customerCountRef = db.ref('customer_counters');
   }
 
   // Get reference untuk customer collection user tertentu
@@ -53,7 +53,6 @@ class CustomerDAO {
       snapshot.forEach((childSnapshot) => {
         const customerData = childSnapshot.val();
         
-        // Ensure all fields have defaults
         customers.push({
           id: childSnapshot.key,
           name: customerData.name || '',
@@ -61,6 +60,8 @@ class CustomerDAO {
           phone: customerData.phone || '',
           address: customerData.address || '',
           notes: customerData.notes || '',
+          // ✅ TAMBAHAN: status field - null berarti pakai date-based logic di frontend
+          status: customerData.status || null,
           carData: customerData.carData || {
             ownerName: '',
             carBrand: '',
@@ -69,7 +70,7 @@ class CustomerDAO {
             chassisNumber: '',
             engineNumber: '',
             dueDate: null,
-            carPrice: 0 // Tambahan: harga kendaraan
+            carPrice: 0
           },
           documentStatus: customerData.documentStatus || {
             hasSTNK: false,
@@ -125,6 +126,8 @@ class CustomerDAO {
         phone: customerData.phone || '',
         address: customerData.address || '',
         notes: customerData.notes || '',
+        // ✅ TAMBAHAN: status field
+        status: customerData.status || null,
         carData: customerData.carData || {
           ownerName: '',
           carBrand: '',
@@ -133,7 +136,7 @@ class CustomerDAO {
           chassisNumber: '',
           engineNumber: '',
           dueDate: null,
-          carPrice: 0 // Tambahan: harga kendaraan
+          carPrice: 0
         },
         documentStatus: customerData.documentStatus || {
           hasSTNK: false,
@@ -176,13 +179,14 @@ class CustomerDAO {
       
       const userCustomersRef = this.getUserCustomersRef(createdBy);
       
-      // Ensure all fields have values
       const customerToSave = {
         name: customerDataWithoutCreatedBy.name || '',
         email: customerDataWithoutCreatedBy.email || '',
         phone: customerDataWithoutCreatedBy.phone || '',
         address: customerDataWithoutCreatedBy.address || '',
         notes: customerDataWithoutCreatedBy.notes || '',
+        // ✅ TAMBAHAN: simpan status (null by default)
+        status: customerDataWithoutCreatedBy.status || null,
         carData: customerDataWithoutCreatedBy.carData || {
           ownerName: customerDataWithoutCreatedBy.name || '',
           carBrand: '',
@@ -191,7 +195,7 @@ class CustomerDAO {
           chassisNumber: '',
           engineNumber: '',
           dueDate: null,
-          carPrice: 0 // Tambahan: harga kendaraan
+          carPrice: 0
         },
         documentStatus: customerDataWithoutCreatedBy.documentStatus || {
           hasSTNK: false,
@@ -213,7 +217,6 @@ class CustomerDAO {
         updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
       };
       
-      // Simpan customer di path: customer_data/{userId}/{customerId}
       await userCustomersRef.child(customerId).set(customerToSave);
       
       return {
@@ -238,7 +241,6 @@ class CustomerDAO {
       
       const existingCustomer = snapshot.val();
       
-      // Handle nested updates with defaults
       let dataToUpdate = { ...updateData };
       
       // If updating carData, merge with existing carData
@@ -286,6 +288,18 @@ class CustomerDAO {
           ...updateData.documentPhotos
         };
       }
+
+      // ✅ TAMBAHAN: Handle status update
+      // Firebase Realtime DB ga bisa simpan null langsung, jadi kita hapus field-nya kalau null
+      // Ini berarti status "reset" = field dihapus dari DB = frontend akan hitung dari dueDate
+      if ('status' in dataToUpdate) {
+        if (dataToUpdate.status === null || dataToUpdate.status === undefined) {
+          // Hapus field status dari DB (reset ke date-based logic)
+          await userCustomersRef.child(customerId).child('status').remove();
+          delete dataToUpdate.status;
+        }
+        // Kalau 'Cancelled', biarkan masuk ke update normal di bawah
+      }
       
       // Add updatedAt timestamp
       dataToUpdate.updatedAt = Date.now();
@@ -314,9 +328,6 @@ class CustomerDAO {
       }
       
       await userCustomersRef.child(customerId).remove();
-      
-      // Note: Kita TIDAK mengurangi counter karena nomor harus tetap sequential
-      // Meskipun customer dihapus, nomor berikutnya tetap increment
       
       return true;
     } catch (error) {
