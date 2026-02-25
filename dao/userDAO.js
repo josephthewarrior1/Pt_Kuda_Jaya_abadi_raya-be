@@ -20,10 +20,26 @@ class UserDAO {
     try {
       const snapshot = await this.usersRef.child(username).once('value');
       if (!snapshot.exists()) return null;
-      
       return { id: username, ...snapshot.val() };
     } catch (error) {
       throw new Error('Failed to find user by username: ' + error.message);
+    }
+  }
+
+  // Find user by email (scan all users)
+  async findByEmail(email) {
+    try {
+      const snapshot = await this.usersRef.once('value');
+      const users = snapshot.val() || {};
+
+      const username = Object.keys(users).find(
+        key => users[key].email?.toLowerCase() === email.toLowerCase()
+      );
+
+      if (!username) return null;
+      return { id: username, ...users[username] };
+    } catch (error) {
+      throw new Error('Failed to find user by email: ' + error.message);
     }
   }
 
@@ -32,7 +48,6 @@ class UserDAO {
     try {
       const snapshot = await this.usersRef.child(userId).once('value');
       if (!snapshot.exists()) return null;
-      
       return { id: userId, ...snapshot.val() };
     } catch (error) {
       throw new Error('Failed to find user by ID: ' + error.message);
@@ -43,22 +58,22 @@ class UserDAO {
   async createUser(userData) {
     try {
       const { username } = userData;
-      
+
       // Check if username already exists
       const existingUser = await this.findByUsername(username);
       if (existingUser) {
         throw new Error('Username already exists');
       }
-      
+
       const dataToSave = {
         ...userData,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      
+
       // Save dengan username sebagai key
       await this.usersRef.child(username).set(dataToSave);
-      
+
       return { id: username, ...dataToSave };
     } catch (error) {
       throw new Error('Failed to create user: ' + error.message);
@@ -72,9 +87,9 @@ class UserDAO {
         ...updateData,
         updatedAt: Date.now(),
       };
-      
+
       await this.usersRef.child(userId).update(dataToUpdate);
-      
+
       return await this.findById(userId);
     } catch (error) {
       throw new Error('Failed to update user: ' + error.message);
@@ -91,6 +106,7 @@ class UserDAO {
     }
   }
 
+  // Delete user
   async deleteUser(username) {
     try {
       await this.usersRef.child(username).remove();
@@ -100,6 +116,5 @@ class UserDAO {
     }
   }
 }
-
 
 module.exports = new UserDAO();

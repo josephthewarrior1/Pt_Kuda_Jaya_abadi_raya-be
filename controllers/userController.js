@@ -5,6 +5,7 @@ const userDAO = require('../dao/userDAO');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '7d';
 
+// Valid user roles
 const USER_ROLES = {
   ADMIN: 'admin',
   USER: 'user',
@@ -17,48 +18,82 @@ class UserController {
     try {
       const { fullName, username, password, role, email } = req.body;
 
+      // Validation
       if (!fullName || !username || !password) {
-        return res.status(400).json({ success: false, error: 'Full name, username and password are required' });
+        return res.status(400).json({
+          success: false,
+          error: 'Full name, username and password are required',
+        });
       }
+
+      // Validate password length
       if (password.length < 6) {
-        return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+        return res.status(400).json({
+          success: false,
+          error: 'Password must be at least 6 characters',
+        });
       }
+
+      // Validate username length
       if (username.length < 4) {
-        return res.status(400).json({ success: false, error: 'Username must be at least 4 characters' });
+        return res.status(400).json({
+          success: false,
+          error: 'Username must be at least 4 characters',
+        });
       }
 
       // Validate email format kalau diisi
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ success: false, error: 'Invalid email format' });
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email format',
+        });
       }
 
+      // Check if username already exists
       const usernameExists = await userDAO.usernameExists(username);
       if (usernameExists) {
-        return res.status(400).json({ success: false, error: 'Username already taken' });
+        return res.status(400).json({
+          success: false,
+          error: 'Username already taken',
+        });
       }
 
-      let userRole = USER_ROLES.USER;
+      // Validate and set role
+      let userRole = USER_ROLES.USER; // Default
       if (role) {
         if (!Object.values(USER_ROLES).includes(role)) {
-          return res.status(400).json({ success: false, error: 'Invalid role. Must be: admin, user, or paid_user' });
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid role. Must be: admin, user, or paid_user',
+          });
         }
         userRole = role;
       }
 
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Create new user
       const newUser = await userDAO.createUser({
         fullName: fullName.trim(),
         username: username.trim(),
         password: hashedPassword,
         role: userRole,
-        email: email ? email.trim().toLowerCase() : '',   // ✅ tambah email
+        email: email ? email.trim().toLowerCase() : '',
       });
 
       console.log('✅ New user registered:', newUser.username, 'Role:', userRole);
 
+      // Generate JWT token
       const token = jwt.sign(
-        { id: newUser.username, username: newUser.username, role: newUser.role, email: newUser.email, fullName: newUser.fullName },
+        {
+          id: newUser.username,
+          username: newUser.username,
+          role: newUser.role,
+          email: newUser.email,
+          fullName: newUser.fullName,
+        },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
       );
@@ -77,31 +112,56 @@ class UserController {
       });
     } catch (error) {
       console.error('❌ Sign up error:', error);
-      res.status(500).json({ success: false, error: 'Server error during sign up' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error during sign up',
+      });
     }
   }
 
-  // Login
+  // Login — support username ATAU email di satu field "login"
   async login(req, res) {
     try {
-      const { username, password } = req.body;
+      const { login, password } = req.body;
 
-      if (!username || !password) {
-        return res.status(400).json({ success: false, error: 'Username and password are required' });
+      // Validation
+      if (!login || !password) {
+        return res.status(400).json({
+          success: false,
+          error: 'Username/email and password are required',
+        });
       }
 
-      const user = await userDAO.findByUsername(username);
+      // Detect: kalau ada '@' berarti email, kalau tidak berarti username
+      const user = login.includes('@')
+        ? await userDAO.findByEmail(login)
+        : await userDAO.findByUsername(login);
+
       if (!user) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials',
+        });
       }
 
+      // Verify password
       const passwordValid = await bcrypt.compare(password, user.password);
       if (!passwordValid) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials',
+        });
       }
 
+      // Generate JWT token
       const token = jwt.sign(
-        { id: user.username, username: user.username, role: user.role, email: user.email || '', fullName: user.fullName },
+        {
+          id: user.username,
+          username: user.username,
+          role: user.role,
+          email: user.email || '',
+          fullName: user.fullName,
+        },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
       );
@@ -122,7 +182,10 @@ class UserController {
       });
     } catch (error) {
       console.error('❌ Login error:', error);
-      res.status(500).json({ success: false, error: 'Server error during login' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error during login',
+      });
     }
   }
 
@@ -130,10 +193,14 @@ class UserController {
   async getProfile(req, res) {
     try {
       const userId = req.user.id;
+
       const user = await userDAO.findById(userId);
 
       if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
       }
 
       res.status(200).json({
@@ -149,7 +216,10 @@ class UserController {
       });
     } catch (error) {
       console.error('❌ Get profile error:', error);
-      res.status(500).json({ success: false, error: 'Server error while fetching profile' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while fetching profile',
+      });
     }
   }
 
@@ -160,12 +230,18 @@ class UserController {
       const { fullName, email } = req.body;
 
       if (!fullName) {
-        return res.status(400).json({ success: false, error: 'Full name is required' });
+        return res.status(400).json({
+          success: false,
+          error: 'Full name is required',
+        });
       }
 
       // Validate email format kalau diisi
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ success: false, error: 'Invalid email format' });
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email format',
+        });
       }
 
       const updateData = {
@@ -188,7 +264,10 @@ class UserController {
       });
     } catch (error) {
       console.error('❌ Update profile error:', error);
-      res.status(500).json({ success: false, error: 'Server error while updating profile' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while updating profile',
+      });
     }
   }
 
@@ -199,48 +278,82 @@ class UserController {
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {
-        return res.status(400).json({ success: false, error: 'Current and new password are required' });
+        return res.status(400).json({
+          success: false,
+          error: 'Current and new password are required',
+        });
       }
+
       if (newPassword.length < 6) {
-        return res.status(400).json({ success: false, error: 'New password must be at least 6 characters' });
+        return res.status(400).json({
+          success: false,
+          error: 'New password must be at least 6 characters',
+        });
       }
 
       const user = await userDAO.findById(userId);
+
       if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
       }
 
+      // Verify current password
       const passwordValid = await bcrypt.compare(currentPassword, user.password);
       if (!passwordValid) {
-        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        return res.status(401).json({
+          success: false,
+          error: 'Current password is incorrect',
+        });
       }
 
+      // Hash new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await userDAO.updateUser(userId, { password: hashedPassword });
 
-      res.status(200).json({ success: true, message: 'Password changed successfully' });
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
     } catch (error) {
       console.error('❌ Change password error:', error);
-      res.status(500).json({ success: false, error: 'Server error while changing password' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while changing password',
+      });
     }
   }
 
-  // Admin Only: Update User Role
+  // Admin Only: Update User Role (Manual Upgrade/Downgrade)
   async updateUserRole(req, res) {
     try {
       const { username } = req.params;
       const { role } = req.body;
 
+      // Validate role
       if (!role || !Object.values(USER_ROLES).includes(role)) {
-        return res.status(400).json({ success: false, error: 'Invalid role. Must be: admin, user, or paid_user' });
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid role. Must be: admin, user, or paid_user',
+        });
       }
 
       const user = await userDAO.findByUsername(username);
       if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
       }
+
+      // Prevent admin from changing their own role
       if (username === req.user.username) {
-        return res.status(400).json({ success: false, error: 'You cannot change your own role' });
+        return res.status(400).json({
+          success: false,
+          error: 'You cannot change your own role',
+        });
       }
 
       const updatedUser = await userDAO.updateUser(username, { role });
@@ -260,7 +373,10 @@ class UserController {
       });
     } catch (error) {
       console.error('❌ Update role error:', error);
-      res.status(500).json({ success: false, error: 'Server error while updating user role' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while updating user role',
+      });
     }
   }
 
@@ -269,19 +385,27 @@ class UserController {
     try {
       const users = await userDAO.getAllUsers();
 
+      // Convert object to array and remove passwords
       const userList = Object.keys(users).map(username => ({
         id: username,
         fullName: users[username].fullName,
-        username,
+        username: username,
         role: users[username].role,
         email: users[username].email || '',
         createdAt: users[username].createdAt,
       }));
 
-      res.status(200).json({ success: true, count: userList.length, users: userList });
+      res.status(200).json({
+        success: true,
+        count: userList.length,
+        users: userList,
+      });
     } catch (error) {
       console.error('❌ Get all users error:', error);
-      res.status(500).json({ success: false, error: 'Server error while fetching users' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while fetching users',
+      });
     }
   }
 
@@ -290,22 +414,36 @@ class UserController {
     try {
       const { username } = req.params;
 
+      // Prevent admin from deleting themselves
       if (username === req.user.username) {
-        return res.status(400).json({ success: false, error: 'You cannot delete your own account' });
+        return res.status(400).json({
+          success: false,
+          error: 'You cannot delete your own account',
+        });
       }
 
       const user = await userDAO.findByUsername(username);
       if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
       }
 
       await userDAO.deleteUser(username);
+
       console.log('✅ User deleted by admin:', username);
 
-      res.status(200).json({ success: true, message: 'User deleted successfully' });
+      res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+      });
     } catch (error) {
       console.error('❌ Delete user error:', error);
-      res.status(500).json({ success: false, error: 'Server error while deleting user' });
+      res.status(500).json({
+        success: false,
+        error: 'Server error while deleting user',
+      });
     }
   }
 }
