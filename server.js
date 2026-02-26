@@ -8,9 +8,13 @@ require('./config/firebase');
 
 // Import routes
 const authRoutes = require('./routes/userRoutes');
-const customerRoutes = require('./routes/customerRoutes'); // Tambahkan ini
+const customerRoutes = require('./routes/customerRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
 const companyRoutes = require('./routes/companyRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
+
+// Import cron
+const { startReminderCron } = require('./src/cron/reminderCron');
 
 const app = express();
 
@@ -45,7 +49,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       users: '/api/users',
-      customers: '/api/customers', // Tambahkan ini
+      customers: '/api/customers',
     },
   });
 });
@@ -61,9 +65,10 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', authRoutes);
-app.use('/api', customerRoutes); // Tambahkan ini
+app.use('/api', customerRoutes);
 app.use('/api', propertyRoutes);
 app.use('/api', companyRoutes);
+app.use('/api', reminderRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -96,7 +101,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log('🚀 ============================================\n');
-  
+
   console.log('📚 Available Endpoints:');
   console.log('  POST   /api/users/signup          - Register new user');
   console.log('  POST   /api/users/login           - Login user');
@@ -111,6 +116,13 @@ app.listen(PORT, () => {
   console.log('  PUT    /api/customers/:id         - Update customer');
   console.log('  DELETE /api/customers/:id         - Delete customer');
   console.log('');
+  console.log('📧 REMINDER ENDPOINTS:');
+  console.log('  POST   /api/reminders/send        - Send reminder to self');
+  console.log('  POST   /api/reminders/trigger-all - Trigger all reminders (admin)');
+  console.log('');
+
+  // Start cron job
+  startReminderCron();
 });
 
 module.exports = app;

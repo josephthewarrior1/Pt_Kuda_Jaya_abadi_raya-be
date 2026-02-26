@@ -38,6 +38,8 @@ const authMiddleware = async (req, res, next) => {
       id: user.id,
       username: user.username,
       role: user.role, // <-- TAMBAHKAN INI!
+      email: user.email || '',      // ← TAMBAH INI
+  fullName: user.fullName || '', // ← TAMBAH INI
     };
     
     console.log('✅ Auth middleware passed for user:', req.user.username, 'Role:', req.user.role);
