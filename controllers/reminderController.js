@@ -7,7 +7,6 @@ const REMINDER_DAYS = 30;
 
 class ReminderController {
 
-  // Manual trigger: kirim reminder ke diri sendiri sekarang
   async sendMyReminder(req, res) {
     try {
       const userId = req.user.id;
@@ -81,7 +80,6 @@ class ReminderController {
     }
   }
 
-  // Admin only: trigger manual semua reminder
   async triggerAllReminders(req, res) {
     try {
       res.status(200).json({
@@ -95,12 +93,9 @@ class ReminderController {
     }
   }
 
-  // ⭐ Endpoint khusus untuk Vercel Cron
-  // Dipanggil otomatis oleh Vercel setiap hari jam 08:00 WIB
-  // HARUS dilindungi CRON_SECRET biar ga bisa dipanggil sembarangan
+  // Endpoint untuk Vercel Cron — dipanggil otomatis tiap hari jam 08:00 WIB
   async runCron(req, res) {
     try {
-      // Validasi secret dari Vercel
       const authHeader = req.headers['authorization'];
       const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
 
@@ -109,7 +104,6 @@ class ReminderController {
       }
 
       console.log('⏰ Vercel cron triggered at:', new Date().toLocaleString('id-ID'));
-
       const result = await runDailyReminders();
 
       res.status(200).json({
