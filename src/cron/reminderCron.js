@@ -1,141 +1,127 @@
-const cron = require('node-cron');
-const userDAO = require('../../dao/userDAO');
-const customerDAO = require('../../dao/customerDAO');
-const propertyDAO = require('../../dao/propertyDAO');
-// Di src/cron/reminderCron.js baris 5
-const { sendReminderEmail, getDaysLeft } = require('../services/Emailservice');
+const customerDAO = require('../dao/customerDAO');
+const propertyDAO = require('../dao/propertyDAO');
+const { sendReminderEmail, getDaysLeft } = require('../src/services/Emailservice');
+const { runDailyReminders } = require('../src/cron/reminderCron');
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-const REMINDER_DAYS = 30; // ingetin kalau sisa <= 30 hari
+const REMINDER_DAYS = 30;
 
-const filterVehicleItems = (customers) => {
-  const expiringSoon = [];
-  const expiredItems = [];
+class ReminderController {
 
-  customers.forEach(c => {
-    // Skip kalau Cancelled
-    if (c.status === 'Cancelled') return;
+  // Manual trigger: kirim reminder ke diri sendiri sekarang
+  async sendMyReminder(req, res) {
+    try {
+      const userId = req.user.id;
+      const userEmail = req.user.email;
 
-    const daysLeft = getDaysLeft(c.carData?.dueDate);
-    if (daysLeft === null) return;
+      if (!userEmail) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email belum diset di profil. Update profil dulu untuk mengaktifkan reminder.'
+        });
+      }
 
-    if (daysLeft < 0) {
-      expiredItems.push(c);
-    } else if (daysLeft <= REMINDER_DAYS) {
-      expiringSoon.push(c);
-    }
-  });
+      const [customers, properties] = await Promise.all([
+        customerDAO.getAllCustomersByUser(userId),
+        propertyDAO.getAllPropertiesByUser(userId),
+      ]);
 
-  // Sort by daysLeft ascending
-  expiringSoon.sort((a, b) => getDaysLeft(a.carData?.dueDate) - getDaysLeft(b.carData?.dueDate));
-  return { expiringSoon, expiredItems };
-};
+      const vehicleExpiringSoon = customers.filter(c => {
+        if (c.status === 'Cancelled') return false;
+        const d = getDaysLeft(c.carData?.dueDate);
+        return d !== null && d >= 0 && d <= REMINDER_DAYS;
+      }).sort((a, b) => getDaysLeft(a.carData?.dueDate) - getDaysLeft(b.carData?.dueDate));
 
-const filterPropertyItems = (properties) => {
-  const expiringSoon = [];
-  const expiredItems = [];
-
-  properties.forEach(p => {
-    if (p.status === 'Cancelled') return;
-
-    const daysLeft = getDaysLeft(p.insuranceData?.endDate);
-    if (daysLeft === null) return;
-
-    if (daysLeft < 0) {
-      expiredItems.push(p);
-    } else if (daysLeft <= REMINDER_DAYS) {
-      expiringSoon.push(p);
-    }
-  });
-
-  expiringSoon.sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
-  return { expiringSoon, expiredItems };
-};
-
-// ─── Core: kirim reminder untuk 1 user ───────────────────────────────────────
-const sendRemindersForUser = async (username, user) => {
-  if (!user.email) {
-    console.log(`⚠️  Skipping ${username} — no email`);
-    return;
-  }
-
-  console.log(`📧 Processing reminders for: ${username}`);
-
-  try {
-    // Fetch semua data parallel
-    const [customers, properties] = await Promise.all([
-      customerDAO.getAllCustomersByUser(username),
-      propertyDAO.getAllPropertiesByUser(username),
-    ]);
-
-    const vehicleData   = filterVehicleItems(customers);
-    const propertyData  = filterPropertyItems(properties);
-
-    // Kirim email kendaraan (selalu kirim biar agent tau statusnya)
-    await sendReminderEmail({
-      to: user.email,
-      agentName: user.fullName || username,
-      expiringSoon: vehicleData.expiringSoon,
-      expiredItems: vehicleData.expiredItems,
-      type: 'vehicle',
-    });
-
-    // Kirim email properti hanya kalau ada data properti
-    if (properties.length > 0) {
-      await sendReminderEmail({
-        to: user.email,
-        agentName: user.fullName || username,
-        expiringSoon: propertyData.expiringSoon,
-        expiredItems: propertyData.expiredItems,
-        type: 'property',
+      const vehicleExpired = customers.filter(c => {
+        if (c.status === 'Cancelled') return false;
+        const d = getDaysLeft(c.carData?.dueDate);
+        return d !== null && d < 0;
       });
+
+      const propertyExpiringSoon = properties.filter(p => {
+        if (p.status === 'Cancelled') return false;
+        const d = getDaysLeft(p.insuranceData?.endDate);
+        return d !== null && d >= 0 && d <= REMINDER_DAYS;
+      }).sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
+
+      const propertyExpired = properties.filter(p => {
+        if (p.status === 'Cancelled') return false;
+        const d = getDaysLeft(p.insuranceData?.endDate);
+        return d !== null && d < 0;
+      });
+
+      await sendReminderEmail({
+        to: userEmail,
+        agentName: req.user.fullName || userId,
+        expiringSoon: vehicleExpiringSoon,
+        expiredItems: vehicleExpired,
+        type: 'vehicle',
+      });
+
+      if (properties.length > 0) {
+        await sendReminderEmail({
+          to: userEmail,
+          agentName: req.user.fullName || userId,
+          expiringSoon: propertyExpiringSoon,
+          expiredItems: propertyExpired,
+          type: 'property',
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Reminder dikirim ke ${userEmail}`,
+        summary: {
+          vehicle: { expiringSoon: vehicleExpiringSoon.length, expired: vehicleExpired.length },
+          property: { expiringSoon: propertyExpiringSoon.length, expired: propertyExpired.length },
+        }
+      });
+    } catch (error) {
+      console.error('❌ Send reminder error:', error);
+      res.status(500).json({ success: false, error: 'Gagal mengirim reminder' });
     }
-
-    console.log(`✅ Done: ${username} (${customers.length} vehicles, ${properties.length} properties)`);
-  } catch (err) {
-    console.error(`❌ Failed to send reminder for ${username}:`, err.message);
   }
-};
 
-// ─── Main: loop semua user ────────────────────────────────────────────────────
-const runDailyReminders = async () => {
-  console.log('\n🕐 Running daily reminders:', new Date().toLocaleString('id-ID'));
-
-  try {
-    const allUsers = await userDAO.getAllUsers();
-    const usernames = Object.keys(allUsers);
-
-    console.log(`👥 Found ${usernames.length} users`);
-
-    // Process satu-satu (jangan parallel semua biar ga nge-spam Nodemailer)
-    for (const username of usernames) {
-      const user = allUsers[username];
-
-      // Skip admin — admin ga punya nasabah
-      if (user.role === 'admin') continue;
-
-      await sendRemindersForUser(username, user);
-
-      // Delay 1 detik antar user biar ga kena Gmail rate limit
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  // Admin only: trigger manual semua reminder
+  async triggerAllReminders(req, res) {
+    try {
+      res.status(200).json({
+        success: true,
+        message: 'Reminder job started. Cek console untuk progress.'
+      });
+      runDailyReminders().catch(console.error);
+    } catch (error) {
+      console.error('❌ Trigger all reminders error:', error);
+      res.status(500).json({ success: false, error: 'Gagal trigger reminders' });
     }
-
-    console.log('✅ Daily reminders completed\n');
-  } catch (err) {
-    console.error('❌ Daily reminder job failed:', err.message);
   }
-};
 
-// ─── Schedule ─────────────────────────────────────────────────────────────────
-// Jalan setiap hari jam 08:00 WIB (UTC+7 = 01:00 UTC)
-// Format: detik menit jam hari-bulan bulan hari-minggu
-const startReminderCron = () => {
-  // Setiap hari jam 08:00 WIB
-  cron.schedule('0 1 * * *', runDailyReminders, {
-    timezone: 'Asia/Jakarta'
-  });
+  // ⭐ Endpoint khusus untuk Vercel Cron
+  // Dipanggil otomatis oleh Vercel setiap hari jam 08:00 WIB
+  // HARUS dilindungi CRON_SECRET biar ga bisa dipanggil sembarangan
+  async runCron(req, res) {
+    try {
+      // Validasi secret dari Vercel
+      const authHeader = req.headers['authorization'];
+      const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
 
-  console.log('⏰ Daily reminder cron scheduled: every day at 08:00 WIB');
-};
+      if (!process.env.CRON_SECRET || authHeader !== expectedSecret) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
 
-module.exports = { startReminderCron, runDailyReminders };
+      console.log('⏰ Vercel cron triggered at:', new Date().toLocaleString('id-ID'));
+
+      const result = await runDailyReminders();
+
+      res.status(200).json({
+        success: true,
+        message: 'Daily reminders completed',
+        ...result,
+      });
+    } catch (error) {
+      console.error('❌ Cron job error:', error);
+      res.status(500).json({ success: false, error: 'Cron job failed' });
+    }
+  }
+}
+
+module.exports = new ReminderController();

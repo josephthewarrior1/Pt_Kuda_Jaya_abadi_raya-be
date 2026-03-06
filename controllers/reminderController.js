@@ -1,6 +1,6 @@
 const customerDAO = require('../dao/customerDAO');
 const propertyDAO = require('../dao/propertyDAO');
-const { sendReminderEmail, getDaysLeft } =  require('../src/services/Emailservice');
+const { sendReminderEmail, getDaysLeft } = require('../src/services/Emailservice');
 const { runDailyReminders } = require('../src/cron/reminderCron');
 
 const REMINDER_DAYS = 30;
@@ -10,7 +10,7 @@ class ReminderController {
   // Manual trigger: kirim reminder ke diri sendiri sekarang
   async sendMyReminder(req, res) {
     try {
-      const userId   = req.user.id;
+      const userId = req.user.id;
       const userEmail = req.user.email;
 
       if (!userEmail) {
@@ -25,7 +25,6 @@ class ReminderController {
         propertyDAO.getAllPropertiesByUser(userId),
       ]);
 
-      // Filter kendaraan
       const vehicleExpiringSoon = customers.filter(c => {
         if (c.status === 'Cancelled') return false;
         const d = getDaysLeft(c.carData?.dueDate);
@@ -38,7 +37,6 @@ class ReminderController {
         return d !== null && d < 0;
       });
 
-      // Filter properti
       const propertyExpiringSoon = properties.filter(p => {
         if (p.status === 'Cancelled') return false;
         const d = getDaysLeft(p.insuranceData?.endDate);
@@ -51,7 +49,6 @@ class ReminderController {
         return d !== null && d < 0;
       });
 
-      // Kirim email
       await sendReminderEmail({
         to: userEmail,
         agentName: req.user.fullName || userId,
@@ -84,19 +81,45 @@ class ReminderController {
     }
   }
 
-  // Admin only: trigger reminder untuk semua user sekarang
+  // Admin only: trigger manual semua reminder
   async triggerAllReminders(req, res) {
     try {
       res.status(200).json({
         success: true,
         message: 'Reminder job started. Cek console untuk progress.'
       });
-
-      // Jalankan di background setelah response dikirim
       runDailyReminders().catch(console.error);
     } catch (error) {
       console.error('❌ Trigger all reminders error:', error);
       res.status(500).json({ success: false, error: 'Gagal trigger reminders' });
+    }
+  }
+
+  // ⭐ Endpoint khusus untuk Vercel Cron
+  // Dipanggil otomatis oleh Vercel setiap hari jam 08:00 WIB
+  // HARUS dilindungi CRON_SECRET biar ga bisa dipanggil sembarangan
+  async runCron(req, res) {
+    try {
+      // Validasi secret dari Vercel
+      const authHeader = req.headers['authorization'];
+      const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
+
+      if (!process.env.CRON_SECRET || authHeader !== expectedSecret) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
+
+      console.log('⏰ Vercel cron triggered at:', new Date().toLocaleString('id-ID'));
+
+      const result = await runDailyReminders();
+
+      res.status(200).json({
+        success: true,
+        message: 'Daily reminders completed',
+        ...result,
+      });
+    } catch (error) {
+      console.error('❌ Cron job error:', error);
+      res.status(500).json({ success: false, error: 'Cron job failed' });
     }
   }
 }

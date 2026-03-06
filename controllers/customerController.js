@@ -203,26 +203,19 @@ class CustomerController {
         });
       }
 
-      const { 
-        name, email, phone, address, notes,
-        // ✅ TAMBAHAN: status field
-        status,
-        // Car data
-        carOwnerName,
-        carBrand,
-        carModel,
-        plateNumber,
-        chassisNumber,
-        engineNumber,
-        dueDate,
-        carPrice,
-        // Document status (opsional)
-        hasSTNK,
-        hasSIM,
-        hasKTP
+      // Support dua format:
+      // 1. Nested object dari frontend: { carData: { carBrand, plateNumber, ... } }
+      // 2. Flat fields dari Postman: { carBrand, plateNumber, ... }
+      const {
+        name, email, phone, address, notes, status,
+        carOwnerName, carBrand, carModel, plateNumber,
+        chassisNumber, engineNumber, dueDate, carPrice,
+        hasSTNK, hasSIM, hasKTP,
+        carData: carDataObj,
+        documentStatus: documentStatusObj,
       } = req.body;
 
-      // Validation untuk update - jika name dikirim, harus valid
+      // Validation
       if (name !== undefined && name.trim() === '') {
         return res.status(400).json({
           success: false,
@@ -230,7 +223,6 @@ class CustomerController {
         });
       }
 
-      // ✅ Validasi status yang diperbolehkan
       const allowedStatuses = ['Cancelled', null, undefined];
       if (status !== undefined && !allowedStatuses.includes(status) && status !== 'null') {
         return res.status(400).json({
@@ -239,74 +231,32 @@ class CustomerController {
         });
       }
 
-      const updateData = {
-        // Personal data
-        name: name !== undefined ? name.trim() : undefined,
-        email: email !== undefined ? email.trim() : undefined,
-        phone: phone !== undefined ? phone.trim() : undefined,
-        address: address !== undefined ? address.trim() : undefined,
-        notes: notes !== undefined ? notes.trim() : undefined,
-        
-        // ✅ TAMBAHAN: status - bisa di-set ke 'Cancelled' atau null (reset ke date-based)
-        // Kita handle 'null' string juga karena JSON kadang kirim string
-        status: status !== undefined ? (status === 'null' ? null : status) : undefined,
-        
-        // Car data
-        carData: {
-          ownerName: carOwnerName !== undefined ? carOwnerName.trim() : undefined,
-          carBrand: carBrand !== undefined ? carBrand.trim() : undefined,
-          carModel: carModel !== undefined ? carModel.trim() : undefined,
-          plateNumber: plateNumber !== undefined ? plateNumber.trim() : undefined,
-          chassisNumber: chassisNumber !== undefined ? chassisNumber.trim() : undefined,
-          engineNumber: engineNumber !== undefined ? engineNumber.trim() : undefined,
-          dueDate: dueDate !== undefined ? dueDate : undefined,
-          carPrice: carPrice !== undefined ? parseFloat(carPrice) : undefined,
-        },
-        
-        // Document status
-        documentStatus: {
-          hasSTNK: hasSTNK !== undefined ? (hasSTNK === 'true' || hasSTNK === true) : undefined,
-          hasSIM: hasSIM !== undefined ? (hasSIM === 'true' || hasSIM === true) : undefined,
-          hasKTP: hasKTP !== undefined ? (hasKTP === 'true' || hasKTP === true) : undefined,
-        },
-        
-        updatedAt: Date.now(),
-      };
+      // Merge carData dari nested object (frontend) + flat fields (Postman)
+      const resolvedCarData = { ...(carDataObj || {}) };
+      if (carOwnerName !== undefined) resolvedCarData.ownerName = carOwnerName.trim();
+      if (carBrand !== undefined) resolvedCarData.carBrand = carBrand.trim();
+      if (carModel !== undefined) resolvedCarData.carModel = carModel.trim();
+      if (plateNumber !== undefined) resolvedCarData.plateNumber = plateNumber.trim();
+      if (chassisNumber !== undefined) resolvedCarData.chassisNumber = chassisNumber.trim();
+      if (engineNumber !== undefined) resolvedCarData.engineNumber = engineNumber.trim();
+      if (dueDate !== undefined) resolvedCarData.dueDate = dueDate;
+      if (carPrice !== undefined) resolvedCarData.carPrice = parseFloat(carPrice);
 
-      // Hapus undefined fields
-      Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined) {
-          delete updateData[key];
-        }
-      });
+      // Merge documentStatus
+      const resolvedDocStatus = { ...(documentStatusObj || {}) };
+      if (hasSTNK !== undefined) resolvedDocStatus.hasSTNK = hasSTNK === 'true' || hasSTNK === true;
+      if (hasSIM !== undefined) resolvedDocStatus.hasSIM = hasSIM === 'true' || hasSIM === true;
+      if (hasKTP !== undefined) resolvedDocStatus.hasKTP = hasKTP === 'true' || hasKTP === true;
 
-      // Hapus undefined fields dalam carData
-      if (updateData.carData) {
-        Object.keys(updateData.carData).forEach(key => {
-          if (updateData.carData[key] === undefined) {
-            delete updateData.carData[key];
-          }
-        });
-        
-        // Jika carData kosong setelah dihapus, hapus objek carData
-        if (Object.keys(updateData.carData).length === 0) {
-          delete updateData.carData;
-        }
-      }
-
-      // Hapus undefined fields dalam documentStatus
-      if (updateData.documentStatus) {
-        Object.keys(updateData.documentStatus).forEach(key => {
-          if (updateData.documentStatus[key] === undefined) {
-            delete updateData.documentStatus[key];
-          }
-        });
-        
-        // Jika documentStatus kosong setelah dihapus, hapus objek documentStatus
-        if (Object.keys(updateData.documentStatus).length === 0) {
-          delete updateData.documentStatus;
-        }
-      }
+      const updateData = {};
+      if (name !== undefined) updateData.name = name.trim();
+      if (email !== undefined) updateData.email = email.trim();
+      if (phone !== undefined) updateData.phone = phone.trim();
+      if (address !== undefined) updateData.address = address.trim();
+      if (notes !== undefined) updateData.notes = notes.trim();
+      if (status !== undefined) updateData.status = status === 'null' ? null : status;
+      if (Object.keys(resolvedCarData).length > 0) updateData.carData = resolvedCarData;
+      if (Object.keys(resolvedDocStatus).length > 0) updateData.documentStatus = resolvedDocStatus;
 
       const updatedCustomer = await customerDAO.updateCustomer(id, updateData, userId);
 

@@ -234,82 +234,83 @@ class CustomerDAO {
       const userCustomersRef = this.getUserCustomersRef(userId);
       
       // Cek apakah customer ada
+      
       const snapshot = await userCustomersRef.child(customerId).once('value');
       if (!snapshot.exists()) {
         throw new Error('Customer not found');
       }
       
       const existingCustomer = snapshot.val();
-      
-      let dataToUpdate = { ...updateData };
-      
-      // If updating carData, merge with existing carData
-      if (updateData.carData) {
-        dataToUpdate.carData = {
-          ownerName: existingCustomer.carData?.ownerName || '',
-          carBrand: existingCustomer.carData?.carBrand || '',
-          carModel: existingCustomer.carData?.carModel || '',
-          plateNumber: existingCustomer.carData?.plateNumber || '',
-          chassisNumber: existingCustomer.carData?.chassisNumber || '',
-          engineNumber: existingCustomer.carData?.engineNumber || '',
-          dueDate: existingCustomer.carData?.dueDate || null,
-          carPrice: existingCustomer.carData?.carPrice || 0,
-          ...updateData.carData
-        };
-      }
-      
-      // If updating documentStatus, merge with existing documentStatus
-      if (updateData.documentStatus) {
-        dataToUpdate.documentStatus = {
-          hasSTNK: existingCustomer.documentStatus?.hasSTNK || false,
-          hasSIM: existingCustomer.documentStatus?.hasSIM || false,
-          hasKTP: existingCustomer.documentStatus?.hasKTP || false,
-          ...updateData.documentStatus
-        };
-      }
-      
-      // If updating carPhotos, merge with existing carPhotos
-      if (updateData.carPhotos) {
-        dataToUpdate.carPhotos = {
-          leftSide: existingCustomer.carPhotos?.leftSide || '',
-          rightSide: existingCustomer.carPhotos?.rightSide || '',
-          front: existingCustomer.carPhotos?.front || '',
-          back: existingCustomer.carPhotos?.back || '',
-          ...updateData.carPhotos
-        };
-      }
-      
-      // If updating documentPhotos, merge with existing documentPhotos
-      if (updateData.documentPhotos) {
-        dataToUpdate.documentPhotos = {
-          stnk: existingCustomer.documentPhotos?.stnk || '',
-          sim: existingCustomer.documentPhotos?.sim || '',
-          ktp: existingCustomer.documentPhotos?.ktp || '',
-          ...updateData.documentPhotos
-        };
-      }
 
-      // ✅ TAMBAHAN: Handle status update
-      // Firebase Realtime DB ga bisa simpan null langsung, jadi kita hapus field-nya kalau null
-      // Ini berarti status "reset" = field dihapus dari DB = frontend akan hitung dari dueDate
-      if ('status' in dataToUpdate) {
-        if (dataToUpdate.status === null || dataToUpdate.status === undefined) {
+      // Pakai dot notation agar Firebase update field secara spesifik
+      // tanpa replace seluruh nested object
+      const updates = {};
+      console.log('🔥 DAO updateCustomer called:', customerId, JSON.stringify(updateData)); // ← pindah ke sini, log updateData bukan updates
+      // Personal fields
+      if (updateData.name !== undefined) updates['name'] = updateData.name;
+      if (updateData.email !== undefined) updates['email'] = updateData.email;
+      if (updateData.phone !== undefined) updates['phone'] = updateData.phone;
+      if (updateData.address !== undefined) updates['address'] = updateData.address;
+      if (updateData.notes !== undefined) updates['notes'] = updateData.notes;
+
+      // Status field
+      if ('status' in updateData) {
+        if (updateData.status === null || updateData.status === undefined) {
           // Hapus field status dari DB (reset ke date-based logic)
           await userCustomersRef.child(customerId).child('status').remove();
-          delete dataToUpdate.status;
+        } else {
+          updates['status'] = updateData.status;
         }
-        // Kalau 'Cancelled', biarkan masuk ke update normal di bawah
       }
-      
-      // Add updatedAt timestamp
-      dataToUpdate.updatedAt = Date.now();
-      
-      await userCustomersRef.child(customerId).update(dataToUpdate);
+
+      // carData - pakai dot notation per field agar tidak replace seluruh object
+      if (updateData.carData) {
+        const cd = updateData.carData;
+        if (cd.ownerName !== undefined) updates['carData/ownerName'] = cd.ownerName;
+        if (cd.carBrand !== undefined) updates['carData/carBrand'] = cd.carBrand;
+        if (cd.carModel !== undefined) updates['carData/carModel'] = cd.carModel;
+        if (cd.plateNumber !== undefined) updates['carData/plateNumber'] = cd.plateNumber;
+        if (cd.chassisNumber !== undefined) updates['carData/chassisNumber'] = cd.chassisNumber;
+        if (cd.engineNumber !== undefined) updates['carData/engineNumber'] = cd.engineNumber;
+        if (cd.dueDate !== undefined) updates['carData/dueDate'] = cd.dueDate;
+        if (cd.carPrice !== undefined) updates['carData/carPrice'] = cd.carPrice;
+      }
+
+      // documentStatus
+      if (updateData.documentStatus) {
+        const ds = updateData.documentStatus;
+        if (ds.hasSTNK !== undefined) updates['documentStatus/hasSTNK'] = ds.hasSTNK;
+        if (ds.hasSIM !== undefined) updates['documentStatus/hasSIM'] = ds.hasSIM;
+        if (ds.hasKTP !== undefined) updates['documentStatus/hasKTP'] = ds.hasKTP;
+      }
+
+      // carPhotos
+      if (updateData.carPhotos) {
+        const cp = updateData.carPhotos;
+        if (cp.leftSide !== undefined) updates['carPhotos/leftSide'] = cp.leftSide;
+        if (cp.rightSide !== undefined) updates['carPhotos/rightSide'] = cp.rightSide;
+        if (cp.front !== undefined) updates['carPhotos/front'] = cp.front;
+        if (cp.back !== undefined) updates['carPhotos/back'] = cp.back;
+      }
+
+      // documentPhotos
+      if (updateData.documentPhotos) {
+        const dp = updateData.documentPhotos;
+        if (dp.stnk !== undefined) updates['documentPhotos/stnk'] = dp.stnk;
+        if (dp.sim !== undefined) updates['documentPhotos/sim'] = dp.sim;
+        if (dp.ktp !== undefined) updates['documentPhotos/ktp'] = dp.ktp;
+      }
+
+      // Timestamp
+      updates['updatedAt'] = Date.now();
+
+      await userCustomersRef.child(customerId).update(updates);
       
       return {
         id: customerId,
         ...existingCustomer,
-        ...dataToUpdate,
+        ...updateData,
+        updatedAt: updates['updatedAt'],
       };
     } catch (error) {
       throw new Error('Failed to update customer: ' + error.message);
