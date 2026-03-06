@@ -14,4 +14,7 @@ router.post('/reminders/trigger-all', authMiddleware, adminOnly, (req, res) =>
   reminderController.triggerAllReminders(req, res)
 );
 
+router.post('/reminders/cron', (req, res) =>
+  reminderController.runCron(req, res)
+);
 module.exports = router;
