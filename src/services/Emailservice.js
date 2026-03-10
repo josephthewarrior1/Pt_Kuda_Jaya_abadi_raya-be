@@ -1,22 +1,15 @@
 const nodemailer = require('nodemailer');
 
-// ─── Transporter ─────────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,       // email gmail lo
-    pass: process.env.GMAIL_APP_PASSWORD // App Password (bukan password biasa!)
-  }
-});
-
-// Verify koneksi saat startup
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Email service error:', error.message);
-  } else {
-    console.log('✅ Email service ready');
-  }
-});
+// ─── Lazy Transporter ─────────────────────────────────────────────────────────
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    }
+  });
+};
 
 // ─── Helper: hitung hari tersisa ─────────────────────────────────────────────
 const getDaysLeft = (dueDateStr) => {
@@ -117,7 +110,7 @@ const buildEmailHTML = ({ agentName, expiringSoon, expiredItems, type = 'vehicle
       ${expiringSoon.length > 0 ? `
       <!-- Segera Jatuh Tempo -->
       <div style="margin-bottom:28px;">
-        <h2 style="font-size:16px;color:#d97706;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+        <h2 style="font-size:16px;color:#d97706;margin:0 0 12px;">
           ⚠️ Segera Jatuh Tempo (${expiringSoon.length})
         </h2>
         <table style="width:100%;border-collapse:collapse;border:1px solid #f1f5f9;border-radius:10px;overflow:hidden;">
@@ -179,6 +172,8 @@ const buildEmailHTML = ({ agentName, expiringSoon, expiredItems, type = 'vehicle
 
 // ─── Send reminder email ──────────────────────────────────────────────────────
 const sendReminderEmail = async ({ to, agentName, expiringSoon, expiredItems, type }) => {
+  const transporter = getTransporter(); // ← lazy, dibuat tiap kali kirim
+
   const typeLabel = type === 'vehicle' ? 'Kendaraan' : 'Properti';
   const totalIssues = expiringSoon.length + expiredItems.length;
 
