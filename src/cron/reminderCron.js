@@ -3,14 +3,6 @@ const customerDAO = require('../../dao/customerDAO');
 const propertyDAO = require('../../dao/propertyDAO');
 const { sendReminderEmail, getDaysLeft } = require('../services/Emailservice');
 
-// Kirim reminder di hari ke-30, 7, dan 1 sebelum jatuh tempo
-const REMINDER_DAYS = [30, 7, 1];
-
-const shouldRemindToday = (daysLeft) => {
-  if (daysLeft === null) return false;
-  return REMINDER_DAYS.includes(daysLeft);
-};
-
 const filterVehicleItems = (customers) => {
   const expiringSoon = [];
   const expiredItems = [];
@@ -19,7 +11,7 @@ const filterVehicleItems = (customers) => {
     const daysLeft = getDaysLeft(c.carData?.dueDate);
     if (daysLeft === null) return;
     if (daysLeft < 0) expiredItems.push(c);
-    else if (shouldRemindToday(daysLeft)) expiringSoon.push(c);
+    else if (daysLeft >= 0 && daysLeft <= 30) expiringSoon.push(c); // ← range 30 hari
   });
   expiringSoon.sort((a, b) => getDaysLeft(a.carData?.dueDate) - getDaysLeft(b.carData?.dueDate));
   return { expiringSoon, expiredItems };
@@ -33,7 +25,7 @@ const filterPropertyItems = (properties) => {
     const daysLeft = getDaysLeft(p.insuranceData?.endDate);
     if (daysLeft === null) return;
     if (daysLeft < 0) expiredItems.push(p);
-    else if (shouldRemindToday(daysLeft)) expiringSoon.push(p);
+    else if (daysLeft >= 0 && daysLeft <= 30) expiringSoon.push(p); // ← range 30 hari
   });
   expiringSoon.sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
   return { expiringSoon, expiredItems };
@@ -52,6 +44,7 @@ const sendRemindersForUser = async (username, user) => {
     ]);
     const vehicleData = filterVehicleItems(customers);
     const propertyData = filterPropertyItems(properties);
+
     if (vehicleData.expiringSoon.length > 0 || vehicleData.expiredItems.length > 0) {
       await sendReminderEmail({
         to: user.email,
@@ -61,6 +54,7 @@ const sendRemindersForUser = async (username, user) => {
         type: 'vehicle',
       });
     }
+
     if (properties.length > 0 && (propertyData.expiringSoon.length > 0 || propertyData.expiredItems.length > 0)) {
       await sendReminderEmail({
         to: user.email,
@@ -70,6 +64,7 @@ const sendRemindersForUser = async (username, user) => {
         type: 'property',
       });
     }
+
     console.log(`✅ Done: ${username} (vehicles: ${vehicleData.expiringSoon.length} soon, ${vehicleData.expiredItems.length} expired)`);
   } catch (err) {
     console.error(`❌ Failed for ${username}:`, err.message);
