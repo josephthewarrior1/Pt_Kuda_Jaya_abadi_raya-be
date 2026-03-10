@@ -14,7 +14,13 @@ router.post('/reminders/trigger-all', authMiddleware, adminOnly, (req, res) =>
   reminderController.triggerAllReminders(req, res)
 );
 
-router.post('/reminders/cron', (req, res) =>
-  reminderController.runCron(req, res)
-);
+// ✅ GANTI POST → GET, tambah security check
+router.get('/reminders/cron', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  reminderController.runCron(req, res);
+});
+
 module.exports = router;
