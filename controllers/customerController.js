@@ -2,19 +2,45 @@ const customerDAO = require('../dao/customerDAO');
 const cloudinary = require('../config/cloudinary');
 
 class CustomerController {
-  // Get all customers (for current user)
+  // Get all customers (for current user) — aggregates first car per customer for list view
   async getAllCustomers(req, res) {
     try {
       const userId = req.user.username;
-      
+      const carDAO = require('../dao/carDAO');
+
       console.log('📋 Getting customers for user:', userId);
-      
+
       const customers = await customerDAO.getAllCustomersByUser(userId);
-      
+      const allCars = await carDAO.getAllCarsByUser(userId);
+
+      // Build a map: customerId → first car
+      const firstCarByCustomer = {};
+      for (const car of allCars) {
+        if (!firstCarByCustomer[car.customerId]) {
+          firstCarByCustomer[car.customerId] = car;
+        }
+      }
+
+      // Attach first car info to each customer
+      const enrichedCustomers = customers.map(customer => {
+        const firstCar = firstCarByCustomer[customer.id];
+        return {
+          ...customer,
+          carData: firstCar ? firstCar.carData : null,
+          carPhotos: firstCar ? firstCar.carPhotos : null,
+          status: customer.status || (firstCar ? (
+            firstCar.carData?.dueDate
+              ? (new Date(firstCar.carData.dueDate) > new Date() ? 'Active' : 'Expired')
+              : null
+          ) : null),
+          firstCarId: firstCar ? firstCar.id : null,
+        };
+      });
+
       res.status(200).json({
         success: true,
-        count: customers.length,
-        customers,
+        count: enrichedCustomers.length,
+        customers: enrichedCustomers,
       });
     } catch (error) {
       console.error('❌ Get all customers error:', error);
@@ -41,7 +67,7 @@ class CustomerController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -50,6 +76,8 @@ class CustomerController {
         });
       }
 
+      const carDAO = require('../dao/carDAO');
+      const propertyDAO = require('../dao/propertyDAO');
       const customer = await customerDAO.getCustomerById(id, userId);
 
       if (!customer) {
@@ -59,9 +87,14 @@ class CustomerController {
         });
       }
 
+      const cars = await carDAO.getCarsByCustomerId(id, userId);
+      const properties = await propertyDAO.getPropertiesByCustomerId(id, userId);
+
       res.status(200).json({
         success: true,
         customer,
+        cars,
+        properties
       });
     } catch (error) {
       console.error('❌ Get customer error:', error);
@@ -72,29 +105,16 @@ class CustomerController {
     }
   }
 
-  // Create new customer with car data
+  // Create new customer
   async createCustomer(req, res) {
     try {
       const userId = req.user.username;
-      const { 
-        name, 
-        email, 
-        phone, 
-        address, 
+      const {
+        name,
+        email,
+        phone,
+        address,
         notes,
-        // Car data
-        carOwnerName,
-        carBrand,
-        carModel,
-        plateNumber,
-        chassisNumber,
-        engineNumber,
-        dueDate,
-        carPrice,
-        // Document data (opsional)
-        hasSTNK,
-        hasSIM,
-        hasKTP
       } = req.body;
 
       // Validation - Hanya name yang required
@@ -116,44 +136,10 @@ class CustomerController {
         phone: phone ? phone.trim() : '',
         address: address ? address.trim() : '',
         notes: notes ? notes.trim() : '',
-        
-        // Status - default null (akan dihitung dari dueDate di frontend)
+
+        // Status - default null
         status: null,
-        
-        // Car data
-        carData: {
-          ownerName: carOwnerName ? carOwnerName.trim() : name.trim(),
-          carBrand: carBrand ? carBrand.trim() : '',
-          carModel: carModel ? carModel.trim() : '',
-          plateNumber: plateNumber ? plateNumber.trim() : '',
-          chassisNumber: chassisNumber ? chassisNumber.trim() : '',
-          engineNumber: engineNumber ? engineNumber.trim() : '',
-          dueDate: dueDate || null,
-          carPrice: carPrice ? parseFloat(carPrice) : 0,
-        },
-        
-        // Document status (opsional)
-        documentStatus: {
-          hasSTNK: hasSTNK === 'true' || hasSTNK === true,
-          hasSIM: hasSIM === 'true' || hasSIM === true,
-          hasKTP: hasKTP === 'true' || hasKTP === true,
-        },
-        
-        // Car photos (will be uploaded separately)
-        carPhotos: {
-          leftSide: '',
-          rightSide: '',
-          front: '',
-          back: ''
-        },
-        
-        // Document photos (opsional, akan diupload terpisah)
-        documentPhotos: {
-          stnk: '',
-          sim: '',
-          ktp: ''
-        },
-        
+
         createdBy: userId,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -178,12 +164,12 @@ class CustomerController {
     }
   }
 
-  // Update customer with car data
+  // Update customer
   async updateCustomer(req, res) {
     try {
       const userId = req.user.username;
       const { id } = req.params;
-      
+
       // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
@@ -194,7 +180,7 @@ class CustomerController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -203,16 +189,8 @@ class CustomerController {
         });
       }
 
-      // Support dua format:
-      // 1. Nested object dari frontend: { carData: { carBrand, plateNumber, ... } }
-      // 2. Flat fields dari Postman: { carBrand, plateNumber, ... }
       const {
         name, email, phone, address, notes, status,
-        carOwnerName, carBrand, carModel, plateNumber,
-        chassisNumber, engineNumber, dueDate, carPrice,
-        hasSTNK, hasSIM, hasKTP,
-        carData: carDataObj,
-        documentStatus: documentStatusObj,
       } = req.body;
 
       // Validation
@@ -231,23 +209,6 @@ class CustomerController {
         });
       }
 
-      // Merge carData dari nested object (frontend) + flat fields (Postman)
-      const resolvedCarData = { ...(carDataObj || {}) };
-      if (carOwnerName !== undefined) resolvedCarData.ownerName = carOwnerName.trim();
-      if (carBrand !== undefined) resolvedCarData.carBrand = carBrand.trim();
-      if (carModel !== undefined) resolvedCarData.carModel = carModel.trim();
-      if (plateNumber !== undefined) resolvedCarData.plateNumber = plateNumber.trim();
-      if (chassisNumber !== undefined) resolvedCarData.chassisNumber = chassisNumber.trim();
-      if (engineNumber !== undefined) resolvedCarData.engineNumber = engineNumber.trim();
-      if (dueDate !== undefined) resolvedCarData.dueDate = dueDate;
-      if (carPrice !== undefined) resolvedCarData.carPrice = parseFloat(carPrice);
-
-      // Merge documentStatus
-      const resolvedDocStatus = { ...(documentStatusObj || {}) };
-      if (hasSTNK !== undefined) resolvedDocStatus.hasSTNK = hasSTNK === 'true' || hasSTNK === true;
-      if (hasSIM !== undefined) resolvedDocStatus.hasSIM = hasSIM === 'true' || hasSIM === true;
-      if (hasKTP !== undefined) resolvedDocStatus.hasKTP = hasKTP === 'true' || hasKTP === true;
-
       const updateData = {};
       if (name !== undefined) updateData.name = name.trim();
       if (email !== undefined) updateData.email = email.trim();
@@ -255,8 +216,6 @@ class CustomerController {
       if (address !== undefined) updateData.address = address.trim();
       if (notes !== undefined) updateData.notes = notes.trim();
       if (status !== undefined) updateData.status = status === 'null' ? null : status;
-      if (Object.keys(resolvedCarData).length > 0) updateData.carData = resolvedCarData;
-      if (Object.keys(resolvedDocStatus).length > 0) updateData.documentStatus = resolvedDocStatus;
 
       const updatedCustomer = await customerDAO.updateCustomer(id, updateData, userId);
 
@@ -280,324 +239,7 @@ class CustomerController {
     }
   }
 
-  // Upload car photos for customer
-  async uploadCarPhotos(req, res) {
-    try {
-      const userId = req.user.username;
-      const { id: customerId } = req.params;
-      
-      // Validasi format ID
-      if (!customerId.includes('-')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid customer ID format. Expected: {username}-{number}',
-        });
-      }
 
-      // Extract username dari ID untuk verifikasi
-      const idUsername = customerId.split('-')[0];
-      
-      // Pastikan customer ID milik user yang sedang login
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer',
-        });
-      }
-      
-      console.log('📸 Uploading car photos for customer:', customerId);
-
-      // Check if customer exists
-      const customer = await customerDAO.getCustomerById(customerId, userId);
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Customer not found',
-        });
-      }
-
-      const files = req.files;
-      const uploadedPhotos = {};
-
-      // Upload each photo to Cloudinary
-      const uploadPromises = [];
-
-      // Left Side Photo
-      if (files.leftSide && files.leftSide[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}`,
-                public_id: `${customerId}_left`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedPhotos.leftSide = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.leftSide[0].buffer);
-          })
-        );
-      }
-
-      // Right Side Photo
-      if (files.rightSide && files.rightSide[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}`,
-                public_id: `${customerId}_right`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedPhotos.rightSide = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.rightSide[0].buffer);
-          })
-        );
-      }
-
-      // Front Photo
-      if (files.front && files.front[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}`,
-                public_id: `${customerId}_front`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedPhotos.front = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.front[0].buffer);
-          })
-        );
-      }
-
-      // Back Photo
-      if (files.back && files.back[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}`,
-                public_id: `${customerId}_back`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedPhotos.back = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.back[0].buffer);
-          })
-        );
-      }
-
-      // Wait for all uploads to complete
-      await Promise.all(uploadPromises);
-
-      // Update customer with photo URLs
-      const updatedCustomer = await customerDAO.updateCustomer(
-        customerId, 
-        { 
-          carPhotos: uploadedPhotos,
-          updatedAt: Date.now()
-        }, 
-        userId
-      );
-
-      console.log('✅ Car photos uploaded for customer:', customerId);
-
-      res.status(200).json({
-        success: true,
-        message: 'Car photos uploaded successfully',
-        photos: uploadedPhotos,
-        customer: updatedCustomer,
-      });
-    } catch (error) {
-      console.error('❌ Upload car photos error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Server error while uploading car photos',
-      });
-    }
-  }
-
-  // Upload document photos (STNK, SIM, KTP) - OPSIONAL
-  async uploadDocuments(req, res) {
-    try {
-      const userId = req.user.username;
-      const { id: customerId } = req.params;
-      
-      // Validasi format ID
-      if (!customerId.includes('-')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid customer ID format. Expected: {username}-{number}',
-        });
-      }
-
-      // Extract username dari ID untuk verifikasi
-      const idUsername = customerId.split('-')[0];
-      
-      // Pastikan customer ID milik user yang sedang login
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer',
-        });
-      }
-      
-      console.log('📄 Uploading documents for customer:', customerId);
-
-      // Check if customer exists
-      const customer = await customerDAO.getCustomerById(customerId, userId);
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Customer not found',
-        });
-      }
-
-      const files = req.files;
-      const uploadedDocuments = {};
-
-      // Upload each document to Cloudinary
-      const uploadPromises = [];
-
-      // STNK Photo
-      if (files.stnk && files.stnk[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}/documents`,
-                public_id: `${customerId}_stnk`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedDocuments.stnk = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.stnk[0].buffer);
-          })
-        );
-      }
-
-      // SIM Photo
-      if (files.sim && files.sim[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}/documents`,
-                public_id: `${customerId}_sim`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedDocuments.sim = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.sim[0].buffer);
-          })
-        );
-      }
-
-      // KTP Photo
-      if (files.ktp && files.ktp[0]) {
-        uploadPromises.push(
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              {
-                folder: `car_insurance/customers/${customerId}/documents`,
-                public_id: `${customerId}_ktp`,
-                resource_type: 'image'
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  uploadedDocuments.ktp = result.secure_url;
-                  resolve();
-                }
-              }
-            );
-            
-            stream.end(files.ktp[0].buffer);
-          })
-        );
-      }
-
-      // Wait for all uploads to complete
-      await Promise.all(uploadPromises);
-
-      // Update customer with document URLs
-      const updatedCustomer = await customerDAO.updateCustomer(
-        customerId, 
-        { 
-          documentPhotos: uploadedDocuments,
-          updatedAt: Date.now()
-        }, 
-        userId
-      );
-
-      console.log('✅ Documents uploaded for customer:', customerId);
-
-      res.status(200).json({
-        success: true,
-        message: 'Documents uploaded successfully',
-        documents: uploadedDocuments,
-        customer: updatedCustomer,
-      });
-    } catch (error) {
-      console.error('❌ Upload documents error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Server error while uploading documents',
-      });
-    }
-  }
 
   // Delete customer
   async deleteCustomer(req, res) {
@@ -615,7 +257,7 @@ class CustomerController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan customer ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -651,10 +293,10 @@ class CustomerController {
   async getCustomerStats(req, res) {
     try {
       const userId = req.user.username;
-      
+
       const count = await customerDAO.getCustomerCount(userId);
       const currentNumber = await customerDAO.getCurrentCustomerNumber(userId);
-      
+
       res.status(200).json({
         success: true,
         stats: {
@@ -692,11 +334,7 @@ class CustomerController {
         return (
           (customer.name && customer.name.toLowerCase().includes(searchTerm)) ||
           (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
-          (customer.phone && customer.phone.includes(searchTerm)) ||
-          (customer.carData?.plateNumber && customer.carData.plateNumber.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.carBrand && customer.carData.carBrand.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.carModel && customer.carData.carModel.toLowerCase().includes(searchTerm)) ||
-          (customer.carData?.carPrice && customer.carData.carPrice.toString().includes(searchTerm))
+          (customer.phone && customer.phone.includes(searchTerm))
         );
       });
 

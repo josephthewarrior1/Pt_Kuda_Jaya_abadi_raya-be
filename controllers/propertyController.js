@@ -6,11 +6,11 @@ class PropertyController {
   async getAllProperties(req, res) {
     try {
       const userId = req.user.username;
-      
+
       console.log('🏠 Getting properties for user:', userId);
-      
+
       const properties = await propertyDAO.getAllPropertiesByUser(userId);
-      
+
       res.status(200).json({
         success: true,
         count: properties.length,
@@ -41,7 +41,7 @@ class PropertyController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan property ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -76,45 +76,25 @@ class PropertyController {
   async createProperty(req, res) {
     try {
       const userId = req.user.username;
-      const { 
-        // Owner Info
-        ownerName,
-        ownerPhone,
-        ownerEmail,
-        ownerAddress,
-        
-        // Property Details
-        propertyType,
-        address,
-        city,
-        province,
-        postalCode,
-        buildingArea,
-        landArea,
-        numberOfFloors,
-        yearBuilt,
-        propertyValue,
-        buildingStructure,
-        
-        // Insurance Details
-        policyNumber,
-        insuranceCompany,
-        coverageType,
-        insuranceValue,
-        premium,
-        startDate,
-        endDate,
-        deductible,
-        
-        notes,
-        status
-      } = req.body;
+      const { customerId, propertyData, insuranceData, notes, status } = req.body;
 
-      // Validation - Hanya ownerName yang required
-      if (!ownerName || ownerName.trim() === '') {
+      // Extract specific fields from nested objects
+      const {
+        propertyType, address, city, province, postalCode,
+        buildingArea, landArea, numberOfFloors, yearBuilt,
+        propertyValue, buildingStructure
+      } = propertyData || {};
+
+      const {
+        policyNumber, insuranceCompany, coverageType,
+        insuranceValue, premium, startDate, endDate, deductible
+      } = insuranceData || {};
+
+      // Validation - customerId is required
+      if (!customerId || customerId.trim() === '') {
         return res.status(400).json({
           success: false,
-          error: 'Owner name is required',
+          error: 'Customer ID is required',
         });
       }
 
@@ -122,13 +102,10 @@ class PropertyController {
       const currentCount = await propertyDAO.getCurrentPropertyNumber(userId);
       const nextPropertyNumber = currentCount + 1;
 
-      const propertyData = {
-        // Owner Info
-        ownerName: ownerName.trim(),
-        ownerPhone: ownerPhone ? ownerPhone.trim() : '',
-        ownerEmail: ownerEmail ? ownerEmail.trim() : '',
-        ownerAddress: ownerAddress ? ownerAddress.trim() : '',
-        
+      const newPropertyData = {
+        // Customer Reference
+        customerId: customerId.trim(),
+
         // Property Details
         propertyData: {
           propertyType: propertyType ? propertyType.trim() : '',
@@ -136,14 +113,14 @@ class PropertyController {
           city: city ? city.trim() : '',
           province: province ? province.trim() : '',
           postalCode: postalCode ? postalCode.trim() : '',
-          buildingArea: buildingArea ? buildingArea.trim() : '',
-          landArea: landArea ? landArea.trim() : '',
-          numberOfFloors: numberOfFloors ? numberOfFloors.trim() : '',
-          yearBuilt: yearBuilt ? yearBuilt.trim() : '',
-          propertyValue: propertyValue ? propertyValue.trim() : '',
+          buildingArea: buildingArea ? String(buildingArea).trim() : '',
+          landArea: landArea ? String(landArea).trim() : '',
+          numberOfFloors: numberOfFloors ? String(numberOfFloors).trim() : '',
+          yearBuilt: yearBuilt ? String(yearBuilt).trim() : '',
+          propertyValue: propertyValue ? String(propertyValue).trim() : '',
           buildingStructure: buildingStructure ? buildingStructure.trim() : '',
         },
-        
+
         // Insurance Details
         insuranceData: {
           policyNumber: policyNumber ? policyNumber.trim() : '',
@@ -155,7 +132,7 @@ class PropertyController {
           endDate: endDate || null,
           deductible: deductible ? deductible.trim() : '',
         },
-        
+
         // Property Photos (will be uploaded separately)
         propertyPhotos: {
           front: '',
@@ -167,7 +144,7 @@ class PropertyController {
           interior3: '',
           interior4: '',
         },
-        
+
         // Documents (will be uploaded separately)
         documents: {
           certificate: '',
@@ -175,16 +152,16 @@ class PropertyController {
           pbb: '',
           other: '',
         },
-        
+
         notes: notes ? notes.trim() : '',
         status: status || 'Active',
-        
+
         createdBy: userId,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
 
-      const newProperty = await propertyDAO.createProperty(propertyData);
+      const newProperty = await propertyDAO.createProperty(newPropertyData);
 
       console.log('✅ New property created:', newProperty.id, 'by user:', userId);
 
@@ -208,7 +185,7 @@ class PropertyController {
     try {
       const userId = req.user.username;
       const { id } = req.params;
-      
+
       // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
@@ -219,7 +196,7 @@ class PropertyController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan property ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -228,55 +205,33 @@ class PropertyController {
         });
       }
 
-      const { 
-        // Owner Info
-        ownerName,
-        ownerPhone,
-        ownerEmail,
-        ownerAddress,
-        
-        // Property Details
-        propertyType,
-        address,
-        city,
-        province,
-        postalCode,
-        buildingArea,
-        landArea,
-        numberOfFloors,
-        yearBuilt,
-        propertyValue,
-        buildingStructure,
-        
-        // Insurance Details
-        policyNumber,
-        insuranceCompany,
-        coverageType,
-        insuranceValue,
-        premium,
-        startDate,
-        endDate,
-        deductible,
-        
-        notes,
-        status
-      } = req.body;
+      const { customerId, propertyData, insuranceData, notes, status } = req.body;
 
-      // Validation untuk update - jika ownerName dikirim, harus valid
-      if (ownerName !== undefined && ownerName.trim() === '') {
+      // Extract specific fields from nested objects
+      const {
+        propertyType, address, city, province, postalCode,
+        buildingArea, landArea, numberOfFloors, yearBuilt,
+        propertyValue, buildingStructure
+      } = propertyData || {};
+
+      const {
+        policyNumber, insuranceCompany, coverageType,
+        insuranceValue, premium, startDate, endDate, deductible
+      } = insuranceData || {};
+
+      // Validation
+      if (customerId !== undefined && customerId.trim() === '') {
         return res.status(400).json({
           success: false,
-          error: 'Owner name cannot be empty',
+          error: 'Customer ID cannot be empty',
         });
       }
 
       const updateData = {
-        // Owner Info
-        ownerName: ownerName !== undefined ? ownerName.trim() : undefined,
-        ownerPhone: ownerPhone !== undefined ? ownerPhone.trim() : undefined,
-        ownerEmail: ownerEmail !== undefined ? ownerEmail.trim() : undefined,
-        ownerAddress: ownerAddress !== undefined ? ownerAddress.trim() : undefined,
-        
+        // Customer Reference
+        customerId: customerId !== undefined ? customerId.trim() : undefined,
+
+
         // Property Details
         propertyData: {
           propertyType: propertyType !== undefined ? propertyType.trim() : undefined,
@@ -291,7 +246,7 @@ class PropertyController {
           propertyValue: propertyValue !== undefined ? propertyValue.trim() : undefined,
           buildingStructure: buildingStructure !== undefined ? buildingStructure.trim() : undefined,
         },
-        
+
         // Insurance Details
         insuranceData: {
           policyNumber: policyNumber !== undefined ? policyNumber.trim() : undefined,
@@ -303,7 +258,7 @@ class PropertyController {
           endDate: endDate !== undefined ? endDate : undefined,
           deductible: deductible !== undefined ? deductible.trim() : undefined,
         },
-        
+
         notes: notes !== undefined ? notes.trim() : undefined,
         status: status !== undefined ? status : undefined,
         updatedAt: Date.now(),
@@ -323,7 +278,7 @@ class PropertyController {
             delete updateData.propertyData[key];
           }
         });
-        
+
         if (Object.keys(updateData.propertyData).length === 0) {
           delete updateData.propertyData;
         }
@@ -336,7 +291,7 @@ class PropertyController {
             delete updateData.insuranceData[key];
           }
         });
-        
+
         if (Object.keys(updateData.insuranceData).length === 0) {
           delete updateData.insuranceData;
         }
@@ -369,7 +324,7 @@ class PropertyController {
     try {
       const userId = req.user.username;
       const { id: propertyId } = req.params;
-      
+
       // Validasi format ID
       if (!propertyId.includes('-')) {
         return res.status(400).json({
@@ -380,7 +335,7 @@ class PropertyController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = propertyId.split('-')[0];
-      
+
       // Pastikan property ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -388,7 +343,7 @@ class PropertyController {
           error: 'Access denied to this property',
         });
       }
-      
+
       console.log('📸 Uploading property photos for:', propertyId);
 
       // Check if property exists
@@ -426,7 +381,7 @@ class PropertyController {
                   }
                 }
               );
-              
+
               stream.end(files[photoType][0].buffer);
             })
           );
@@ -438,11 +393,11 @@ class PropertyController {
 
       // Update property with photo URLs
       const updatedProperty = await propertyDAO.updateProperty(
-        propertyId, 
-        { 
+        propertyId,
+        {
           propertyPhotos: uploadedPhotos,
           updatedAt: Date.now()
-        }, 
+        },
         userId
       );
 
@@ -468,7 +423,7 @@ class PropertyController {
     try {
       const userId = req.user.username;
       const { id: propertyId } = req.params;
-      
+
       // Validasi format ID
       if (!propertyId.includes('-')) {
         return res.status(400).json({
@@ -479,7 +434,7 @@ class PropertyController {
 
       // Extract username dari ID untuk verifikasi
       const idUsername = propertyId.split('-')[0];
-      
+
       // Pastikan property ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -487,7 +442,7 @@ class PropertyController {
           error: 'Access denied to this property',
         });
       }
-      
+
       console.log('📄 Uploading property documents for:', propertyId);
 
       // Check if property exists
@@ -524,28 +479,28 @@ class PropertyController {
                   }
                 }
               );
-              
+
               stream.end(files[docType][0].buffer);
             })
           );
         }
       });
-    
+
       // Wait for all uploads to complete
       await Promise.all(uploadPromises);
-    
+
       // Update property with document URLs
       const updatedProperty = await propertyDAO.updateProperty(
-        propertyId, 
-        { 
+        propertyId,
+        {
           documents: uploadedDocuments,
           updatedAt: Date.now()
-        }, 
+        },
         userId
       );
-    
+
       console.log('✅ Property documents uploaded for:', propertyId);
-    
+
       res.status(200).json({
         success: true,
         message: 'Property documents uploaded successfully',
@@ -559,12 +514,12 @@ class PropertyController {
         error: 'Server error while uploading property documents',
       });
     }
-    }
-    // Delete property
-    async deleteProperty(req, res) {
+  }
+  // Delete property
+  async deleteProperty(req, res) {
     try {
-    const userId = req.user.username;
-    const { id } = req.params;
+      const userId = req.user.username;
+      const { id } = req.params;
       // Validasi format ID
       if (!id.includes('-')) {
         return res.status(400).json({
@@ -572,10 +527,10 @@ class PropertyController {
           error: 'Invalid property ID format. Expected: {username}-{number}',
         });
       }
-    
+
       // Extract username dari ID untuk verifikasi
       const idUsername = id.split('-')[0];
-      
+
       // Pastikan property ID milik user yang sedang login
       if (idUsername !== userId) {
         return res.status(403).json({
@@ -583,11 +538,11 @@ class PropertyController {
           error: 'Access denied to this property',
         });
       }
-    
+
       await propertyDAO.deleteProperty(id, userId);
-    
+
       console.log('✅ Property deleted:', id, 'by user:', userId);
-    
+
       res.status(200).json({
         success: true,
         message: 'Property deleted successfully',
@@ -605,16 +560,16 @@ class PropertyController {
         error: 'Server error while deleting property',
       });
     }
-    }
-    // Get property statistics
-    async getPropertyStats(req, res) {
+  }
+  // Get property statistics
+  async getPropertyStats(req, res) {
     try {
-    const userId = req.user.username;
+      const userId = req.user.username;
       const count = await propertyDAO.getPropertyCount(userId);
       const currentNumber = await propertyDAO.getCurrentPropertyNumber(userId);
       const activeProperties = await propertyDAO.getPropertiesByStatus(userId, 'Active');
       const expiredProperties = await propertyDAO.getPropertiesByStatus(userId, 'Expired');
-      
+
       res.status(200).json({
         success: true,
         stats: {
@@ -632,27 +587,25 @@ class PropertyController {
         error: 'Server error while fetching stats',
       });
     }
-    }
-    // Search properties
-    async searchProperties(req, res) {
+  }
+  // Search properties
+  async searchProperties(req, res) {
     try {
-    const userId = req.user.username;
-    const { query } = req.query;
+      const userId = req.user.username;
+      const { query } = req.query;
       if (!query || query.trim() === '') {
         return res.status(400).json({
           success: false,
           error: 'Search query is required',
         });
       }
-    
+
       const searchTerm = query.toLowerCase().trim();
       const allProperties = await propertyDAO.getAllPropertiesByUser(userId);
-    
+
       const filteredProperties = allProperties.filter(property => {
         return (
-          (property.ownerName && property.ownerName.toLowerCase().includes(searchTerm)) ||
-          (property.ownerPhone && property.ownerPhone.includes(searchTerm)) ||
-          (property.ownerEmail && property.ownerEmail.toLowerCase().includes(searchTerm)) ||
+          (property.customerId && property.customerId.toLowerCase().includes(searchTerm)) ||
           (property.propertyData?.address && property.propertyData.address.toLowerCase().includes(searchTerm)) ||
           (property.propertyData?.city && property.propertyData.city.toLowerCase().includes(searchTerm)) ||
           (property.propertyData?.propertyType && property.propertyData.propertyType.toLowerCase().includes(searchTerm)) ||
@@ -660,7 +613,7 @@ class PropertyController {
           (property.insuranceData?.insuranceCompany && property.insuranceData.insuranceCompany.toLowerCase().includes(searchTerm))
         );
       });
-    
+
       res.status(200).json({
         success: true,
         count: filteredProperties.length,
@@ -673,13 +626,13 @@ class PropertyController {
         error: 'Server error while searching properties',
       });
     }
-    }
-    // Check and update expired policies
-    async checkExpiredPolicies(req, res) {
+  }
+  // Check and update expired policies
+  async checkExpiredPolicies(req, res) {
     try {
-    const userId = req.user.username;
+      const userId = req.user.username;
       const expiredCount = await propertyDAO.checkExpiredPolicies(userId);
-      
+
       res.status(200).json({
         success: true,
         message: `${expiredCount} policies updated to expired status`,
@@ -692,21 +645,21 @@ class PropertyController {
         error: 'Server error while checking expired policies',
       });
     }
-    }
-    // Get properties by status
-    async getPropertiesByStatus(req, res) {
+  }
+  // Get properties by status
+  async getPropertiesByStatus(req, res) {
     try {
-    const userId = req.user.username;
-    const { status } = req.params;
+      const userId = req.user.username;
+      const { status } = req.params;
       if (!['Active', 'Expired', 'Cancelled'].includes(status)) {
         return res.status(400).json({
           success: false,
           error: 'Invalid status. Use: Active, Expired, or Cancelled',
         });
       }
-    
+
       const properties = await propertyDAO.getPropertiesByStatus(userId, status);
-    
+
       res.status(200).json({
         success: true,
         count: properties.length,
@@ -719,6 +672,6 @@ class PropertyController {
         error: 'Server error while fetching properties',
       });
     }
-    }
-    }
-    module.exports = new PropertyController();
+  }
+}
+module.exports = new PropertyController();

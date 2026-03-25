@@ -16,48 +16,32 @@ router.get('/customers/search', authMiddleware, userAndPaidUserOnly, (req, res) 
 );
 
 // Get customer statistics - HARUS DI ATAS /:id
-router.get('/customers/stats', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.get('/customers/stats', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.getCustomerStats(req, res)
 );
 
 // Get all customers
-router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.get('/customers', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.getAllCustomers(req, res)
 );
 
 // Get customer by ID - HARUS DI BAWAH /search dan /stats
-router.get('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.get('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.getCustomerById(req, res)
 );
 
 // Create new customer (with car data)
-router.post('/customers', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.post('/customers', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.createCustomer(req, res)
 );
 
 // Update customer
-router.put('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.put('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.updateCustomer(req, res)
 );
 
-// Upload car photos (4 photos: left, right, front, back)
-router.post('/customers/:id/upload-photos', 
-  authMiddleware, 
-  userAndPaidUserOnly,
-  uploadCarPhotos,
-  (req, res) => customerController.uploadCarPhotos(req, res)
-);
-
-// Upload document photos (STNK, SIM, KTP) - OPSIONAL
-router.post('/customers/:id/upload-documents', 
-  authMiddleware, 
-  userAndPaidUserOnly,
-  uploadDocuments,
-  (req, res) => customerController.uploadDocuments(req, res)
-);
-
 // Delete customer
-router.delete('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) => 
+router.delete('/customers/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
   customerController.deleteCustomer(req, res)
 );
 
