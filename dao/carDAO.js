@@ -16,15 +16,15 @@ class CarDAO {
     try {
       const counterRef = this.carCountRef.child(userId);
       const snapshot = await counterRef.once('value');
-      
+
       let nextNumber = 1;
       if (snapshot.exists()) {
         nextNumber = snapshot.val() + 1;
       }
-      
+
       // Update counter
       await counterRef.set(nextNumber);
-      
+
       return nextNumber;
     } catch (error) {
       throw new Error('Failed to get next car number: ' + error.message);
@@ -36,7 +36,7 @@ class CarDAO {
     try {
       const counterRef = this.carCountRef.child(userId);
       const snapshot = await counterRef.once('value');
-      
+
       return snapshot.exists() ? snapshot.val() : 0;
     } catch (error) {
       throw new Error('Failed to get current car number: ' + error.message);
@@ -48,11 +48,11 @@ class CarDAO {
     try {
       const userCarsRef = this.getUserCarsRef(userId);
       const snapshot = await userCarsRef.once('value');
-      
+
       const cars = [];
       snapshot.forEach((childSnapshot) => {
         const carData = childSnapshot.val();
-        
+
         cars.push({
           id: childSnapshot.key,
           customerId: carData.customerId || '',
@@ -67,6 +67,7 @@ class CarDAO {
             carPrice: 0,
             color: '',
             year: '',
+            startDate: null,
           },
           documentStatus: carData.documentStatus || {
             hasSTNK: false,
@@ -91,14 +92,14 @@ class CarDAO {
           updatedAt: carData.updatedAt || Date.now(),
         });
       });
-      
+
       // Sort by car number
       cars.sort((a, b) => {
         const numA = parseInt(a.id.split('-')[1] || 0);
         const numB = parseInt(b.id.split('-')[1] || 0);
         return numA - numB;
       });
-      
+
       return cars;
     } catch (error) {
       throw new Error('Failed to fetch cars by user: ' + error.message);
@@ -120,13 +121,13 @@ class CarDAO {
     try {
       const userCarsRef = this.getUserCarsRef(userId);
       const snapshot = await userCarsRef.child(carId).once('value');
-      
+
       if (!snapshot.exists()) {
         return null;
       }
-      
+
       const carData = snapshot.val();
-      
+
       return {
         id: carId,
         customerId: carData.customerId || '',
@@ -141,6 +142,7 @@ class CarDAO {
           carPrice: 0,
           color: '',
           year: '',
+          startDate: null,
         },
         documentStatus: carData.documentStatus || {
           hasSTNK: false,
@@ -173,22 +175,22 @@ class CarDAO {
   async createCar(carInputData) {
     try {
       const { createdBy, customerId } = carInputData;
-      
+
       if (!customerId) {
         throw new Error('Customer ID is required to create a car');
       }
 
       // Get next car number for this user
       const nextNumber = await this.getNextCarNumber(createdBy);
-      
+
       // Generate car ID: {username}-{number} (Note: for uniqueness, this counter is independent of customers)
       const carId = `${createdBy}-car-${nextNumber}`;
-      
+
       // Remove createdBy so we don't duplicate it in saved data
       const { createdBy: _, ...carDataWithoutCreatedBy } = carInputData;
-      
+
       const userCarsRef = this.getUserCarsRef(createdBy);
-      
+
       const carToSave = {
         customerId: carDataWithoutCreatedBy.customerId,
         carData: carDataWithoutCreatedBy.carData || {
@@ -202,6 +204,7 @@ class CarDAO {
           carPrice: 0,
           color: '',
           year: '',
+          startDate: null,
         },
         documentStatus: carDataWithoutCreatedBy.documentStatus || {
           hasSTNK: false,
@@ -224,9 +227,9 @@ class CarDAO {
         createdAt: carDataWithoutCreatedBy.createdAt || Date.now(),
         updatedAt: carDataWithoutCreatedBy.updatedAt || Date.now(),
       };
-      
+
       await userCarsRef.child(carId).set(carToSave);
-      
+
       return {
         id: carId,
         ...carToSave,
@@ -240,16 +243,16 @@ class CarDAO {
   async updateCar(carId, updateData, userId) {
     try {
       const userCarsRef = this.getUserCarsRef(userId);
-      
+
       // Check if car exists
       const snapshot = await userCarsRef.child(carId).once('value');
       if (!snapshot.exists()) {
         throw new Error('Car not found');
       }
-      
+
       const existingCar = snapshot.val();
       const updates = {};
-      
+
       if (updateData.customerId !== undefined) updates['customerId'] = updateData.customerId;
       if (updateData.status !== undefined) updates['status'] = updateData.status;
       if (updateData.notes !== undefined) updates['notes'] = updateData.notes;
@@ -267,6 +270,7 @@ class CarDAO {
         if (cd.carPrice !== undefined) updates['carData/carPrice'] = cd.carPrice;
         if (cd.color !== undefined) updates['carData/color'] = cd.color;
         if (cd.year !== undefined) updates['carData/year'] = cd.year;
+        if (cd.startDate !== undefined) updates['carData/startDate'] = cd.startDate;
       }
 
       // documentStatus
@@ -297,7 +301,7 @@ class CarDAO {
       updates['updatedAt'] = Date.now();
 
       await userCarsRef.child(carId).update(updates);
-      
+
       return {
         id: carId,
         ...existingCar,
@@ -313,14 +317,14 @@ class CarDAO {
   async deleteCar(carId, userId) {
     try {
       const userCarsRef = this.getUserCarsRef(userId);
-      
+
       const snapshot = await userCarsRef.child(carId).once('value');
       if (!snapshot.exists()) {
         throw new Error('Car not found');
       }
-      
+
       await userCarsRef.child(carId).remove();
-      
+
       return true;
     } catch (error) {
       throw new Error('Failed to delete car: ' + error.message);
@@ -332,7 +336,7 @@ class CarDAO {
     try {
       const userCarsRef = this.getUserCarsRef(userId);
       const snapshot = await userCarsRef.once('value');
-      
+
       return snapshot.numChildren();
     } catch (error) {
       throw new Error('Failed to get car count: ' + error.message);

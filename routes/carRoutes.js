@@ -7,6 +7,11 @@ const { uploadCarPhotos, uploadDocuments } = require('../middlewares/upload');
 
 // ==================== CAR ROUTES (USER & PAID_USER ONLY) ====================
 
+// Get car references (brands & models)
+router.get('/cars/references', authMiddleware, userAndPaidUserOnly, (req, res) =>
+    carController.getCarReferences(req, res)
+);
+
 // Get all cars for current user
 router.get('/cars', authMiddleware, userAndPaidUserOnly, (req, res) =>
     carController.getAllCars(req, res)

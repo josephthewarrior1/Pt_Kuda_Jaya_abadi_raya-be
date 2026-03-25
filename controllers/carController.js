@@ -1,7 +1,35 @@
 const carDAO = require('../dao/carDAO');
+const carReferenceDAO = require('../dao/carReferenceDAO');
 const cloudinary = require('../config/cloudinary');
 
 class CarController {
+    // Get car references (brands and models)
+    async getCarReferences(req, res) {
+        try {
+            const references = await carReferenceDAO.getReferences();
+
+            // Format for frontend: [{ brand: 'Toyota', models: ['Avanza', 'Innova'] }]
+            const formatted = Object.keys(references).map(brand => {
+                const modelsRaw = references[brand];
+                let models = [];
+                if (typeof modelsRaw === 'object' && modelsRaw !== null) {
+                    models = Object.keys(modelsRaw).filter(m => m !== '_brandExists');
+                }
+                return { brand, models: models.sort() };
+            }).sort((a, b) => a.brand.localeCompare(b.brand));
+
+            res.status(200).json({
+                success: true,
+                references: formatted,
+            });
+        } catch (error) {
+            console.error('❌ Get car references error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Server error while fetching car references',
+            });
+        }
+    }
     // Get all cars (for current user)
     async getAllCars(req, res) {
         try {
@@ -87,6 +115,7 @@ class CarController {
                 plateNumber,
                 chassisNumber,
                 engineNumber,
+                startDate,
                 dueDate,
                 carPrice,
                 color,
@@ -114,6 +143,7 @@ class CarController {
                     plateNumber: plateNumber ? plateNumber.trim() : '',
                     chassisNumber: chassisNumber ? chassisNumber.trim() : '',
                     engineNumber: engineNumber ? engineNumber.trim() : '',
+                    startDate: startDate || null,
                     dueDate: dueDate || null,
                     carPrice: carPrice ? parseFloat(carPrice) : 0,
                     color: color ? color.trim() : '',
@@ -141,6 +171,11 @@ class CarController {
 
             console.log('✅ New car created:', newCar.id, 'by user:', userId);
 
+            // Add brand and model to references asynchronously
+            if (carBrand) {
+                carReferenceDAO.addReference(carBrand, carModel).catch(err => console.error(err));
+            }
+
             res.status(201).json({
                 success: true,
                 message: 'Car created successfully',
@@ -166,7 +201,7 @@ class CarController {
                 status,
                 notes,
                 carOwnerName, carBrand, carModel, plateNumber,
-                chassisNumber, engineNumber, dueDate, carPrice,
+                chassisNumber, engineNumber, startDate, dueDate, carPrice,
                 color, year,
                 hasSTNK, hasSIM, hasKTP,
                 carData: carDataObj,
@@ -180,6 +215,7 @@ class CarController {
             if (plateNumber !== undefined) resolvedCarData.plateNumber = plateNumber.trim();
             if (chassisNumber !== undefined) resolvedCarData.chassisNumber = chassisNumber.trim();
             if (engineNumber !== undefined) resolvedCarData.engineNumber = engineNumber.trim();
+            if (startDate !== undefined) resolvedCarData.startDate = startDate;
             if (dueDate !== undefined) resolvedCarData.dueDate = dueDate;
             if (carPrice !== undefined) resolvedCarData.carPrice = parseFloat(carPrice);
             if (color !== undefined) resolvedCarData.color = color.trim();
@@ -198,6 +234,11 @@ class CarController {
             if (Object.keys(resolvedDocStatus).length > 0) updateData.documentStatus = resolvedDocStatus;
 
             const updatedCar = await carDAO.updateCar(id, updateData, userId);
+
+            // Add brand and model to references asynchronously
+            if (carBrand) {
+                carReferenceDAO.addReference(carBrand, carModel).catch(err => console.error(err));
+            }
 
             res.status(200).json({
                 success: true,
