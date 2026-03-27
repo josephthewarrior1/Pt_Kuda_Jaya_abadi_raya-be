@@ -1,5 +1,16 @@
 const propertyDAO = require('../dao/propertyDAO');
+const customerDAO = require('../dao/customerDAO');
 const cloudinary = require('../config/cloudinary');
+
+async function attachCustomerNames(userId, properties) {
+  const customers = await customerDAO.getAllCustomersByUser(userId);
+  const customerNameMap = new Map(customers.map(customer => [customer.id, customer.name || '']));
+
+  return properties.map(property => ({
+    ...property,
+    customerName: customerNameMap.get(property.customerId) || '',
+  }));
+}
 
 class PropertyController {
   // Get all properties (for current user)
@@ -10,11 +21,12 @@ class PropertyController {
       console.log('🏠 Getting properties for user:', userId);
 
       const properties = await propertyDAO.getAllPropertiesByUser(userId);
+      const enrichedProperties = await attachCustomerNames(userId, properties);
 
       res.status(200).json({
         success: true,
-        count: properties.length,
-        properties,
+        count: enrichedProperties.length,
+        properties: enrichedProperties,
       });
     } catch (error) {
       console.error('❌ Get all properties error:', error);
@@ -59,9 +71,16 @@ class PropertyController {
         });
       }
 
+      const customer = property.customerId
+        ? await customerDAO.getCustomerById(property.customerId, userId)
+        : null;
+
       res.status(200).json({
         success: true,
-        property,
+        property: {
+          ...property,
+          customerName: customer?.name || '',
+        },
       });
     } catch (error) {
       console.error('❌ Get property error:', error);
@@ -613,11 +632,12 @@ class PropertyController {
           (property.insuranceData?.insuranceCompany && property.insuranceData.insuranceCompany.toLowerCase().includes(searchTerm))
         );
       });
+      const enrichedProperties = await attachCustomerNames(userId, filteredProperties);
 
       res.status(200).json({
         success: true,
-        count: filteredProperties.length,
-        properties: filteredProperties,
+        count: enrichedProperties.length,
+        properties: enrichedProperties,
       });
     } catch (error) {
       console.error('❌ Search properties error:', error);
@@ -659,11 +679,12 @@ class PropertyController {
       }
 
       const properties = await propertyDAO.getPropertiesByStatus(userId, status);
+      const enrichedProperties = await attachCustomerNames(userId, properties);
 
       res.status(200).json({
         success: true,
-        count: properties.length,
-        properties,
+        count: enrichedProperties.length,
+        properties: enrichedProperties,
       });
     } catch (error) {
       console.error('❌ Get properties by status error:', error);
