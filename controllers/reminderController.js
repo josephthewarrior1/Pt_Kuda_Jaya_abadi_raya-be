@@ -1,15 +1,25 @@
 const customerDAO = require('../dao/customerDAO');
+const carDAO = require('../dao/carDAO');
 const propertyDAO = require('../dao/propertyDAO');
 const { sendReminderEmail, getDaysLeft } = require('../src/services/Emailservice');
 const { runDailyReminders } = require('../src/cron/reminderCron');
 
 const REMINDER_DAYS = 30;
 
-class ReminderController {
+const attachCustomerNames = async (userId, items) => {
+  const customers = await customerDAO.getAllCustomersByUser(userId);
+  const customerNameMap = new Map(customers.map(customer => [customer.id, customer.name || '']));
 
+  return items.map(item => ({
+    ...item,
+    customerName: customerNameMap.get(item.customerId) || '',
+  }));
+};
+
+class ReminderController {
   async sendMyReminder(req, res) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.username;
       const userEmail = req.user.email;
 
       if (!userEmail) {
@@ -19,33 +29,34 @@ class ReminderController {
         });
       }
 
-      const [customers, properties] = await Promise.all([
-        customerDAO.getAllCustomersByUser(userId),
+      const [cars, properties] = await Promise.all([
+        carDAO.getAllCarsByUser(userId),
         propertyDAO.getAllPropertiesByUser(userId),
       ]);
+      const enrichedProperties = await attachCustomerNames(userId, properties);
 
-      const vehicleExpiringSoon = customers.filter(c => {
-        if (c.status === 'Cancelled') return false;
-        const d = getDaysLeft(c.carData?.dueDate);
-        return d !== null && d >= 0 && d <= REMINDER_DAYS;
+      const vehicleExpiringSoon = cars.filter(car => {
+        if (car.status === 'Cancelled') return false;
+        const daysLeft = getDaysLeft(car.carData?.dueDate);
+        return daysLeft !== null && daysLeft >= 0 && daysLeft <= REMINDER_DAYS;
       }).sort((a, b) => getDaysLeft(a.carData?.dueDate) - getDaysLeft(b.carData?.dueDate));
 
-      const vehicleExpired = customers.filter(c => {
-        if (c.status === 'Cancelled') return false;
-        const d = getDaysLeft(c.carData?.dueDate);
-        return d !== null && d < 0;
+      const vehicleExpired = cars.filter(car => {
+        if (car.status === 'Cancelled') return false;
+        const daysLeft = getDaysLeft(car.carData?.dueDate);
+        return daysLeft !== null && daysLeft < 0;
       });
 
-      const propertyExpiringSoon = properties.filter(p => {
-        if (p.status === 'Cancelled') return false;
-        const d = getDaysLeft(p.insuranceData?.endDate);
-        return d !== null && d >= 0 && d <= REMINDER_DAYS;
+      const propertyExpiringSoon = enrichedProperties.filter(property => {
+        if (property.status === 'Cancelled') return false;
+        const daysLeft = getDaysLeft(property.insuranceData?.endDate);
+        return daysLeft !== null && daysLeft >= 0 && daysLeft <= REMINDER_DAYS;
       }).sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
 
-      const propertyExpired = properties.filter(p => {
-        if (p.status === 'Cancelled') return false;
-        const d = getDaysLeft(p.insuranceData?.endDate);
-        return d !== null && d < 0;
+      const propertyExpired = enrichedProperties.filter(property => {
+        if (property.status === 'Cancelled') return false;
+        const daysLeft = getDaysLeft(property.insuranceData?.endDate);
+        return daysLeft !== null && daysLeft < 0;
       });
 
       await sendReminderEmail({
@@ -56,15 +67,13 @@ class ReminderController {
         type: 'vehicle',
       });
 
-      if (properties.length > 0) {
-        await sendReminderEmail({
-          to: userEmail,
-          agentName: req.user.fullName || userId,
-          expiringSoon: propertyExpiringSoon,
-          expiredItems: propertyExpired,
-          type: 'property',
-        });
-      }
+      await sendReminderEmail({
+        to: userEmail,
+        agentName: req.user.fullName || userId,
+        expiringSoon: propertyExpiringSoon,
+        expiredItems: propertyExpired,
+        type: 'property',
+      });
 
       res.status(200).json({
         success: true,
@@ -75,7 +84,7 @@ class ReminderController {
         }
       });
     } catch (error) {
-      console.error('❌ Send reminder error:', error);
+      console.error('Send reminder error:', error);
       res.status(500).json({ success: false, error: 'Gagal mengirim reminder' });
     }
   }
@@ -88,22 +97,21 @@ class ReminderController {
       });
       runDailyReminders().catch(console.error);
     } catch (error) {
-      console.error('❌ Trigger all reminders error:', error);
+      console.error('Trigger all reminders error:', error);
       res.status(500).json({ success: false, error: 'Gagal trigger reminders' });
     }
   }
 
-  // Endpoint untuk Vercel Cron — dipanggil otomatis tiap hari jam 08:00 WIB
   async runCron(req, res) {
     try {
-      const authHeader = req.headers['authorization'];
+      const authHeader = req.headers.authorization;
       const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
 
       if (!process.env.CRON_SECRET || authHeader !== expectedSecret) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
 
-      console.log('⏰ Vercel cron triggered at:', new Date().toLocaleString('id-ID'));
+      console.log('Vercel cron triggered at:', new Date().toLocaleString('id-ID'));
       const result = await runDailyReminders();
 
       res.status(200).json({
@@ -112,7 +120,7 @@ class ReminderController {
         ...result,
       });
     } catch (error) {
-      console.error('❌ Cron job error:', error);
+      console.error('Cron job error:', error);
       res.status(500).json({ success: false, error: 'Cron job failed' });
     }
   }

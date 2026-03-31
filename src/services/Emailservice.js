@@ -31,9 +31,10 @@ const buildEmailHTML = ({ agentName, expiringSoon, expiredItems, type = 'vehicle
       ? getDaysLeft(item.carData?.dueDate)
       : getDaysLeft(item.insuranceData?.endDate);
 
+    // FIX: vehicle pakai carData.ownerName, property pakai customerName
     const title = isVehicle
-      ? `${item.name} — ${item.carData?.carBrand || ''} ${item.carData?.carModel || ''}`
-      : `${item.ownerName} — ${item.propertyData?.propertyType || ''} ${item.propertyData?.city ? '· ' + item.propertyData.city : ''}`;
+      ? `${item.carData?.ownerName || '—'} — ${item.carData?.carBrand || ''} ${item.carData?.carModel || ''}`
+      : `${item.customerName || '—'} — ${item.propertyData?.propertyType || ''} ${item.propertyData?.city ? '· ' + item.propertyData.city : ''}`;
 
     const detail = isVehicle
       ? `Plat: ${item.carData?.plateNumber || '—'}`
@@ -60,9 +61,10 @@ const buildEmailHTML = ({ agentName, expiringSoon, expiredItems, type = 'vehicle
   };
 
   const renderExpiredRow = (item) => {
+    // FIX: vehicle pakai carData.ownerName, property pakai customerName
     const title = isVehicle
-      ? `${item.name} — ${item.carData?.carBrand || ''} ${item.carData?.carModel || ''}`
-      : `${item.ownerName} — ${item.propertyData?.propertyType || ''}`;
+      ? `${item.carData?.ownerName || '—'} — ${item.carData?.carBrand || ''} ${item.carData?.carModel || ''}`
+      : `${item.customerName || '—'} — ${item.propertyData?.propertyType || ''}`;
 
     const detail = isVehicle
       ? `Plat: ${item.carData?.plateNumber || '—'}`
@@ -172,7 +174,7 @@ const buildEmailHTML = ({ agentName, expiringSoon, expiredItems, type = 'vehicle
 
 // ─── Send reminder email ──────────────────────────────────────────────────────
 const sendReminderEmail = async ({ to, agentName, expiringSoon, expiredItems, type }) => {
-  const transporter = getTransporter(); // ← lazy, dibuat tiap kali kirim
+  const transporter = getTransporter();
 
   const typeLabel = type === 'vehicle' ? 'Kendaraan' : 'Properti';
   const totalIssues = expiringSoon.length + expiredItems.length;
