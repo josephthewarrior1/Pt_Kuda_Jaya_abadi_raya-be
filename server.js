@@ -13,6 +13,10 @@ const propertyRoutes = require('./routes/propertyRoutes');
 const carRoutes = require('./routes/carRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const renewalRoutes = require('./routes/renewalRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const kwitansiRoutes = require('./routes/kwitansiRoutes');
 
 // Import cron
 const { startReminderCron } = require('./src/cron/reminderCron');
@@ -71,6 +75,10 @@ app.use('/api', propertyRoutes);
 app.use('/api', carRoutes);
 app.use('/api', companyRoutes);
 app.use('/api', reminderRoutes);
+app.use('/api', paymentRoutes);
+app.use('/api', renewalRoutes);
+app.use('/api', invoiceRoutes);
+app.use('/api', kwitansiRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -117,6 +125,35 @@ app.listen(PORT, () => {
   console.log('  POST   /api/customers             - Create new customer');
   console.log('  PUT    /api/customers/:id         - Update customer');
   console.log('  DELETE /api/customers/:id         - Delete customer');
+  console.log('');
+  console.log('🧾 INVOICE ENDPOINTS (User & Paid User Only):');
+  console.log('  GET    /api/invoices              - Get all invoices');
+  console.log('  GET    /api/invoices/:id          - Get invoice by ID');
+  console.log('  POST   /api/invoices              - Create new invoice');
+  console.log('  PUT    /api/invoices/:id          - Update invoice');
+  console.log('');
+  console.log('💳 PAYMENT ENDPOINTS (User & Paid User Only):');
+  console.log('  GET    /api/payments                 - Get all payment records');
+  console.log('  GET    /api/payments/:id             - Get payment by ID');
+  console.log('  GET    /api/payments/customer/:id    - Get payments by customer');
+  console.log('  GET    /api/payments/status/:status  - Get payments by status');
+  console.log('  POST   /api/payments                 - Create payment record');
+  console.log('  PUT    /api/payments/:id             - Update payment record');
+  console.log('  POST   /api/payments/:id/upload-proof - Upload payment proof');
+  console.log('');
+  console.log('📄 KWITANSI ENDPOINTS (User & Paid User Only):');
+  console.log('  POST   /api/kwitansi/generate        - Generate or update kwitansi');
+  console.log('  GET    /api/kwitansi                 - Get all kwitansi');
+  console.log('  GET    /api/kwitansi/:id             - Get kwitansi by ID');
+  console.log('');
+  console.log('🔄 RENEWAL ENDPOINTS (User & Paid User Only):');
+  console.log('  GET    /api/renewals                  - Get all renewals');
+  console.log('  GET    /api/renewals/:id              - Get renewal by ID');
+  console.log('  GET    /api/renewals/customer/:id     - Get renewals by customer');
+  console.log('  GET    /api/renewals/status/:status   - Get renewals by status');
+  console.log('  POST   /api/renewals                  - Create renewal');
+  console.log('  PUT    /api/renewals/:id              - Update renewal');
+  console.log('  POST   /api/renewals/:id/complete     - Complete renewal');
   console.log('');
   console.log('📧 REMINDER ENDPOINTS:');
   console.log('  POST   /api/reminders/send        - Send reminder to self');

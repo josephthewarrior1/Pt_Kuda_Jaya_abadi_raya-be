@@ -56,6 +56,10 @@ const uploadPropertyDocuments = upload.fields([
   { name: 'other', maxCount: 1 },       // Dokumen lainnya
 ]);
 
+const uploadPaymentProof = upload.fields([
+  { name: 'proof', maxCount: 1 },
+]);
+
 // Error handler khusus multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -98,5 +102,6 @@ module.exports = {
   uploadDocuments,
   uploadPropertyPhotos,
   uploadPropertyDocuments,
+  uploadPaymentProof,
   handleMulterError
 };

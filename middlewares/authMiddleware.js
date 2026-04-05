@@ -32,14 +32,14 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ⭐⭐⭐ PERBAIKAN DI SINI ⭐⭐⭐
     // Attach user to request object DENGAN ROLE
     req.user = {
       id: user.id,
+      uid: user.id, // Support old controllers using uid
       username: user.username,
       role: user.role, // <-- TAMBAHKAN INI!
       email: user.email || '',      // ← TAMBAH INI
-  fullName: user.fullName || '', // ← TAMBAH INI
+      fullName: user.fullName || '', // ← TAMBAH INI
     };
     
     console.log('✅ Auth middleware passed for user:', req.user.username, 'Role:', req.user.role);
