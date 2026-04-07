@@ -3,15 +3,15 @@ const cloudinary = require('../config/cloudinary');
 
 class CompanyDAO {
   constructor() {
-    this.companiesRef = db.ref('company_profiles');
+    this.companiesRef = db.collection('company_profiles');
   }
 
   // Get company profile by userId
   async getCompanyProfile(userId) {
     try {
-      const snapshot = await this.companiesRef.child(userId).once('value');
+      const doc = await this.companiesRef.doc(userId).get();
       
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         // Return default if not exists
         return {
           companyName: '',
@@ -23,7 +23,7 @@ class CompanyDAO {
         };
       }
       
-      return snapshot.val();
+      return doc.data();
     } catch (error) {
       throw new Error('Failed to fetch company profile: ' + error.message);
     }
@@ -49,7 +49,7 @@ class CompanyDAO {
         dataToUpdate.createdAt = currentProfile.createdAt;
       }
 
-      await this.companiesRef.child(userId).set(dataToUpdate);
+      await this.companiesRef.doc(userId).set(dataToUpdate);
       
       return dataToUpdate;
     } catch (error) {
@@ -104,7 +104,7 @@ class CompanyDAO {
       };
 
       // Update logo in profile
-      await this.companiesRef.child(userId).update({
+      await this.companiesRef.doc(userId).update({
         companyLogo: logoData,
         updatedAt: Date.now()
       });
@@ -132,7 +132,7 @@ class CompanyDAO {
       }
 
       // Remove logo from profile
-      await this.companiesRef.child(userId).update({
+      await this.companiesRef.doc(userId).update({
         companyLogo: null,
         updatedAt: Date.now()
       });

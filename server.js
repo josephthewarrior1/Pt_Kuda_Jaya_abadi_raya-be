@@ -17,6 +17,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const renewalRoutes = require('./routes/renewalRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const kwitansiRoutes = require('./routes/kwitansiRoutes');
+const quotationRoutes = require('./routes/quotationRoutes');
 
 // Import cron
 const { startReminderCron } = require('./src/cron/reminderCron');
@@ -79,6 +80,7 @@ app.use('/api', paymentRoutes);
 app.use('/api', renewalRoutes);
 app.use('/api', invoiceRoutes);
 app.use('/api', kwitansiRoutes);
+app.use('/api', quotationRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -145,6 +147,11 @@ app.listen(PORT, () => {
   console.log('  POST   /api/kwitansi/generate        - Generate or update kwitansi');
   console.log('  GET    /api/kwitansi                 - Get all kwitansi');
   console.log('  GET    /api/kwitansi/:id             - Get kwitansi by ID');
+  console.log('');
+  console.log('📝 QUOTATION ENDPOINTS (User & Paid User Only):');
+  console.log('  POST   /api/quotations               - Create quotation');
+  console.log('  GET    /api/quotations/policy/:id    - Get quotations by policy');
+  console.log('  POST   /api/quotations/:id/accept    - Accept quotation (syncs to Car)');
   console.log('');
   console.log('🔄 RENEWAL ENDPOINTS (User & Paid User Only):');
   console.log('  GET    /api/renewals                  - Get all renewals');

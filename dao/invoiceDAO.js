@@ -2,27 +2,27 @@ const { db } = require('../config/firebase');
 
 class InvoiceDAO {
   constructor() {
-    this.invoicesRootRef = db.ref('invoice_records');
-    this.invoiceCountRef = db.ref('invoice_counters');
+    this.invoicesRootRef = db.collection('invoice_records');
+    this.invoiceCountRef = db.collection('invoice_counters');
   }
 
   getUserInvoicesRef(userId) {
-    return this.invoicesRootRef.child(userId);
+    return this.invoicesRootRef.doc(userId).collection('invoices');
   }
 
   // Get next invoice number for user
   async getNextInvoiceNumber(userId) {
     try {
-      const counterRef = this.invoiceCountRef.child(userId);
-      const snapshot = await counterRef.once('value');
+      const docRef = this.invoiceCountRef.doc(userId);
+      const doc = await docRef.get();
 
       let nextNumber = 1;
-      if (snapshot.exists()) {
-        nextNumber = snapshot.val() + 1;
+      if (doc.exists) {
+        nextNumber = (doc.data().count || 0) + 1;
       }
 
       // Update counter
-      await counterRef.set(nextNumber);
+      await docRef.set({ count: nextNumber });
 
       return nextNumber;
     } catch (error) {
@@ -53,16 +53,36 @@ class InvoiceDAO {
     };
   }
 
+  // Get active unpaid invoice for a specific policy (car or property)
+  async getUnpaidInvoiceByPolicy(policyType, policyId, userId) {
+    try {
+      const fieldName = policyType === 'car' ? 'carId' : 'propertyId';
+      if (!policyId) return null;
+
+      const snapshot = await this.getUserInvoicesRef(userId)
+        .where(fieldName, '==', policyId)
+        .where('status', '==', 'Unpaid')
+        .get();
+
+      if (snapshot.empty) return null;
+      
+      const doc = snapshot.docs[0];
+      return this.normalizeInvoice(doc.id, doc.data(), userId);
+    } catch (error) {
+      throw new Error('Failed to fetch unpaid invoice for policy: ' + error.message);
+    }
+  }
+
   // Get all invoices by user
   async getAllInvoicesByUser(userId) {
     try {
-      const snapshot = await this.getUserInvoicesRef(userId).once('value');
+      const snapshot = await this.getUserInvoicesRef(userId).get();
       const invoices = [];
 
-      snapshot.forEach((childSnapshot) => {
+      snapshot.forEach((docSnap) => {
         invoices.push({
-          id: childSnapshot.key,
-          ...childSnapshot.val(),
+          id: docSnap.id,
+          ...docSnap.data(),
         });
       });
 
@@ -82,13 +102,13 @@ class InvoiceDAO {
   // Get invoice by ID
   async getInvoiceById(invoiceId, userId) {
     try {
-      const snapshot = await this.getUserInvoicesRef(userId).child(invoiceId).once('value');
+      const doc = await this.getUserInvoicesRef(userId).doc(invoiceId).get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         return null;
       }
 
-      return this.normalizeInvoice(invoiceId, snapshot.val(), userId);
+      return this.normalizeInvoice(invoiceId, doc.data(), userId);
     } catch (error) {
       throw new Error('Failed to fetch invoice: ' + error.message);
     }
@@ -121,7 +141,7 @@ class InvoiceDAO {
         updatedAt: invoiceData.updatedAt || Date.now(),
       };
 
-      await this.getUserInvoicesRef(createdBy).child(invoiceId).set(invoiceToSave);
+      await this.getUserInvoicesRef(createdBy).doc(invoiceId).set(invoiceToSave);
 
       return {
         id: invoiceId,
@@ -135,14 +155,14 @@ class InvoiceDAO {
   // Update invoice
   async updateInvoice(invoiceId, updateData, userId) {
     try {
-      const invoiceRef = this.getUserInvoicesRef(userId).child(invoiceId);
-      const snapshot = await invoiceRef.once('value');
+      const invoiceRef = this.getUserInvoicesRef(userId).doc(invoiceId);
+      const doc = await invoiceRef.get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         throw new Error('Invoice not found');
       }
 
-      const existingInvoice = snapshot.val();
+      const existingInvoice = doc.data();
       const dataToUpdate = {
         ...updateData,
         updatedAt: Date.now(),

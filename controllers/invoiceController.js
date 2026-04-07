@@ -10,12 +10,46 @@ exports.createInvoice = async (req, res) => {
       createdBy: userId,
     };
 
+    // Strict Rule: Block if an Unpaid invoice already exists for this policy
+    let parsedPolicyType = null;
+    let parsedPolicyId = null;
+    if (invoiceData.carId) {
+      parsedPolicyType = 'car';
+      parsedPolicyId = invoiceData.carId;
+    } else if (invoiceData.propertyId) {
+      parsedPolicyType = 'property';
+      parsedPolicyId = invoiceData.propertyId;
+    }
+
+    if (parsedPolicyType && parsedPolicyId) {
+      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByPolicy(parsedPolicyType, parsedPolicyId, userId);
+      if (existingUnpaid) {
+        return res.status(409).json({
+          success: false,
+          error: `Terdapat Invoice yang belum dibayar (${existingUnpaid.invoiceNumber}) untuk ${parsedPolicyType === 'car' ? 'Kendaraan' : 'Properti'} ini. Selesaikan atau batalkan invoice tersebut terlebih dahulu!`,
+          existingInvoiceId: existingUnpaid.id
+        });
+      }
+    }
+
     const newInvoice = await InvoiceDAO.createInvoice(invoiceData);
 
     // Auto-generate Payment with Pending status
     try {
+      let policyType = '';
+      let policyId = '';
+      if (newInvoice.carId) {
+        policyType = 'car';
+        policyId = newInvoice.carId;
+      } else if (newInvoice.propertyId) {
+        policyType = 'property';
+        policyId = newInvoice.propertyId;
+      }
+
       const paymentData = {
         customerId: newInvoice.customerId,
+        policyType: policyType,
+        policyId: policyId,
         invoiceNumber: newInvoice.id, // Store Invoice ID for relational tracking
         amount: newInvoice.grandTotal,
         dueDate: newInvoice.dueDate,

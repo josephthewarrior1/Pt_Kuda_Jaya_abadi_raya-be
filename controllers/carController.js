@@ -120,11 +120,11 @@ class CarController {
                 carPrice,
                 color,
                 year,
-                hasSTNK,
-                hasSIM,
-                hasKTP,
                 notes,
-                status
+                status,
+                insuranceProvider,
+                insuranceType,
+                coverageExtensions
             } = req.body;
 
             if (!customerId) {
@@ -148,11 +148,14 @@ class CarController {
                     carPrice: carPrice ? parseFloat(carPrice) : 0,
                     color: color ? color.trim() : '',
                     year: year ? year.toString().trim() : '',
+                    insuranceProvider: insuranceProvider ? insuranceProvider.trim() : '',
+                    insuranceType: insuranceType ? insuranceType.trim() : '',
+                    coverageExtensions: coverageExtensions || [],
                 },
                 documentStatus: {
-                    hasSTNK: hasSTNK === 'true' || hasSTNK === true,
-                    hasSIM: hasSIM === 'true' || hasSIM === true,
-                    hasKTP: hasKTP === 'true' || hasKTP === true,
+                    hasSTNK: false,
+                    hasSIM: false,
+                    hasKTP: false,
                 },
                 carPhotos: {
                     leftSide: '', rightSide: '', front: '', back: ''
@@ -202,10 +205,8 @@ class CarController {
                 notes,
                 carOwnerName, carBrand, carModel, plateNumber,
                 chassisNumber, engineNumber, startDate, dueDate, carPrice,
-                color, year,
-                hasSTNK, hasSIM, hasKTP,
+                color, year, insuranceProvider, insuranceType, coverageExtensions,
                 carData: carDataObj,
-                documentStatus: documentStatusObj,
             } = req.body;
 
             const resolvedCarData = { ...(carDataObj || {}) };
@@ -220,18 +221,15 @@ class CarController {
             if (carPrice !== undefined) resolvedCarData.carPrice = parseFloat(carPrice);
             if (color !== undefined) resolvedCarData.color = color.trim();
             if (year !== undefined) resolvedCarData.year = year.toString().trim();
-
-            const resolvedDocStatus = { ...(documentStatusObj || {}) };
-            if (hasSTNK !== undefined) resolvedDocStatus.hasSTNK = hasSTNK === 'true' || hasSTNK === true;
-            if (hasSIM !== undefined) resolvedDocStatus.hasSIM = hasSIM === 'true' || hasSIM === true;
-            if (hasKTP !== undefined) resolvedDocStatus.hasKTP = hasKTP === 'true' || hasKTP === true;
+            if (insuranceProvider !== undefined) resolvedCarData.insuranceProvider = insuranceProvider.trim();
+            if (insuranceType !== undefined) resolvedCarData.insuranceType = insuranceType.trim();
+            if (coverageExtensions !== undefined) resolvedCarData.coverageExtensions = coverageExtensions;
 
             const updateData = {};
             if (customerId !== undefined) updateData.customerId = customerId;
             if (status !== undefined) updateData.status = status;
             if (notes !== undefined) updateData.notes = notes;
             if (Object.keys(resolvedCarData).length > 0) updateData.carData = resolvedCarData;
-            if (Object.keys(resolvedDocStatus).length > 0) updateData.documentStatus = resolvedDocStatus;
 
             const updatedCar = await carDAO.updateCar(id, updateData, userId);
 

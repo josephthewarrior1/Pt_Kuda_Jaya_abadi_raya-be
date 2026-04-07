@@ -2,14 +2,20 @@ const { db } = require('../config/firebase');
 
 class UserDAO {
   constructor() {
-    this.usersRef = db.ref('users');
+    this.usersRef = db.collection('users');
   }
 
   // Get all users
   async getAllUsers() {
     try {
-      const snapshot = await this.usersRef.once('value');
-      return snapshot.val() || {};
+      const snapshot = await this.usersRef.get();
+      if (snapshot.empty) return {};
+      
+      const users = {};
+      snapshot.forEach(doc => {
+        users[doc.id] = doc.data();
+      });
+      return users;
     } catch (error) {
       throw new Error('Failed to fetch users: ' + error.message);
     }
@@ -18,9 +24,9 @@ class UserDAO {
   // Find user by username
   async findByUsername(username) {
     try {
-      const snapshot = await this.usersRef.child(username).once('value');
-      if (!snapshot.exists()) return null;
-      return { id: username, ...snapshot.val() };
+      const doc = await this.usersRef.doc(username).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
     } catch (error) {
       throw new Error('Failed to find user by username: ' + error.message);
     }
@@ -29,28 +35,45 @@ class UserDAO {
   // Find user by email (scan all users)
   async findByEmail(email) {
     try {
-      const snapshot = await this.usersRef.once('value');
-      const users = snapshot.val() || {};
-
-      const username = Object.keys(users).find(
-        key => users[key].email?.toLowerCase() === email.toLowerCase()
-      );
-
-      if (!username) return null;
-      return { id: username, ...users[username] };
+      const snapshot = await this.usersRef
+        .where('email', '==', email.toLowerCase())
+        .limit(1)
+        .get();
+        
+      if (snapshot.empty) return null;
+      
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
     } catch (error) {
       throw new Error('Failed to find user by email: ' + error.message);
     }
   }
 
-  // Find user by ID (username)
+  // Find user by ID (document ID - could be username or Firebase UID)
   async findById(userId) {
     try {
-      const snapshot = await this.usersRef.child(userId).once('value');
-      if (!snapshot.exists()) return null;
-      return { id: userId, ...snapshot.val() };
+      const doc = await this.usersRef.doc(userId).get();
+      if (doc.exists) return { id: doc.id, ...doc.data() };
+      
+      // Fallback: search by firebaseUid field (for users created before UID-as-doc-id)
+      return await this.findByFirebaseUid(userId);
     } catch (error) {
       throw new Error('Failed to find user by ID: ' + error.message);
+    }
+  }
+
+  // Find user by Firebase Auth UID field
+  async findByFirebaseUid(uid) {
+    try {
+      const snapshot = await this.usersRef
+        .where('firebaseUid', '==', uid)
+        .limit(1)
+        .get();
+      if (snapshot.empty) return null;
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw new Error('Failed to find user by firebaseUid: ' + error.message);
     }
   }
 
@@ -71,8 +94,8 @@ class UserDAO {
         updatedAt: Date.now(),
       };
 
-      // Save dengan username sebagai key
-      await this.usersRef.child(username).set(dataToSave);
+      // Save dengan username sebagai nama document
+      await this.usersRef.doc(username).set(dataToSave);
 
       return { id: username, ...dataToSave };
     } catch (error) {
@@ -88,7 +111,7 @@ class UserDAO {
         updatedAt: Date.now(),
       };
 
-      await this.usersRef.child(userId).update(dataToUpdate);
+      await this.usersRef.doc(userId).update(dataToUpdate);
 
       return await this.findById(userId);
     } catch (error) {
@@ -109,7 +132,7 @@ class UserDAO {
   // Delete user
   async deleteUser(username) {
     try {
-      await this.usersRef.child(username).remove();
+      await this.usersRef.doc(username).delete();
       return true;
     } catch (error) {
       throw new Error('Failed to delete user: ' + error.message);

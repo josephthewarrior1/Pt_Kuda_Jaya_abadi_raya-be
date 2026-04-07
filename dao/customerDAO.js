@@ -2,28 +2,28 @@ const { db } = require('../config/firebase');
 
 class CustomerDAO {
   constructor() {
-    this.customersRootRef = db.ref('customer_data');
-    this.customerCountRef = db.ref('customer_counters');
+    this.customersRootRef = db.collection('customer_data');
+    this.customerCountRef = db.collection('customer_counters');
   }
 
   // Get reference untuk customer collection user tertentu
   getUserCustomersRef(userId) {
-    return this.customersRootRef.child(userId);
+    return this.customersRootRef.doc(userId).collection('customers');
   }
 
   // Get next customer number untuk user
   async getNextCustomerNumber(userId) {
     try {
-      const counterRef = this.customerCountRef.child(userId);
-      const snapshot = await counterRef.once('value');
+      const docRef = this.customerCountRef.doc(userId);
+      const doc = await docRef.get();
 
       let nextNumber = 1;
-      if (snapshot.exists()) {
-        nextNumber = snapshot.val() + 1;
+      if (doc.exists) {
+        nextNumber = (doc.data().count || 0) + 1;
       }
 
       // Update counter
-      await counterRef.set(nextNumber);
+      await docRef.set({ count: nextNumber });
 
       return nextNumber;
     } catch (error) {
@@ -34,10 +34,8 @@ class CustomerDAO {
   // Get current customer number (tanpa increment)
   async getCurrentCustomerNumber(userId) {
     try {
-      const counterRef = this.customerCountRef.child(userId);
-      const snapshot = await counterRef.once('value');
-
-      return snapshot.exists() ? snapshot.val() : 0;
+      const doc = await this.customerCountRef.doc(userId).get();
+      return doc.exists ? (doc.data().count || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get current customer number: ' + error.message);
     }
@@ -47,20 +45,19 @@ class CustomerDAO {
   async getAllCustomersByUser(userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
-      const snapshot = await userCustomersRef.once('value');
+      const snapshot = await userCustomersRef.get();
 
       const customers = [];
-      snapshot.forEach((childSnapshot) => {
-        const customerData = childSnapshot.val();
+      snapshot.forEach((docSnap) => {
+        const customerData = docSnap.data();
 
         customers.push({
-          id: childSnapshot.key,
+          id: docSnap.id,
           name: customerData.name || '',
           email: customerData.email || '',
           phone: customerData.phone || '',
           address: customerData.address || '',
           notes: customerData.notes || '',
-          // ✅ TAMBAHAN: status field - null berarti pakai date-based logic di frontend
           status: customerData.status || null,
           createdBy: customerData.createdBy || userId,
           createdAt: customerData.createdAt || Date.now(),
@@ -84,14 +81,13 @@ class CustomerDAO {
   // Get customer by ID and user ID
   async getCustomerById(customerId, userId) {
     try {
-      const userCustomersRef = this.getUserCustomersRef(userId);
-      const snapshot = await userCustomersRef.child(customerId).once('value');
+      const doc = await this.getUserCustomersRef(userId).doc(customerId).get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         return null;
       }
 
-      const customerData = snapshot.val();
+      const customerData = doc.data();
 
       return {
         id: customerId,
@@ -100,7 +96,6 @@ class CustomerDAO {
         phone: customerData.phone || '',
         address: customerData.address || '',
         notes: customerData.notes || '',
-        // ✅ TAMBAHAN: status field
         status: customerData.status || null,
         createdBy: customerData.createdBy || userId,
         createdAt: customerData.createdAt || Date.now(),
@@ -133,13 +128,12 @@ class CustomerDAO {
         phone: customerDataWithoutCreatedBy.phone || '',
         address: customerDataWithoutCreatedBy.address || '',
         notes: customerDataWithoutCreatedBy.notes || '',
-        // ✅ TAMBAHAN: simpan status (null by default)
         status: customerDataWithoutCreatedBy.status || null,
         createdAt: customerDataWithoutCreatedBy.createdAt || Date.now(),
         updatedAt: customerDataWithoutCreatedBy.updatedAt || Date.now(),
       };
 
-      await userCustomersRef.child(customerId).set(customerToSave);
+      await userCustomersRef.doc(customerId).set(customerToSave);
 
       return {
         id: customerId,
@@ -153,22 +147,19 @@ class CustomerDAO {
   // Update customer
   async updateCustomer(customerId, updateData, userId) {
     try {
-      const userCustomersRef = this.getUserCustomersRef(userId);
+      const docRef = this.getUserCustomersRef(userId).doc(customerId);
 
       // Cek apakah customer ada
-
-      const snapshot = await userCustomersRef.child(customerId).once('value');
-      if (!snapshot.exists()) {
+      const doc = await docRef.get();
+      if (!doc.exists) {
         throw new Error('Customer not found');
       }
 
-      const existingCustomer = snapshot.val();
+      const existingCustomer = doc.data();
 
-      // Pakai dot notation agar Firebase update field secara spesifik
-      // tanpa replace seluruh nested object
       const updates = {};
-      console.log('🔥 DAO updateCustomer called:', customerId, JSON.stringify(updateData)); // ← pindah ke sini, log updateData bukan updates
-      // Personal fields
+      console.log('🔥 DAO updateCustomer called:', customerId, JSON.stringify(updateData)); 
+
       if (updateData.name !== undefined) updates['name'] = updateData.name;
       if (updateData.email !== undefined) updates['email'] = updateData.email;
       if (updateData.phone !== undefined) updates['phone'] = updateData.phone;
@@ -178,8 +169,7 @@ class CustomerDAO {
       // Status field
       if ('status' in updateData) {
         if (updateData.status === null || updateData.status === undefined) {
-          // Hapus field status dari DB (reset ke date-based logic)
-          await userCustomersRef.child(customerId).child('status').remove();
+           updates['status'] = null; // Firestore can store null
         } else {
           updates['status'] = updateData.status;
         }
@@ -188,7 +178,7 @@ class CustomerDAO {
       // Timestamp
       updates['updatedAt'] = Date.now();
 
-      await userCustomersRef.child(customerId).update(updates);
+      await docRef.update(updates);
 
       return {
         id: customerId,
@@ -204,15 +194,14 @@ class CustomerDAO {
   // Delete customer
   async deleteCustomer(customerId, userId) {
     try {
-      const userCustomersRef = this.getUserCustomersRef(userId);
+      const docRef = this.getUserCustomersRef(userId).doc(customerId);
 
-      // Cek apakah customer ada
-      const snapshot = await userCustomersRef.child(customerId).once('value');
-      if (!snapshot.exists()) {
+      const doc = await docRef.get();
+      if (!doc.exists) {
         throw new Error('Customer not found');
       }
 
-      await userCustomersRef.child(customerId).remove();
+      await docRef.delete();
 
       return true;
     } catch (error) {
@@ -224,9 +213,10 @@ class CustomerDAO {
   async getCustomerCount(userId) {
     try {
       const userCustomersRef = this.getUserCustomersRef(userId);
-      const snapshot = await userCustomersRef.once('value');
-
-      return snapshot.numChildren();
+      // Wait, Firestore doesn't have an efficient count natively unless using count() query
+      // but doc.data().count works if we use counter
+      const doc = await this.customerCountRef.doc(userId).get();
+      return doc.exists ? (doc.data().count || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get customer count: ' + error.message);
     }

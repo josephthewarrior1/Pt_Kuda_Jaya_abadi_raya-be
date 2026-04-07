@@ -2,13 +2,17 @@ const { db } = require('../config/firebase');
 
 class CarReferenceDAO {
     constructor() {
-        this.ref = db.ref('car_references');
+        this.ref = db.collection('car_references');
     }
 
     async getReferences() {
         try {
-            const snapshot = await this.ref.once('value');
-            return snapshot.val() || {};
+            const snapshot = await this.ref.get();
+            const references = {};
+            snapshot.forEach(doc => {
+                references[doc.id] = doc.data();
+            });
+            return references;
         } catch (error) {
             throw new Error('Failed to get car references: ' + error.message);
         }
@@ -18,17 +22,16 @@ class CarReferenceDAO {
         if (!brand) return;
         try {
             const cleanBrand = brand.trim();
-            const updates = {};
+            const docRef = this.ref.doc(cleanBrand);
+            const updates = { _brandExists: true };
 
             if (model) {
                 const cleanModel = model.trim();
-                updates[`${cleanBrand}/${cleanModel}`] = true;
-            } else {
-                updates[`${cleanBrand}/_brandExists`] = true;
+                updates[cleanModel] = true;
             }
 
-            // Using root car_references node update allows patching paths safely
-            await this.ref.update(updates);
+            // Using merge true allows patching paths safely
+            await docRef.set(updates, { merge: true });
         } catch (error) {
             // Drop error silently to not disrupt the main flow
             console.error('Failed to add car reference:', error.message);

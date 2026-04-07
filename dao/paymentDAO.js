@@ -2,25 +2,25 @@ const { db } = require('../config/firebase');
 
 class PaymentDAO {
   constructor() {
-    this.paymentsRootRef = db.ref('payment_records');
-    this.paymentCountRef = db.ref('payment_counters');
+    this.paymentsRootRef = db.collection('payment_records');
+    this.paymentCountRef = db.collection('payment_counters');
   }
 
   getUserPaymentsRef(userId) {
-    return this.paymentsRootRef.child(userId);
+    return this.paymentsRootRef.doc(userId).collection('payments');
   }
 
   async getNextPaymentNumber(userId) {
     try {
-      const counterRef = this.paymentCountRef.child(userId);
-      const snapshot = await counterRef.once('value');
+      const docRef = this.paymentCountRef.doc(userId);
+      const doc = await docRef.get();
 
       let nextNumber = 1;
-      if (snapshot.exists()) {
-        nextNumber = snapshot.val() + 1;
+      if (doc.exists) {
+        nextNumber = (doc.data().count || 0) + 1;
       }
 
-      await counterRef.set(nextNumber);
+      await docRef.set({ count: nextNumber });
       return nextNumber;
     } catch (error) {
       throw new Error('Failed to get next payment number: ' + error.message);
@@ -33,6 +33,7 @@ class PaymentDAO {
       customerId: paymentData.customerId || '',
       policyType: paymentData.policyType || '',
       policyId: paymentData.policyId || '',
+      renewalId: paymentData.renewalId || '',
       invoiceNumber: paymentData.invoiceNumber || '',
       amount: paymentData.amount || 0,
       dueDate: paymentData.dueDate || null,
@@ -49,13 +50,13 @@ class PaymentDAO {
 
   async getAllPaymentsByUser(userId) {
     try {
-      const snapshot = await this.getUserPaymentsRef(userId).once('value');
+      const snapshot = await this.getUserPaymentsRef(userId).get();
       const payments = [];
 
-      snapshot.forEach((childSnapshot) => {
+      snapshot.forEach((docSnap) => {
         payments.push({
-          id: childSnapshot.key,
-          ...childSnapshot.val(),
+          id: docSnap.id,
+          ...docSnap.data(),
         });
       });
 
@@ -70,6 +71,7 @@ class PaymentDAO {
         customerId: payment.customerId || '',
         policyType: payment.policyType || '',
         policyId: payment.policyId || '',
+        renewalId: payment.renewalId || '',
         invoiceNumber: payment.invoiceNumber || '',
         amount: payment.amount || 0,
         dueDate: payment.dueDate || null,
@@ -89,13 +91,13 @@ class PaymentDAO {
 
   async getPaymentById(paymentId, userId) {
     try {
-      const snapshot = await this.getUserPaymentsRef(userId).child(paymentId).once('value');
+      const doc = await this.getUserPaymentsRef(userId).doc(paymentId).get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         return null;
       }
 
-      return this.normalizePayment(paymentId, snapshot.val(), userId);
+      return this.normalizePayment(paymentId, doc.data(), userId);
     } catch (error) {
       throw new Error('Failed to fetch payment: ' + error.message);
     }
@@ -123,7 +125,7 @@ class PaymentDAO {
         updatedAt: paymentData.updatedAt || Date.now(),
       };
 
-      await this.getUserPaymentsRef(createdBy).child(paymentId).set(paymentToSave);
+      await this.getUserPaymentsRef(createdBy).doc(paymentId).set(paymentToSave);
 
       return {
         id: paymentId,
@@ -136,14 +138,14 @@ class PaymentDAO {
 
   async updatePayment(paymentId, updateData, userId) {
     try {
-      const paymentRef = this.getUserPaymentsRef(userId).child(paymentId);
-      const snapshot = await paymentRef.once('value');
+      const paymentRef = this.getUserPaymentsRef(userId).doc(paymentId);
+      const doc = await paymentRef.get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         throw new Error('Payment not found');
       }
 
-      const existingPayment = snapshot.val();
+      const existingPayment = doc.data();
       const dataToUpdate = {
         ...updateData,
         updatedAt: Date.now(),
@@ -181,14 +183,14 @@ class PaymentDAO {
 
   async deletePayment(paymentId, userId) {
     try {
-      const paymentRef = this.getUserPaymentsRef(userId).child(paymentId);
-      const snapshot = await paymentRef.once('value');
+      const paymentRef = this.getUserPaymentsRef(userId).doc(paymentId);
+      const doc = await paymentRef.get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         throw new Error('Payment not found');
       }
 
-      await paymentRef.remove();
+      await paymentRef.delete();
       return true;
     } catch (error) {
       throw new Error('Failed to delete payment: ' + error.message);

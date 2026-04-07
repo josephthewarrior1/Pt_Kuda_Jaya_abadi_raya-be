@@ -1,9 +1,5 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { admin } = require('../config/firebase');
 const userDAO = require('../dao/userDAO');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d';
 
 // Valid user roles
 const USER_ROLES = {
@@ -71,39 +67,36 @@ class UserController {
         userRole = role;
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Create user in Firebase Auth with uid equal to username
+      const userRecord = await admin.auth().createUser({
+        uid: username.trim(),
+        email: email ? email.trim().toLowerCase() : `${username.trim()}@kudajaya.local`,
+        password: password,
+        displayName: fullName.trim(),
+      });
 
-      // Create new user
+      // Map Firebase UID as our user ID
+      const uid = userRecord.uid;
+
+      // Set Custom Claims for role
+      await admin.auth().setCustomUserClaims(uid, { role: userRole });
+
+      // Create new user profile in Firestore
       const newUser = await userDAO.createUser({
         fullName: fullName.trim(),
         username: username.trim(),
-        password: hashedPassword,
         role: userRole,
         email: email ? email.trim().toLowerCase() : '',
+        firebaseUid: uid,
       });
 
-      console.log('✅ New user registered:', newUser.username, 'Role:', userRole);
-
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          id: newUser.username,
-          username: newUser.username,
-          role: newUser.role,
-          email: newUser.email,
-          fullName: newUser.fullName,
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
+      console.log('✅ New user registered in Firebase and Firestore:', newUser.username, 'Role:', userRole);
 
       res.status(201).json({
         success: true,
         message: 'Account created successfully',
-        token,
         user: {
-          id: newUser.username,
+          id: newUser.id,
           fullName: newUser.fullName,
           username: newUser.username,
           role: newUser.role,
@@ -144,41 +137,12 @@ class UserController {
         });
       }
 
-      // Verify password
-      const passwordValid = await bcrypt.compare(password, user.password);
-      if (!passwordValid) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid credentials',
-        });
-      }
-
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          id: user.username,
-          username: user.username,
-          role: user.role,
-          email: user.email || '',
-          fullName: user.fullName,
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
-
-      console.log('✅ User logged in:', user.username, 'Role:', user.role);
-
-      res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        token,
-        user: {
-          id: user.username,
-          fullName: user.fullName,
-          username: user.username,
-          role: user.role,
-          email: user.email || '',
-        },
+      // Login flow is now handled directly by the frontend using Firebase Web SDK. 
+      // But we provide a minimal fallback check if absolutely necessary.
+      // Usually hitting this endpoint means they are using the old flow.
+      res.status(400).json({
+        success: false,
+        error: 'Login should be performed directly via Firebase client SDK.',
       });
     } catch (error) {
       console.error('❌ Login error:', error);
@@ -300,18 +264,10 @@ class UserController {
         });
       }
 
-      // Verify current password
-      const passwordValid = await bcrypt.compare(currentPassword, user.password);
-      if (!passwordValid) {
-        return res.status(401).json({
-          success: false,
-          error: 'Current password is incorrect',
-        });
-      }
-
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await userDAO.updateUser(userId, { password: hashedPassword });
+      // Update password in Firebase Auth
+      await admin.auth().updateUser(userId, {
+        password: newPassword
+      });
 
       res.status(200).json({
         success: true,
@@ -356,7 +312,8 @@ class UserController {
         });
       }
 
-      const updatedUser = await userDAO.updateUser(username, { role });
+      const updatedUser = await userDAO.updateUser(user.id, { role });
+      await admin.auth().setCustomUserClaims(user.id, { role });
 
       console.log('✅ User role updated by admin:', username, '→', role);
 

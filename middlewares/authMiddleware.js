@@ -1,7 +1,5 @@
-const jwt = require('jsonwebtoken');
+const { admin } = require('../config/firebase');
 const userDAO = require('../dao/userDAO');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -16,55 +14,48 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split('Bearer ')[1];
 
-    // Verify JWT token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Verify Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(token);
     
     // Debug: log decoded token
-    console.log('🔐 Decoded token payload:', decoded);
+    console.log('🔐 Decoded Firebase token payload for UID:', decodedToken.uid);
 
-    // Get user from database
-    const user = await userDAO.findById(decoded.id);
+    // Get user from database (using Firebase UID)
+    const user = await userDAO.findById(decodedToken.uid);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found',
+        error: 'User not found in database',
       });
     }
 
     // Attach user to request object DENGAN ROLE
     req.user = {
-      id: user.id,
+      id: user.id, // Should match decodedToken.uid
       uid: user.id, // Support old controllers using uid
       username: user.username,
-      role: user.role, // <-- TAMBAHKAN INI!
-      email: user.email || '',      // ← TAMBAH INI
-      fullName: user.fullName || '', // ← TAMBAH INI
+      role: user.role,
+      email: user.email || decodedToken.email || '',
+      fullName: user.fullName || '',
     };
     
     console.log('✅ Auth middleware passed for user:', req.user.username, 'Role:', req.user.role);
 
     next();
   } catch (error) {
-    console.error('❌ Auth middleware error:', error);
+    console.error('❌ Auth middleware error:', error.message);
     
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token',
-      });
-    }
-    
-    if (error.name === 'TokenExpiredError') {
+    if (error.code === 'auth/id-token-expired') {
       return res.status(401).json({
         success: false,
         error: 'Token expired',
       });
     }
 
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      error: 'Authentication failed',
+      error: 'Invalid token or authentication failed',
     });
   }
 };

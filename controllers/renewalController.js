@@ -184,10 +184,6 @@ class RenewalController {
         return res.status(400).json({ success: false, error: 'New start date and new end date are required' });
       }
 
-      if (!paymentId || !paymentId.trim()) {
-        return res.status(400).json({ success: false, error: 'Payment Record is required for renewal' });
-      }
-
       const customer = await customerDAO.getCustomerById(customerId.trim(), userId);
       if (!customer) {
         return res.status(404).json({ success: false, error: 'Customer not found' });
@@ -198,9 +194,14 @@ class RenewalController {
         return res.status(404).json({ success: false, error: 'Policy not found' });
       }
 
-      const payment = await paymentDAO.getPaymentById(paymentId.trim(), userId);
-      if (!payment) {
-        return res.status(404).json({ success: false, error: 'Payment not found' });
+      // ── Guard: block if there's already a Pending/Approved renewal for this vehicle ──
+      const existingPendingRenewal = await renewalDAO.getActivePendingRenewalByPolicy(policyId.trim(), userId);
+      if (existingPendingRenewal) {
+        return res.status(409).json({
+          success: false,
+          error: `Kendaraan ini sudah memiliki renewal aktif (${existingPendingRenewal.id}) dengan status "${existingPendingRenewal.status}". Selesaikan atau batalkan renewal tersebut terlebih dahulu.`,
+          existingRenewalId: existingPendingRenewal.id,
+        });
       }
 
       const oldDates = getPolicyDates(policyType, policy);
@@ -210,7 +211,7 @@ class RenewalController {
         customerId: customerId.trim(),
         policyType,
         policyId: policyId.trim(),
-        paymentId: paymentId ? paymentId.trim() : '',
+        paymentId: '',  // Will be set after auto-creating payment
         oldStartDate: oldDates.startDate,
         oldEndDate: oldDates.endDate,
         newStartDate,
@@ -223,6 +224,28 @@ class RenewalController {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
+
+      // Auto-create a linked Pending Payment
+      try {
+        const autoPayment = await paymentDAO.createPayment({
+          customerId: customerId.trim(),
+          policyType,
+          policyId: policyId.trim(),
+          renewalId: renewal.id,
+          amount: premium ? parseFloat(premium) : 0,
+          dueDate: newEndDate || null,
+          status: 'Pending',
+          notes: `Auto-generated dari Renewal ${renewal.id}`,
+          createdBy: userId,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        // Save paymentId back to renewal
+        await renewalDAO.updateRenewal(renewal.id, { paymentId: autoPayment.id }, userId);
+        renewal.paymentId = autoPayment.id;
+      } catch (payErr) {
+        console.error('Warning: failed to auto-create payment for renewal:', payErr);
+      }
 
       res.status(201).json({
         success: true,

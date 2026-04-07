@@ -1,0 +1,2134 @@
+{
+  "car_counters": {
+    "kuda123": 4,
+    "tester123": 18
+  },
+  "car_data": {
+    "kuda123": {
+      "kuda123-CAR-0001": {
+        "carData": {
+          "carBrand": "Honda",
+          "carModel": "HR-V",
+          "carPrice": 0,
+          "chassisNumber": "HNDHRV202345678",
+          "color": "Putih",
+          "dueDate": "2026-03-15",
+          "engineNumber": "ENGHRV998877",
+          "ownerName": "Michael Santoso",
+          "plateNumber": "D 5678 XYZ",
+          "startDate": "2025-03-15",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767064353/car_insurance/customers/kuda123-1/kuda123-1_back.png",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767064352/car_insurance/customers/kuda123-1/kuda123-1_front.png",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767512586/car_insurance/customers/kuda123-1/kuda123-1_left.png",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767512586/car_insurance/customers/kuda123-1/kuda123-1_right.png"
+        },
+        "createdAt": 1767063953468,
+        "createdBy": "kuda123",
+        "customerId": "kuda123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "kuda123-CAR-0001",
+        "notes": "Perpanjangan asuransi mobil tahunan",
+        "status": "Active",
+        "updatedAt": 1767512587238
+      },
+      "kuda123-CAR-0002": {
+        "carData": {
+          "carBrand": "asdasda",
+          "carModel": "sa",
+          "carPrice": 0,
+          "chassisNumber": "sasa",
+          "color": "Hitam",
+          "dueDate": "2026-02-06",
+          "engineNumber": "sasasa",
+          "ownerName": "mysql",
+          "plateNumber": "sasa",
+          "startDate": "2025-02-06",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1767510050773,
+        "createdBy": "kuda123",
+        "customerId": "kuda123-10",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "kuda123-CAR-0002",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1767510050773
+      },
+      "kuda123-CAR-0003": {
+        "carData": {
+          "carBrand": "asdasda",
+          "carModel": "assdasd",
+          "carPrice": 0,
+          "chassisNumber": "asdas",
+          "color": "Putih",
+          "dueDate": "2026-02-07",
+          "engineNumber": "asdasdas",
+          "ownerName": "asdasda",
+          "plateNumber": "asdas",
+          "startDate": "2025-02-07",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1767415381753,
+        "createdBy": "kuda123",
+        "customerId": "kuda123-6",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "kuda123-CAR-0003",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1767415381753
+      },
+      "kuda123-CAR-0004": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "civic",
+          "carPrice": 0,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Hitam",
+          "dueDate": "2026-02-06",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "joseph",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-02-06",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767498257/car_insurance/customers/kuda123-9/kuda123-9_back.jpg",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767498257/car_insurance/customers/kuda123-9/kuda123-9_front.jpg",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767498257/car_insurance/customers/kuda123-9/kuda123-9_left.jpg",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1767498257/car_insurance/customers/kuda123-9/kuda123-9_right.jpg"
+        },
+        "createdAt": 1767498249080,
+        "createdBy": "kuda123",
+        "customerId": "kuda123-9",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "kuda123-CAR-0004",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1767498258426
+      }
+    },
+    "tester123": {
+      "tester123-CAR-0001": {
+        "carData": {
+          "carBrand": "Honda",
+          "carModel": "HR-V",
+          "carPrice": 0,
+          "chassisNumber": "HNDHRV202345678",
+          "color": "Putih",
+          "dueDate": "2026-03-15",
+          "engineNumber": "ENGHRV998877",
+          "ownerName": "Michael Santoso",
+          "plateNumber": "D 5678 XYZ",
+          "startDate": "2025-03-15",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769219698/car_insurance/customers/tester123-1/tester123-1_left.png",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769219698/car_insurance/customers/tester123-1/tester123-1_right.png"
+        },
+        "createdAt": 1767332294021,
+        "createdBy": "tester123",
+        "customerId": "tester123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1770873728/car_insurance/customers/tester123-1/documents/tester123-1_stnk.jpg"
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0001",
+        "notes": "Perpanjangan asuransi mobil tahunan",
+        "status": "Active",
+        "updatedAt": 1770873730118
+      },
+      "tester123-CAR-0002": {
+        "carData": {
+          "carBrand": "lexus",
+          "carModel": "civic",
+          "carPrice": 200000000,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Hitam",
+          "dueDate": "2026-03-14",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "gareth",
+          "plateNumber": "B 911 VFR",
+          "startDate": "2025-03-14",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1769994733503,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0002",
+        "notes": "",
+        "status": "Cancelled",
+        "updatedAt": 1771468764004
+      },
+      "tester123-CAR-0003": {
+        "carData": {
+          "carBrand": "Toyota",
+          "carModel": "Avanza",
+          "carPrice": 0,
+          "chassisNumber": "M12HJOPIK",
+          "color": "Putih",
+          "dueDate": "2026-12-19",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "Hery setiawan",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-12-19",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1771464645643,
+        "createdBy": "tester123",
+        "customerId": "tester123-12",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0003",
+        "notes": "",
+        "status": "Cancelled",
+        "updatedAt": 1771468761915
+      },
+      "tester123-CAR-0004": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "X300",
+          "carPrice": 0,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Hitam",
+          "dueDate": "2027-02-20",
+          "engineNumber": "SW321K1",
+          "ownerName": "Lulu Gozali",
+          "plateNumber": "B 2145 FRR",
+          "startDate": "2026-02-20",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1771553206/car_insurance/customers/tester123-13/tester123-13_back.jpg",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1771553207/car_insurance/customers/tester123-13/tester123-13_front.jpg",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1771553207/car_insurance/customers/tester123-13/tester123-13_left.jpg",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1771553207/car_insurance/customers/tester123-13/tester123-13_right.jpg"
+        },
+        "createdAt": 1771553170871,
+        "createdBy": "tester123",
+        "customerId": "tester123-13",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0004",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1771553213374
+      },
+      "tester123-CAR-0005": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "Avanza",
+          "carPrice": 250000,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Putih",
+          "dueDate": "2026-04-04",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "kevin setiawan",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-04-04",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1772770035107,
+        "createdBy": "tester123",
+        "customerId": "tester123-14",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0005",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1772776350238
+      },
+      "tester123-CAR-0006": {
+        "carData": {
+          "carBrand": "Honda",
+          "carModel": "HR-V",
+          "carPrice": 0,
+          "chassisNumber": "MH1234567890",
+          "color": "Hitam",
+          "dueDate": "2025-12-31",
+          "engineNumber": "2NR9876543",
+          "ownerName": "Siti Nurhaliza",
+          "plateNumber": "B 5678 XYZ",
+          "startDate": "2024-12-31",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769219862/car_insurance/customers/tester123-3/tester123-3_left.png",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769219862/car_insurance/customers/tester123-3/tester123-3_right.png"
+        },
+        "createdAt": 1769219289779,
+        "createdBy": "tester123",
+        "customerId": "tester123-3",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0006",
+        "notes": "Customer VIP",
+        "status": "Active",
+        "updatedAt": 1769219863649
+      },
+      "tester123-CAR-0007": {
+        "carData": {
+          "carBrand": "lexus",
+          "carModel": "civic",
+          "carPrice": 0,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Putih",
+          "dueDate": "2026-02-07",
+          "engineNumber": "asdasdas",
+          "ownerName": "testing",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-02-07",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769223154/car_insurance/customers/tester123-4/tester123-4_left.jpg",
+          "rightSide": ""
+        },
+        "createdAt": 1769220581459,
+        "createdBy": "tester123",
+        "customerId": "tester123-4",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0007",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1769223155411
+      },
+      "tester123-CAR-0008": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "lexus",
+          "carPrice": 0,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Hitam",
+          "dueDate": "2026-01-30",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "testing89",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-01-30",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769223467/car_insurance/customers/tester123-5/tester123-5_left.jpg",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769223467/car_insurance/customers/tester123-5/tester123-5_right.jpg"
+        },
+        "createdAt": 1769223460288,
+        "createdBy": "tester123",
+        "customerId": "tester123-5",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0008",
+        "notes": "sdfs",
+        "status": "Active",
+        "updatedAt": 1769223468538
+      },
+      "tester123-CAR-0009": {
+        "carData": {
+          "carBrand": "Toyota",
+          "carModel": "Avanza",
+          "carPrice": 0,
+          "chassisNumber": "M12HJOPIK",
+          "color": "Putih",
+          "dueDate": "2026-03-28",
+          "engineNumber": "SW321K1",
+          "ownerName": "joseph imanuel",
+          "plateNumber": "B 2132 HFG",
+          "startDate": "2025-03-28",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769401679/car_insurance/customers/tester123-6/tester123-6_back.jpg",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769401679/car_insurance/customers/tester123-6/tester123-6_front.jpg",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769401679/car_insurance/customers/tester123-6/tester123-6_left.jpg",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769401679/car_insurance/customers/tester123-6/tester123-6_right.jpg"
+        },
+        "createdAt": 1769401674011,
+        "createdBy": "tester123",
+        "customerId": "tester123-6",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "id": "tester123-CAR-0009",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1769401681841
+      },
+      "tester123-CAR-0010": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "civic",
+          "carPrice": 150000000,
+          "chassisNumber": "M12HJOPIK",
+          "color": "Hitam",
+          "dueDate": "2026-03-07",
+          "engineNumber": "21121212",
+          "ownerName": "harga baru",
+          "plateNumber": "B 3321 BFR",
+          "startDate": "2025-03-07",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769572243/car_insurance/customers/tester123-7/tester123-7_back.jpg",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769572243/car_insurance/customers/tester123-7/tester123-7_front.jpg",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769572243/car_insurance/customers/tester123-7/tester123-7_left.jpg",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769572243/car_insurance/customers/tester123-7/tester123-7_right.jpg"
+        },
+        "createdAt": 1769572234153,
+        "createdBy": "tester123",
+        "customerId": "tester123-7",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": true,
+          "hasSIM": true,
+          "hasSTNK": true
+        },
+        "id": "tester123-CAR-0010",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1769572244632
+      },
+      "tester123-CAR-0011": {
+        "carData": {
+          "carBrand": "lexus",
+          "carModel": "Avanza",
+          "carPrice": 200000000,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Putih",
+          "dueDate": "2026-04-04",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "kevin",
+          "plateNumber": "B 911 VFR",
+          "startDate": "2025-04-04",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1769573052125,
+        "createdBy": "tester123",
+        "customerId": "tester123-8",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1769573057/car_insurance/customers/tester123-8/documents/tester123-8_stnk.jpg"
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": true
+        },
+        "id": "tester123-CAR-0011",
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1772770203251
+      },
+      "tester123-car-12": {
+        "carData": {
+          "carBrand": "Toyota",
+          "carModel": "Innova",
+          "carPrice": 20000000,
+          "chassisNumber": "M12HJOPIK",
+          "color": "Hitam",
+          "dueDate": "2027-08-16",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "",
+          "plateNumber": "B 7123 FRT",
+          "startDate": "2026-08-16",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1773649239761,
+        "customerId": "tester123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": true,
+          "hasSIM": true,
+          "hasSTNK": true
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1773649239761
+      },
+      "tester123-car-13": {
+        "carData": {
+          "carBrand": "BYD",
+          "carModel": "ATTO",
+          "carPrice": 2000000,
+          "chassisNumber": "MHFEW9182JF",
+          "color": "Putih",
+          "dueDate": "2026-04-11",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "joseph",
+          "plateNumber": "B 4313 FET",
+          "startDate": "2025-04-11",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1773711015/car_insurance/cars/tester123-car-13/tester123-car-13_back.png",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1773711015/car_insurance/cars/tester123-car-13/tester123-car-13_front.png",
+          "leftSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1773711019/car_insurance/cars/tester123-car-13/tester123-car-13_leftSide.png",
+          "rightSide": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1773711017/car_insurance/cars/tester123-car-13/tester123-car-13_rightSide.png"
+        },
+        "createdAt": 1773710964569,
+        "customerId": "tester123-6",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1773711089/car_insurance/cars/tester123-car-13/documents/tester123-car-13_stnk.png"
+        },
+        "documentStatus": {
+          "hasKTP": true,
+          "hasSIM": true,
+          "hasSTNK": true
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1773711090958
+      },
+      "tester123-car-14": {
+        "carData": {
+          "carBrand": "BMW",
+          "carModel": "Avanza",
+          "carPrice": 2000000,
+          "chassisNumber": "M12HJOPIK",
+          "color": "Hitam",
+          "dueDate": "2026-04-11",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "",
+          "plateNumber": "B 2145 FRR",
+          "startDate": "2025-04-11",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1774397920/car_insurance/cars/tester123-car-14/tester123-car-14_front.jpg",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1774397905925,
+        "customerId": "tester123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1774397921964
+      },
+      "tester123-car-15": {
+        "carData": {
+          "carBrand": "lexus",
+          "carModel": "civic",
+          "carPrice": 5000000,
+          "chassisNumber": "MHF2293JFH",
+          "color": "Putih",
+          "dueDate": "2026-05-21",
+          "engineNumber": "1FDWWTV",
+          "ownerName": "Michael Santoso",
+          "plateNumber": "B 6705 PTU",
+          "startDate": "2025-05-21",
+          "year": "2022"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1774399209541,
+        "customerId": "tester123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1774399209541
+      },
+      "tester123-car-16": {
+        "carData": {
+          "carBrand": "Isuzu",
+          "carModel": "Panther",
+          "carPrice": 2500000,
+          "chassisNumber": "JJIDj3028302",
+          "color": "Putih",
+          "dueDate": "2027-03-27",
+          "engineNumber": "dfwddf2f32f3wf",
+          "ownerName": "Siti Nurhaliza",
+          "plateNumber": "B 2145 FRR",
+          "startDate": "2026-03-27",
+          "year": "2019"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1774594095197,
+        "customerId": "tester123-3",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1774594095197
+      },
+      "tester123-car-17": {
+        "carData": {
+          "carBrand": "Toyota",
+          "carModel": "Avanza",
+          "carPrice": 200000000,
+          "chassisNumber": "MHF123456789",
+          "color": "Putih",
+          "dueDate": "2026-04-05",
+          "engineNumber": "1TR987654321",
+          "ownerName": "Budi Santoso",
+          "plateNumber": "B 1234 ABC",
+          "startDate": "2025-04-05",
+          "year": "2020"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1775404469241,
+        "customerId": "tester123-15",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1775405473367
+      },
+      "tester123-car-18": {
+        "carData": {
+          "carBrand": "Honda",
+          "carModel": "Civic",
+          "carPrice": 0,
+          "chassisNumber": "POWNNMFJD",
+          "color": "Putih",
+          "engineNumber": "3HAJIDOWPW",
+          "ownerName": "Michael Santoso",
+          "plateNumber": "B 3331 TTF",
+          "year": "2019"
+        },
+        "carPhotos": {
+          "back": "",
+          "front": "",
+          "leftSide": "",
+          "rightSide": ""
+        },
+        "createdAt": 1775438393210,
+        "customerId": "tester123-1",
+        "documentPhotos": {
+          "ktp": "",
+          "sim": "",
+          "stnk": ""
+        },
+        "documentStatus": {
+          "hasKTP": false,
+          "hasSIM": false,
+          "hasSTNK": false
+        },
+        "notes": "",
+        "status": "Active",
+        "updatedAt": 1775438393210
+      }
+    }
+  },
+  "car_references": {
+    "BMW": {
+      "Series 3": true,
+      "Series 5": true,
+      "X1": true,
+      "X3": true,
+      "X5": true,
+      "_brandExists": true
+    },
+    "Chevrolet": {
+      "Captiva": true,
+      "Colorado": true,
+      "Spin": true,
+      "Trax": true,
+      "_brandExists": true
+    },
+    "Daihatsu": {
+      "Ayla": true,
+      "Gran Max": true,
+      "Luxio": true,
+      "Rocky": true,
+      "Sigra": true,
+      "Sirion": true,
+      "Terios": true,
+      "Xenia": true,
+      "_brandExists": true
+    },
+    "Ford": {
+      "EcoSport": true,
+      "Everest": true,
+      "Fiesta": true,
+      "Ranger": true,
+      "_brandExists": true
+    },
+    "Honda": {
+      "Accord": true,
+      "BR-V": true,
+      "Brio": true,
+      "CR-V": true,
+      "City": true,
+      "Civic": true,
+      "HR-V": true,
+      "Mobilio": true,
+      "WR-V": true,
+      "_brandExists": true
+    },
+    "Hyundai": {
+      "Creta": true,
+      "Ioniq 5": true,
+      "Ioniq 6": true,
+      "Palisade": true,
+      "Santa Fe": true,
+      "Stargazer": true,
+      "_brandExists": true
+    },
+    "Isuzu": {
+      "D-Max": true,
+      "Elf": true,
+      "MU-X": true,
+      "Panther": true,
+      "Traga": true,
+      "_brandExists": true
+    },
+    "Kia": {
+      "Carens": true,
+      "Carnival": true,
+      "Seltos": true,
+      "Sonet": true,
+      "_brandExists": true
+    },
+    "Mazda": {
+      "CX-3": true,
+      "CX-5": true,
+      "CX-8": true,
+      "CX-9": true,
+      "Mazda2": true,
+      "Mazda3": true,
+      "_brandExists": true
+    },
+    "Mercedes-Benz": {
+      "C-Class": true,
+      "E-Class": true,
+      "GLA": true,
+      "GLC": true,
+      "GLE": true,
+      "_brandExists": true
+    },
+    "Mitsubishi": {
+      "L300": true,
+      "Outlander": true,
+      "Pajero Sport": true,
+      "Triton": true,
+      "Xpander": true,
+      "Xpander Cross": true,
+      "_brandExists": true
+    },
+    "Nissan": {
+      "Kicks": true,
+      "Livina": true,
+      "Magnite": true,
+      "Serena": true,
+      "Terra": true,
+      "X-Trail": true,
+      "_brandExists": true
+    },
+    "Suzuki": {
+      "APV": true,
+      "Baleno": true,
+      "Carry": true,
+      "Ertiga": true,
+      "Ignis": true,
+      "Jimny": true,
+      "S-Presso": true,
+      "XL7": true,
+      "_brandExists": true
+    },
+    "Toyota": {
+      "Agya": true,
+      "Alphard": true,
+      "Avanza": true,
+      "Calya": true,
+      "Camry": true,
+      "Corolla Cross": true,
+      "Fortuner": true,
+      "Innova": true,
+      "Raize": true,
+      "Rush": true,
+      "Veloz": true,
+      "Vios": true,
+      "Yaris": true,
+      "_brandExists": true
+    },
+    "Wuling": {
+      "Air EV": true,
+      "Almaz": true,
+      "Alvez": true,
+      "BinguoEV": true,
+      "Confero": true,
+      "Cortez": true,
+      "_brandExists": true
+    }
+  },
+  "company_profiles": {
+    "tester123": {
+      "companyCity": "Jakarta",
+      "companyLogo": {
+        "format": "jpg",
+        "height": 400,
+        "publicId": "company-logos/tester123/fkz2sfqfigjzemtoy2jw",
+        "uploadedAt": 1770438885559,
+        "url": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1770438885/company-logos/tester123/fkz2sfqfigjzemtoy2jw.jpg",
+        "width": 400
+      },
+      "companyName": "PT. Maju Jaya Abadi",
+      "companySubtitle": "Solusi Teknologi Terdepan",
+      "createdAt": 1770106946486,
+      "updatedAt": 1770438885559
+    }
+  },
+  "customer_counters": {
+    "kuda123": 10,
+    "tester123": 15
+  },
+  "customer_data": {
+    "kuda123": {
+      "kuda123-1": {
+        "address": "Jl. Gatot Subroto No. 45, Bandung",
+        "createdAt": 1767063953468,
+        "email": "michael.santoso@gmail.com",
+        "name": "Michael Santoso123",
+        "notes": "Perpanjangan asuransi mobil tahunan",
+        "phone": "082198765432",
+        "updatedAt": 1767512587238
+      },
+      "kuda123-10": {
+        "address": "lkolklk",
+        "createdAt": 1767510050773,
+        "email": "",
+        "name": "mysql",
+        "notes": "",
+        "phone": "85133123652",
+        "updatedAt": 1767510050773
+      },
+      "kuda123-6": {
+        "address": "sadasda",
+        "createdAt": 1767415381753,
+        "email": "",
+        "name": "joseph",
+        "notes": "",
+        "phone": "81215797479",
+        "updatedAt": 1767415381753
+      },
+      "kuda123-9": {
+        "address": "212121212",
+        "createdAt": 1767498249080,
+        "email": "",
+        "name": "joseph",
+        "notes": "",
+        "phone": "081215797878",
+        "updatedAt": 1767498258426
+      }
+    },
+    "tester123": {
+      "tester123-1": {
+        "address": "Jl. Gatot Subroto No. 45, Bandung",
+        "createdAt": 1767332294021,
+        "email": "michael.santoso@gmail.com",
+        "name": "Michael Santoso",
+        "notes": "Perpanjangan asuransi mobil tahunan",
+        "phone": "082198765432",
+        "updatedAt": 1770873730118
+      },
+      "tester123-10": {
+        "address": "jln kecamatan adriano",
+        "createdAt": 1769994733503,
+        "email": "",
+        "name": "gareth",
+        "notes": "",
+        "phone": "81215797479",
+        "updatedAt": 1773719855959
+      },
+      "tester123-12": {
+        "address": "Jl. Gatot Subroto No. 45, Bandung",
+        "createdAt": 1771464645643,
+        "email": "",
+        "name": "hery setiawan",
+        "notes": "",
+        "phone": "85133123652",
+        "status": "Cancelled",
+        "updatedAt": 1771468761915
+      },
+      "tester123-13": {
+        "address": "Jln Lautze II no 14",
+        "createdAt": 1771553170871,
+        "email": "",
+        "name": "Lulu Gozali",
+        "notes": "",
+        "phone": "0819905080",
+        "updatedAt": 1771553213374
+      },
+      "tester123-14": {
+        "address": "Jl. Gatot Subroto No. 45, Bandung",
+        "createdAt": 1772770035107,
+        "email": "",
+        "name": "kevin setiawan",
+        "notes": "",
+        "phone": "0812644848",
+        "updatedAt": 1772776350238
+      },
+      "tester123-15": {
+        "address": "Jl. Testing No. 123",
+        "createdAt": 1775404314386,
+        "email": "budi@budi.com",
+        "name": "Budi Santoso (Updated)",
+        "notes": "",
+        "phone": "08123456789",
+        "updatedAt": 1775404391737
+      },
+      "tester123-3": {
+        "address": "Jl. Thamrin No. 10 Jakarta",
+        "createdAt": 1769219289779,
+        "email": "",
+        "name": "Siti Nurhaliza",
+        "notes": "Customer VIP",
+        "phone": "08139876543",
+        "updatedAt": 1769219863649
+      },
+      "tester123-4": {
+        "address": "jlm ayam",
+        "createdAt": 1769220581459,
+        "email": "",
+        "name": "testing",
+        "notes": "",
+        "phone": "081215797878",
+        "updatedAt": 1769223155411
+      },
+      "tester123-5": {
+        "address": "fdsfsddfsfsf",
+        "createdAt": 1769223460288,
+        "email": "",
+        "name": "testing89",
+        "notes": "sdfs",
+        "phone": "8119660089",
+        "updatedAt": 1769223468538
+      },
+      "tester123-6": {
+        "address": "jln pademangan",
+        "createdAt": 1769401674011,
+        "email": "",
+        "name": "joseph",
+        "notes": "",
+        "phone": "081215797878",
+        "updatedAt": 1769401681841
+      },
+      "tester123-7": {
+        "address": "jln harga baru",
+        "createdAt": 1769572234153,
+        "email": "",
+        "name": "harga baru",
+        "notes": "",
+        "phone": "081215797878",
+        "updatedAt": 1769572244632
+      },
+      "tester123-8": {
+        "address": "jln kesehatan",
+        "createdAt": 1769573052125,
+        "email": "",
+        "name": "kevin",
+        "notes": "",
+        "phone": "082198765432",
+        "updatedAt": 1772770203251
+      }
+    }
+  },
+  "customers": {
+    "d1b85c29-49ca-4326-bf28-19b8bde07cbd": {
+      "address": "Jl. Raya Bogor Km 30",
+      "createdAt": 1766465842933,
+      "createdBy": "tester123",
+      "email": "sumber@email.com",
+      "name": "PT Sumber Makmur",
+      "notes": "Customer baru dari user biasa",
+      "phone": "081234567890",
+      "updatedAt": 1766465842933
+    }
+  },
+  "invoice_counters": {
+    "tester123": 2
+  },
+  "invoice_records": {
+    "tester123": {
+      "tester123-inv-1": {
+        "carId": "tester123-car-13",
+        "createdAt": 1775376391874,
+        "createdBy": "tester123",
+        "customerId": "tester123-6",
+        "customerName": "joseph",
+        "discount": 0,
+        "dueDate": 1775865600000,
+        "grandTotal": 515000,
+        "invoiceNumber": "INV-202604-7213",
+        "issueDate": 1775376391737,
+        "items": [
+          {
+            "description": "Premi Asuransi Kendaraan",
+            "price": "500000",
+            "quantity": 1
+          }
+        ],
+        "notes": "Generated from Invoice form",
+        "plateNumber": "B 4313 FET",
+        "status": "Paid",
+        "subTotal": 500000,
+        "updatedAt": 1775376487913
+      },
+      "tester123-inv-2": {
+        "carId": "tester123-CAR-0003",
+        "createdAt": 1775439184779,
+        "createdBy": "tester123",
+        "customerId": "tester123-12",
+        "customerName": "Hery setiawan",
+        "discount": 0,
+        "dueDate": 1797638400000,
+        "grandTotal": 550000,
+        "invoiceNumber": "INV-202604-8228",
+        "issueDate": 1775439184358,
+        "items": [
+          {
+            "description": "Premi",
+            "price": "500000",
+            "quantity": 1
+          }
+        ],
+        "notes": "Generated from Invoice form",
+        "plateNumber": "B 3321 BFR",
+        "status": "Unpaid",
+        "subTotal": 500000,
+        "updatedAt": 1775439184779
+      }
+    }
+  },
+  "kwitansi_counters": {
+    "tester123": 1
+  },
+  "kwitansi_records": {
+    "tester123": {
+      "tester123-kwt-1": {
+        "createdAt": 1775377654949,
+        "invoiceData": {
+          "customerName": "joseph",
+          "grandTotal": 515000,
+          "invoiceId": "tester123-inv-1",
+          "invoiceNumber": "INV-202604-7213",
+          "items": [
+            {
+              "description": "Premi Asuransi Kendaraan",
+              "price": "500000",
+              "quantity": 1
+            }
+          ]
+        },
+        "issuedDate": 1775377654949,
+        "kwitansiNumber": "KWT/2026/04/001",
+        "paymentId": "tester123-pay-2",
+        "printCount": 3,
+        "printedBy": "tester123",
+        "updatedAt": 1775379894084
+      }
+    }
+  },
+  "payment_counters": {
+    "tester123": 5
+  },
+  "payment_records": {
+    "tester123": {
+      "tester123-pay-2": {
+        "amount": 515000,
+        "createdAt": 1775376391951,
+        "createdBy": "tester123",
+        "customerId": "tester123-6",
+        "dueDate": 1775865600000,
+        "invoiceNumber": "tester123-inv-1",
+        "notes": "Auto-generated from Invoice INV-202604-7213",
+        "paidDate": "2026-04-05T08:08:07.789Z",
+        "paymentMethod": "",
+        "policyId": "",
+        "policyType": "",
+        "proofUrl": "",
+        "status": "Paid",
+        "updatedAt": 1775376487870
+      },
+      "tester123-pay-3": {
+        "amount": 500000,
+        "createdAt": 1775404781917,
+        "createdBy": "tester123",
+        "customerId": "tester123-15",
+        "dueDate": "2026-04-05",
+        "invoiceNumber": "",
+        "notes": "",
+        "paymentMethod": "",
+        "policyId": "tester123-car-17",
+        "policyType": "car",
+        "proofUrl": "",
+        "status": "Overdue",
+        "updatedAt": 1775404781917
+      },
+      "tester123-pay-5": {
+        "amount": 0,
+        "createdAt": 1775441198484,
+        "createdBy": "tester123",
+        "customerId": "tester123-12",
+        "dueDate": "2027-04-06",
+        "invoiceNumber": "",
+        "notes": "Auto-generated dari Renewal tester123-ren-3",
+        "paymentMethod": "",
+        "policyId": "tester123-CAR-0003",
+        "policyType": "car",
+        "proofUrl": "",
+        "status": "Pending",
+        "updatedAt": 1775441198484
+      }
+    }
+  },
+  "property_counters": {
+    "kuda123": 1,
+    "tester123": 4
+  },
+  "property_data": {
+    "kuda123": {
+      "kuda123-1": {
+        "createdAt": 1769239798502,
+        "customerId": "kuda123-6",
+        "documents": {
+          "certificate": "",
+          "imb": "",
+          "other": "",
+          "pbb": ""
+        },
+        "insuranceData": {
+          "coverageType": "",
+          "deductible": "",
+          "insuranceCompany": "",
+          "insuranceValue": "",
+          "policyNumber": "",
+          "premium": ""
+        },
+        "notes": "",
+        "propertyData": {
+          "address": "",
+          "buildingArea": "",
+          "buildingStructure": "",
+          "city": "jakarta",
+          "landArea": "",
+          "numberOfFloors": "",
+          "postalCode": "",
+          "propertyType": "",
+          "propertyValue": "",
+          "province": "",
+          "yearBuilt": ""
+        },
+        "propertyPhotos": {
+          "back": "",
+          "front": "",
+          "interior1": "",
+          "interior2": "",
+          "interior3": "",
+          "interior4": "",
+          "left": "",
+          "right": ""
+        },
+        "status": "Active",
+        "updatedAt": 1769392187040
+      }
+    },
+    "tester123": {
+      "tester123-4": {
+        "createdAt": 1774586390640,
+        "customerId": "tester123-1",
+        "documents": {
+          "certificate": "",
+          "imb": "",
+          "other": "",
+          "pbb": ""
+        },
+        "insuranceData": {
+          "coverageType": "Earthquake",
+          "deductible": "555555",
+          "endDate": 1806105600000,
+          "insuranceCompany": "ACA",
+          "insuranceValue": "5000000",
+          "policyNumber": "123123123123",
+          "premium": "50000000",
+          "startDate": 1774569600000
+        },
+        "notes": "",
+        "propertyData": {
+          "address": "jln pademangan III raya no 14",
+          "buildingArea": "250",
+          "buildingStructure": "kayu",
+          "city": "Jakarta Barat",
+          "landArea": "2000",
+          "numberOfFloors": "5",
+          "postalCode": "14410",
+          "propertyType": "House",
+          "propertyValue": "20000000",
+          "province": "Dki Jakarta",
+          "yearBuilt": "2006"
+        },
+        "propertyPhotos": {
+          "back": "",
+          "front": "",
+          "interior1": "",
+          "interior2": "",
+          "interior3": "",
+          "interior4": "",
+          "left": "",
+          "right": ""
+        },
+        "status": "Active",
+        "updatedAt": 1774586390640
+      }
+    }
+  },
+  "quotation_counters": {
+    "tester123": 5
+  },
+  "quotation_data": {
+    "tester123": {
+      "tester123-1": {
+        "calculations": {
+          "coverages": [
+            {
+              "calculatedAmount": 2400000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 1.2,
+              "type": "Comprehensive"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Huru Hara / RSCC"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isFree": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Water Hammer"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isFree": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Authorized Workshop"
+            },
+            {
+              "amount": 300000,
+              "calculatedAmount": 300000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+            },
+            {
+              "amount": 100000,
+              "calculatedAmount": 100000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Driver"
+            },
+            {
+              "amount": 80000,
+              "calculatedAmount": 80000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Passanger 4 Person"
+            }
+          ],
+          "discountAmount": 700000,
+          "discountPercent": 25,
+          "stampDuty": 60000,
+          "totalFixedPremiums": 480000,
+          "totalPercentagePremiums": 2800000,
+          "totalPremium": 2640000,
+          "tsiPrice": 200000000
+        },
+        "coverages": [
+          {
+            "calculatedAmount": 2400000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 1.2,
+            "type": "Comprehensive"
+          },
+          {
+            "calculatedAmount": 200000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 0.1,
+            "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+          },
+          {
+            "calculatedAmount": 200000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 0.1,
+            "type": "Huru Hara / RSCC"
+          },
+          {
+            "amount": 0,
+            "calculatedAmount": 0,
+            "isFree": true,
+            "isPercentage": true,
+            "rate": 0,
+            "type": "Water Hammer"
+          },
+          {
+            "amount": 0,
+            "calculatedAmount": 0,
+            "isFree": true,
+            "isPercentage": true,
+            "rate": 0,
+            "type": "Authorized Workshop"
+          },
+          {
+            "amount": 300000,
+            "calculatedAmount": 300000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+          },
+          {
+            "amount": 100000,
+            "calculatedAmount": 100000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "PA Driver"
+          },
+          {
+            "amount": 80000,
+            "calculatedAmount": 80000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "PA Passanger 4 Person"
+          }
+        ],
+        "createdAt": 1769995461740,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "customerName": "gareth",
+        "discountPercent": 25,
+        "id": "tester123-1",
+        "notes": "Quotation ini berlaku 30 hari dari tanggal terbit",
+        "quotationNo": "QS/001/MV/V/2025",
+        "stampDuty": 60000,
+        "status": "generated",
+        "updatedAt": 1769995461740,
+        "vehicleData": {
+          "carType": "lexus civic",
+          "policeNo": "B 911 VFR",
+          "tsiPrice": 200000000
+        }
+      },
+      "tester123-2": {
+        "calculations": {
+          "coverages": [
+            {
+              "calculatedAmount": 2400000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 1.2,
+              "type": "Comprehensive"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Huru Hara / RSCC"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isInclude": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Water Hammer"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isInclude": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Authorized Workshop"
+            },
+            {
+              "amount": 300000,
+              "calculatedAmount": 300000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+            },
+            {
+              "amount": 100000,
+              "calculatedAmount": 100000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Driver"
+            },
+            {
+              "amount": 80000,
+              "calculatedAmount": 80000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Passanger 4 Person"
+            }
+          ],
+          "discountAmount": 700000,
+          "discountPercent": 25,
+          "totalPremium": 2640000
+        },
+        "createdAt": 1769995714565,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "customerName": "gareth",
+        "id": "tester123-2",
+        "quotationNo": "QS/002/MV/V/2025",
+        "updatedAt": 1769995714565,
+        "vehicleData": {
+          "carType": "lexus civic",
+          "policeNo": "B 911 VFR",
+          "tsiPrice": 200000000
+        }
+      },
+      "tester123-3": {
+        "calculations": {
+          "coverages": [
+            {
+              "calculatedAmount": 2400000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 1.2,
+              "type": "Comprehensive"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isInclude": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Huru Hara / RSCC"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isInclude": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Water Hammer"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isInclude": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Authorized Workshop"
+            },
+            {
+              "amount": 300000,
+              "calculatedAmount": 300000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+            },
+            {
+              "amount": 100000,
+              "calculatedAmount": 100000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Driver"
+            },
+            {
+              "amount": 80000,
+              "calculatedAmount": 80000,
+              "isInclude": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Passanger 4 Person"
+            }
+          ],
+          "discountAmount": 700000,
+          "discountPercent": 25,
+          "totalPremium": 2640000
+        },
+        "createdAt": 1769996007780,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "customerName": "gareth",
+        "id": "tester123-3",
+        "quotationNo": "QS/003/MV/V/2025",
+        "updatedAt": 1769996007780,
+        "vehicleData": {
+          "carType": "lexus civic",
+          "policeNo": "B 911 VFR",
+          "tsiPrice": 200000000
+        }
+      },
+      "tester123-4": {
+        "calculations": {
+          "coverages": [
+            {
+              "calculatedAmount": 2400000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 1.2,
+              "type": "Comprehensive"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+            },
+            {
+              "calculatedAmount": 200000,
+              "isFree": false,
+              "isPercentage": true,
+              "rate": 0.1,
+              "type": "Huru Hara / RSCC"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isFree": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Water Hammer"
+            },
+            {
+              "amount": 0,
+              "calculatedAmount": 0,
+              "isFree": true,
+              "isPercentage": true,
+              "rate": 0,
+              "type": "Authorized Workshop"
+            },
+            {
+              "amount": 300000,
+              "calculatedAmount": 300000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+            },
+            {
+              "amount": 100000,
+              "calculatedAmount": 100000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Driver"
+            },
+            {
+              "amount": 80000,
+              "calculatedAmount": 80000,
+              "isFree": false,
+              "isPercentage": false,
+              "rate": 0,
+              "type": "PA Passanger 4 Person"
+            }
+          ],
+          "discountAmount": 700000,
+          "discountPercent": 25,
+          "stampDuty": 60000,
+          "totalFixedPremiums": 480000,
+          "totalPercentagePremiums": 2800000,
+          "totalPremium": 2640000,
+          "tsiPrice": 200000000
+        },
+        "coverages": [
+          {
+            "calculatedAmount": 2400000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 1.2,
+            "type": "Comprehensive"
+          },
+          {
+            "calculatedAmount": 200000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 0.1,
+            "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+          },
+          {
+            "calculatedAmount": 200000,
+            "isFree": false,
+            "isPercentage": true,
+            "rate": 0.1,
+            "type": "Huru Hara / RSCC"
+          },
+          {
+            "amount": 0,
+            "calculatedAmount": 0,
+            "isFree": true,
+            "isPercentage": true,
+            "rate": 0,
+            "type": "Water Hammer"
+          },
+          {
+            "amount": 0,
+            "calculatedAmount": 0,
+            "isFree": true,
+            "isPercentage": true,
+            "rate": 0,
+            "type": "Authorized Workshop"
+          },
+          {
+            "amount": 300000,
+            "calculatedAmount": 300000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "TPL (Tanggung Jawab Hukum Pihak III)"
+          },
+          {
+            "amount": 100000,
+            "calculatedAmount": 100000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "PA Driver"
+          },
+          {
+            "amount": 80000,
+            "calculatedAmount": 80000,
+            "isFree": false,
+            "isPercentage": false,
+            "rate": 0,
+            "type": "PA Passanger 4 Person"
+          }
+        ],
+        "createdAt": 1769996101385,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "customerName": "gareth",
+        "discountPercent": 25,
+        "id": "tester123-4",
+        "notes": "Quotation ini berlaku 30 hari dari tanggal terbit",
+        "quotationNo": "QS/004/MV/V/2025",
+        "stampDuty": 60000,
+        "status": "generated",
+        "updatedAt": 1769996101385,
+        "vehicleData": {
+          "carType": "lexus civic",
+          "policeNo": "B 911 VFR",
+          "tsiPrice": 200000000
+        }
+      },
+      "tester123-5": {
+        "coverages": [
+          {
+            "rate": "1,2 %",
+            "type": "Comprehensive"
+          },
+          {
+            "rate": "0,1 %",
+            "type": "HURU HARA / RSCC"
+          },
+          {
+            "rate": "0,1 %",
+            "type": "Banjir, Angin Topan, Badai, Hujan Es, Tanah Longsor"
+          },
+          {
+            "amount": "FREE INCLUDE",
+            "type": "Water Hammer"
+          },
+          {
+            "amount": "FREE INCLUDE",
+            "type": "Authorized Workshop"
+          },
+          {
+            "amount": "20.000.000,-(IDR)",
+            "type": "PA Driver"
+          },
+          {
+            "amount": "10.000.000,-(IDR)",
+            "type": "PA Passanger 4 Person"
+          },
+          {
+            "amount": "30.000.000,-(IDR)",
+            "type": "TPL"
+          }
+        ],
+        "createdAt": 1769996618635,
+        "createdBy": "tester123",
+        "customerId": "tester123-10",
+        "customerName": "gareth",
+        "id": "tester123-5",
+        "premiumItems": [
+          {
+            "calculation": "590.000.000 X 1,2",
+            "isPercentage": true,
+            "result": "7.080.000,-",
+            "type": "Comprehensive"
+          },
+          {
+            "calculation": "590.000.000 X 0,1",
+            "isPercentage": true,
+            "result": "590.000,-",
+            "type": "Banjir,Angin Topan, Badai"
+          },
+          {
+            "calculation": "590.000.000 X 0,1",
+            "isPercentage": true,
+            "result": "590.000,-",
+            "type": "Huru Hara / RSCC"
+          },
+          {
+            "calculation": "FREE INCLUDE",
+            "result": "FREE INCLUDE",
+            "type": "Water Hammer"
+          },
+          {
+            "calculation": "FREE INCLUDE",
+            "result": "FREE INCLUDE",
+            "type": "Authorized Workshop"
+          },
+          {
+            "calculation": "300.000",
+            "result": "300.000,-",
+            "type": "TPL"
+          },
+          {
+            "calculation": "100.000",
+            "result": "100.000,-",
+            "type": "PA Driver"
+          },
+          {
+            "calculation": "80.000",
+            "result": "80.000,-",
+            "type": "PA Passenger 4 Person"
+          }
+        ],
+        "quotationNo": "QS/005/MV/V/2025",
+        "totalPremium": 6615000,
+        "updatedAt": 1769996618635
+      }
+    }
+  },
+  "quotations": {
+    "-OpVNlzD31-rqsKnVo6x": {
+      "coverages": {
+        "authorizedWorkshop": {
+          "enabled": true,
+          "freeInclude": true,
+          "percentage": 0.05
+        },
+        "comprehensive": {
+          "enabled": true,
+          "freeInclude": false,
+          "percentage": 1.32
+        },
+        "earthquake": {
+          "enabled": true,
+          "freeInclude": false,
+          "percentage": 0.12
+        },
+        "flood": {
+          "enabled": false,
+          "freeInclude": false,
+          "percentage": 0.1
+        },
+        "landslide": {
+          "enabled": false,
+          "freeInclude": false,
+          "percentage": 0.05
+        },
+        "thirdPartyLiability": {
+          "enabled": false,
+          "freeInclude": false,
+          "percentage": 0.5
+        },
+        "typhoonAndStorm": {
+          "enabled": true,
+          "freeInclude": false,
+          "percentage": 0.05
+        },
+        "waterHammer": {
+          "enabled": true,
+          "freeInclude": true,
+          "percentage": 0.05
+        }
+      },
+      "createdAt": "2026-04-06T01:23:23.171Z",
+      "customerId": "tester123-12",
+      "id": "-OpVNlzD31-rqsKnVo6x",
+      "insuranceProvider": "Aca",
+      "insuranceType": "All Risk",
+      "policyId": "tester123-CAR-0003",
+      "policyType": "car",
+      "quotationNumber": "QUO-202604-0276",
+      "status": "Accepted",
+      "totalPremium": 805000,
+      "tsi": 50000000,
+      "updatedAt": "2026-04-06T01:24:45.961Z",
+      "userId": "tester123"
+    }
+  },
+  "renewal_counters": {
+    "tester123": 3
+  },
+  "renewal_records": {
+    "tester123": {
+      "tester123-ren-1": {
+        "completedAt": "2026-04-05T16:11:13.487Z",
+        "createdAt": 1775404851901,
+        "createdBy": "tester123",
+        "customerId": "tester123-15",
+        "newEndDate": "2026-04-05",
+        "newStartDate": "2025-04-05",
+        "notes": "",
+        "oldEndDate": "2025-04-05",
+        "oldStartDate": "2024-04-05",
+        "paymentId": "",
+        "policyId": "tester123-car-17",
+        "policyType": "car",
+        "premium": 1000000,
+        "status": "Completed",
+        "updatedAt": 1775405473561
+      },
+      "tester123-ren-2": {
+        "createdAt": 1775406398678,
+        "createdBy": "tester123",
+        "customerId": "tester123-8",
+        "newEndDate": "2027-04-04",
+        "newStartDate": "2026-04-04",
+        "notes": "bayar sore",
+        "oldEndDate": "2026-04-04",
+        "oldStartDate": "2025-04-04",
+        "paymentId": "",
+        "policyId": "tester123-CAR-0011",
+        "policyType": "car",
+        "premium": 0,
+        "status": "Cancelled",
+        "updatedAt": 1775440980913
+      },
+      "tester123-ren-3": {
+        "createdAt": 1775441198184,
+        "createdBy": "tester123",
+        "customerId": "tester123-12",
+        "newEndDate": "2027-04-06",
+        "newStartDate": "2026-04-06",
+        "notes": "",
+        "oldEndDate": "2026-12-19",
+        "oldStartDate": "2025-12-19",
+        "paymentId": "tester123-pay-5",
+        "policyId": "tester123-CAR-0003",
+        "policyType": "car",
+        "premium": 5000000,
+        "status": "Cancelled",
+        "updatedAt": 1775441770671
+      }
+    }
+  },
+  "users": {
+    "-OeQHhVds7e13l2uJjp-": {
+      "createdAt": 1763541965720,
+      "fullName": "Budi Santoso",
+      "password": "$2b$10$oQKnHNk.QSfLx9ovtwuNA.NZVFyiAZJMTUqxnZcbe2FjNNVbez4Lq",
+      "updatedAt": 1763541965720,
+      "username": "budis"
+    },
+    "admin": {
+      "createdAt": 1766457073551,
+      "fullName": "Admin User",
+      "password": "$2b$10$dPinWAcr7qPo6XOqgkr2xefbSnmX82E0PwIUIfGgzgIkijkqY9FoS",
+      "role": "admin",
+      "updatedAt": 1766457073551,
+      "username": "admin"
+    },
+    "joseph": {
+      "createdAt": 1764144042352,
+      "fullName": "joseph",
+      "password": "$2b$10$W5jRvkws2A.XcBQ5VkHdwu7sAvdRtNvzJftupFsDqWw2DmBNdU17W",
+      "updatedAt": 1764144042352,
+      "username": "joseph"
+    },
+    "josephimanuel": {
+      "createdAt": 1771988417894,
+      "email": "josephretiawan71@gmail.com",
+      "fullName": "joseph",
+      "password": "$2b$10$u1Wlx/1HGW92pTfnnAqMq.oi/hEYVf1BpGy826BP0yqph0Omz0q6G",
+      "role": "user",
+      "updatedAt": 1771988417894,
+      "username": "josephimanuel"
+    },
+    "josephsetiawan": {
+      "createdAt": 1770945944834,
+      "fullName": "joseph imanuel",
+      "password": "$2b$10$Uo6kKkViFUaFUtYTpsOm/O6dEtWAel47EmRXr21RgqA/I1skeLTRi",
+      "role": "user",
+      "updatedAt": 1770945944834,
+      "username": "josephsetiawan"
+    },
+    "kuda123": {
+      "createdAt": 1766998548039,
+      "fullName": "kuda",
+      "password": "$2b$10$fm4HNOrfCjxrM1QJELKj..krbVdUxeW.peExvYXNHovyb2a3zy0oa",
+      "role": "user",
+      "updatedAt": 1766998548039,
+      "username": "kuda123"
+    },
+    "tester123": {
+      "createdAt": 1766465533989,
+      "email": "josephsetiawan71@gmail.com",
+      "fullName": "tester123",
+      "password": "$2b$10$kM9wFePW4wzoCeIlva/gXubGAwaHGMBwe1mgyXcUalrGZLrVhGzDK",
+      "role": "user",
+      "updatedAt": 1771984798837,
+      "username": "tester123"
+    }
+  }
+}

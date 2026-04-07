@@ -2,26 +2,26 @@ const { db } = require('../config/firebase');
 
 class KwitansiDAO {
   constructor() {
-    this.kwitansiRootRef = db.ref('kwitansi_records');
-    this.kwitansiCountRef = db.ref('kwitansi_counters');
+    this.kwitansiRootRef = db.collection('kwitansi_records');
+    this.kwitansiCountRef = db.collection('kwitansi_counters');
   }
 
   getUserKwitansiRef(userId) {
-    return this.kwitansiRootRef.child(userId);
+    return this.kwitansiRootRef.doc(userId).collection('kwitansis');
   }
 
   // Get next kwitansi number for user
   async getNextKwitansiNumber(userId) {
     try {
-      const counterRef = this.kwitansiCountRef.child(userId);
-      const snapshot = await counterRef.once('value');
+      const docRef = this.kwitansiCountRef.doc(userId);
+      const doc = await docRef.get();
 
       let nextNumber = 1;
-      if (snapshot.exists()) {
-        nextNumber = snapshot.val() + 1;
+      if (doc.exists) {
+        nextNumber = (doc.data().count || 0) + 1;
       }
 
-      await counterRef.set(nextNumber);
+      await docRef.set({ count: nextNumber });
 
       return nextNumber;
     } catch (error) {
@@ -45,13 +45,13 @@ class KwitansiDAO {
 
   async getAllKwitansiByUser(userId) {
     try {
-      const snapshot = await this.getUserKwitansiRef(userId).once('value');
+      const snapshot = await this.getUserKwitansiRef(userId).get();
       const kwitansis = [];
 
-      snapshot.forEach((childSnapshot) => {
+      snapshot.forEach((docSnap) => {
         kwitansis.push({
-          id: childSnapshot.key,
-          ...childSnapshot.val(),
+          id: docSnap.id,
+          ...docSnap.data(),
         });
       });
 
@@ -70,13 +70,13 @@ class KwitansiDAO {
 
   async getKwitansiById(kwitansiId, userId) {
     try {
-      const snapshot = await this.getUserKwitansiRef(userId).child(kwitansiId).once('value');
+      const doc = await this.getUserKwitansiRef(userId).doc(kwitansiId).get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         return null;
       }
 
-      return this.normalizeKwitansi(kwitansiId, snapshot.val(), userId);
+      return this.normalizeKwitansi(kwitansiId, doc.data(), userId);
     } catch (error) {
       throw new Error('Failed to fetch kwitansi: ' + error.message);
     }
@@ -112,7 +112,7 @@ class KwitansiDAO {
         updatedAt: Date.now(),
       };
 
-      await this.getUserKwitansiRef(createdBy).child(kwitansiId).set(recordToSave);
+      await this.getUserKwitansiRef(createdBy).doc(kwitansiId).set(recordToSave);
 
       return {
         id: kwitansiId,
@@ -125,14 +125,14 @@ class KwitansiDAO {
 
   async incrementPrintCount(kwitansiId, userId) {
     try {
-      const kwitansiRef = this.getUserKwitansiRef(userId).child(kwitansiId);
-      const snapshot = await kwitansiRef.once('value');
+      const kwitansiRef = this.getUserKwitansiRef(userId).doc(kwitansiId);
+      const doc = await kwitansiRef.get();
 
-      if (!snapshot.exists()) {
+      if (!doc.exists) {
         throw new Error('Kwitansi not found');
       }
 
-      const existingData = snapshot.val();
+      const existingData = doc.data();
       const newCount = (existingData.printCount || 0) + 1;
       
       const dataToUpdate = {

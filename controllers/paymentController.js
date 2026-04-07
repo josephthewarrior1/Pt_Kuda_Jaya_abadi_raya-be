@@ -3,10 +3,40 @@ const customerDAO = require('../dao/customerDAO');
 const carDAO = require('../dao/carDAO');
 const propertyDAO = require('../dao/propertyDAO');
 const invoiceDAO = require('../dao/invoiceDAO');
+const renewalDAO = require('../dao/renewalDAO');
 const cloudinary = require('../config/cloudinary');
 
 const ALLOWED_POLICY_TYPES = ['car', 'property'];
 const ALLOWED_STATUSES = ['Pending', 'Paid', 'Overdue', 'Cancelled'];
+
+// ─── Helper: Auto-complete a Renewal when its Payment is marked Paid ──────────
+const autoCompleteRenewal = async (payment, userId) => {
+  if (!payment.renewalId) return;
+  const renewal = await renewalDAO.getRenewalById(payment.renewalId, userId);
+  if (!renewal || renewal.status === 'Completed') return;
+
+  if (!renewal.newStartDate || !renewal.newEndDate) return;
+
+  // Update the car/policy with new dates
+  if (renewal.policyType === 'car') {
+    await carDAO.updateCar(renewal.policyId, {
+      carData: { startDate: renewal.newStartDate, dueDate: renewal.newEndDate },
+      status: 'Active',
+    }, userId);
+  } else if (renewal.policyType === 'property') {
+    await propertyDAO.updateProperty(renewal.policyId, {
+      insuranceData: { startDate: renewal.newStartDate, endDate: renewal.newEndDate, premium: renewal.premium },
+      status: 'Active',
+    }, userId);
+  }
+
+  await renewalDAO.updateRenewal(renewal.id, {
+    status: 'Completed',
+    completedAt: new Date().toISOString(),
+  }, userId);
+
+  console.log(`✅ Auto-completed Renewal ${renewal.id} → Car/Policy updated to Active`);
+};
 
 const isPastDue = (dueDate) => {
   if (!dueDate) {
@@ -363,6 +393,31 @@ class PaymentController {
         }
       }
 
+      // AUTO-COMPLETE RENEWAL if Payment is now Paid and has a renewalId
+      if (updatedPayment.status === 'Paid' && updatedPayment.renewalId) {
+        try {
+          await autoCompleteRenewal(updatedPayment, userId);
+        } catch (err) {
+          console.error('Failed to auto-complete renewal:', err);
+        }
+      }
+
+      // Auto-Activate Policy if it was Nonaktif
+      if (updatedPayment.status === 'Paid' && updatedPayment.policyType === 'car' && updatedPayment.policyId) {
+        try {
+          const carData = await carDAO.getCarById(updatedPayment.policyId, userId);
+          if (carData) {
+            // carDAO sometimes returns {success:true, car: {...}} or directly the object, handle both:
+            const car = carData.car || carData;
+            if (car.status === 'Nonaktif') {
+              await carDAO.updateCar(updatedPayment.policyId, { status: 'Active' }, userId);
+            }
+          }
+        } catch (autoActivateErr) {
+          console.error('Failed to auto-activate Nonaktif vehicle:', autoActivateErr);
+        }
+      }
+
       res.status(200).json({
         success: true,
         message: 'Payment record updated successfully',
@@ -430,6 +485,15 @@ class PaymentController {
           await invoiceDAO.updateInvoice(updatedPayment.invoiceNumber, { status: 'Paid' }, userId);
         } catch (invoiceErr) {
           console.error('Failed to sync Invoice status upon payment proof upload:', invoiceErr);
+        }
+      }
+
+      // AUTO-COMPLETE RENEWAL if Payment has a renewalId
+      if (updatedPayment.renewalId) {
+        try {
+          await autoCompleteRenewal(updatedPayment, userId);
+        } catch (err) {
+          console.error('Failed to auto-complete renewal after proof upload:', err);
         }
       }
 

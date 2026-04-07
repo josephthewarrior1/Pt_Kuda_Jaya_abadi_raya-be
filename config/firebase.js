@@ -28,7 +28,7 @@ try {
   }
   
   auth = admin.auth();
-  db = admin.database();
+  db = admin.firestore(); // Changed from admin.database()
 } catch (error) {
   console.error('❌ Firebase Admin initialization failed:', error.message);
   // JANGAN throw error, export null aja
