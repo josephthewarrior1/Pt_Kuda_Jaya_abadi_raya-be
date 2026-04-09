@@ -156,7 +156,7 @@ class UserController {
   // Get Profile
   async getProfile(req, res) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.username;
 
       const user = await userDAO.findById(userId);
 
@@ -190,7 +190,7 @@ class UserController {
   // Update Profile — sekarang bisa update email juga
   async updateProfile(req, res) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.username;
       const { fullName, email } = req.body;
 
       if (!fullName) {
@@ -238,7 +238,7 @@ class UserController {
   // Change Password
   async changePassword(req, res) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.username;
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {

@@ -4,7 +4,7 @@ const PaymentDAO = require('../dao/paymentDAO');
 // Create new invoice
 exports.createInvoice = async (req, res) => {
   try {
-    const userId = req.user.id || req.user.uid; // from auth middleware
+    const userId = req.user.username; // from auth middleware
     const invoiceData = {
       ...req.body,
       createdBy: userId,
@@ -80,7 +80,7 @@ exports.createInvoice = async (req, res) => {
 // Get all invoices for user
 exports.getAllInvoices = async (req, res) => {
   try {
-    const userId = req.user.id || req.user.uid;
+    const userId = req.user.username;
     const invoices = await InvoiceDAO.getAllInvoicesByUser(userId);
 
     res.status(200).json({
@@ -100,7 +100,7 @@ exports.getAllInvoices = async (req, res) => {
 // Get invoice by ID
 exports.getInvoiceById = async (req, res) => {
   try {
-    const userId = req.user.id || req.user.uid;
+    const userId = req.user.username;
     const { id } = req.params;
 
     const invoice = await InvoiceDAO.getInvoiceById(id, userId);
@@ -128,7 +128,7 @@ exports.getInvoiceById = async (req, res) => {
 // Update invoice
 exports.updateInvoice = async (req, res) => {
   try {
-    const userId = req.user.id || req.user.uid;
+    const userId = req.user.username;
     const { id } = req.params;
     const updateData = req.body;
 

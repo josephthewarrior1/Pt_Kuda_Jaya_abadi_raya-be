@@ -4,7 +4,7 @@ const InvoiceDAO = require('../dao/invoiceDAO');
 
 exports.createOrGetKwitansi = async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.username;
     const { paymentId } = req.body;
 
     if (!paymentId) {
@@ -71,7 +71,7 @@ exports.createOrGetKwitansi = async (req, res) => {
 
 exports.getAllKwitansi = async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.username;
     const kwitansis = await KwitansiDAO.getAllKwitansiByUser(userId);
 
     res.status(200).json({
@@ -87,7 +87,7 @@ exports.getAllKwitansi = async (req, res) => {
 
 exports.getKwitansiById = async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.username;
     const { id } = req.params;
 
     const kwitansi = await KwitansiDAO.getKwitansiById(id, userId);

@@ -159,10 +159,17 @@ class RenewalDAO {
   // Returns the first active (Pending/Approved) renewal for a given policyId
   async getActivePendingRenewalByPolicy(policyId, userId) {
     try {
-      const renewals = await this.getAllRenewalsByUser(userId);
-      return renewals.find(
-        (r) => r.policyId === policyId && ['Pending', 'Approved'].includes(r.status)
-      ) || null;
+      const snapshot = await this.getUserRenewalsRef(userId)
+        .where('policyId', '==', policyId)
+        .where('status', 'in', ['Pending', 'Approved'])
+        .get();
+
+      if (snapshot.empty) {
+        return null;
+      }
+
+      const doc = snapshot.docs[0];
+      return this.normalizeRenewal(doc.id, doc.data(), userId);
     } catch (error) {
       throw new Error('Failed to check active renewal: ' + error.message);
     }

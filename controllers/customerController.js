@@ -65,16 +65,7 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
-      const idUsername = id.split('-')[0];
-
-      // Pastikan customer ID milik user yang sedang login
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer',
-        });
-      }
+      // Firestore query via DAO implicitly scopes by userId, ensuring secure access.
 
       const carDAO = require('../dao/carDAO');
       const propertyDAO = require('../dao/propertyDAO');
@@ -178,16 +169,7 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
-      const idUsername = id.split('-')[0];
-
-      // Pastikan customer ID milik user yang sedang login
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer',
-        });
-      }
+      // Firestore query via DAO implicitly scopes by userId, ensuring secure access.
 
       const {
         name, email, phone, address, notes, status,
@@ -255,16 +237,7 @@ class CustomerController {
         });
       }
 
-      // Extract username dari ID untuk verifikasi
-      const idUsername = id.split('-')[0];
-
-      // Pastikan customer ID milik user yang sedang login
-      if (idUsername !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this customer',
-        });
-      }
+      // Firestore query via DAO implicitly scopes by userId, ensuring secure access.
 
       await customerDAO.deleteCustomer(id, userId);
 
