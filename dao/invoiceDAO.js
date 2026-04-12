@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class InvoiceDAO {
   constructor() {
     this.invoicesRootRef = db.collection('invoice_records');
-    this.invoiceCountRef = db.collection('invoice_counters');
+    this.counterRef = db.collection('counters');
   }
 
   getUserInvoicesRef(userId) {
@@ -13,16 +13,16 @@ class InvoiceDAO {
   // Get next invoice number for user
   async getNextInvoiceNumber(userId) {
     try {
-      const docRef = this.invoiceCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().invoiceCount || 0) + 1;
       }
 
       // Update counter
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ invoiceCount: nextNumber }, { merge: true });
 
       return nextNumber;
     } catch (error) {

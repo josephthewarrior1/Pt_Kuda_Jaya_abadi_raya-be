@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class RenewalDAO {
   constructor() {
     this.renewalsRootRef = db.collection('renewal_records');
-    this.renewalCountRef = db.collection('renewal_counters');
+    this.counterRef = db.collection('counters');
   }
 
   getUserRenewalsRef(userId) {
@@ -12,15 +12,15 @@ class RenewalDAO {
 
   async getNextRenewalNumber(userId) {
     try {
-      const docRef = this.renewalCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().renewalCount || 0) + 1;
       }
 
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ renewalCount: nextNumber }, { merge: true });
       return nextNumber;
     } catch (error) {
       throw new Error('Failed to get next renewal number: ' + error.message);

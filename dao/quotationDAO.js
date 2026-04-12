@@ -2,11 +2,16 @@ const { db } = require('../config/firebase');
 
 class QuotationDAO {
   constructor() {
-    this.quotationsRef = db.collection('quotations');
+    this.quotationsRootRef = db.collection('quotation_records');
   }
 
-  async createQuotation(data) {
-    const docRef = this.quotationsRef.doc();
+  getUserQuotationsRef(userId) {
+    return this.quotationsRootRef.doc(userId).collection('quotations');
+  }
+
+  async createQuotation(data, userId) {
+    const userQuotationsRef = this.getUserQuotationsRef(userId);
+    const docRef = userQuotationsRef.doc();
     const now = new Date().toISOString();
     const newQuotation = {
       ...data,
@@ -19,8 +24,8 @@ class QuotationDAO {
     return newQuotation;
   }
 
-  async getQuotationsByPolicy(policyId) {
-    const snapshot = await this.quotationsRef
+  async getQuotationsByPolicy(policyId, userId) {
+    const snapshot = await this.getUserQuotationsRef(userId)
       .where('policyId', '==', policyId)
       .get();
     
@@ -35,14 +40,14 @@ class QuotationDAO {
     return quotations;
   }
 
-  async getQuotationById(id) {
-    const doc = await this.quotationsRef.doc(id).get();
+  async getQuotationById(id, userId) {
+    const doc = await this.getUserQuotationsRef(userId).doc(id).get();
     if (!doc.exists) return null;
     return doc.data();
   }
 
-  async updateQuotation(id, data) {
-    const docRef = this.quotationsRef.doc(id);
+  async updateQuotation(id, data, userId) {
+    const docRef = this.getUserQuotationsRef(userId).doc(id);
     const updateData = { ...data, updatedAt: new Date().toISOString() };
     await docRef.update(updateData);
     
@@ -50,13 +55,13 @@ class QuotationDAO {
     return doc.data();
   }
 
-  async deleteQuotation(id) {
-    await this.quotationsRef.doc(id).delete();
+  async deleteQuotation(id, userId) {
+    await this.getUserQuotationsRef(userId).doc(id).delete();
     return true;
   }
 
-  async deletePendingQuotationsExcept(policyId, keepId) {
-    const snapshot = await this.quotationsRef
+  async deletePendingQuotationsExcept(policyId, keepId, userId) {
+    const snapshot = await this.getUserQuotationsRef(userId)
       .where('policyId', '==', policyId)
       .get();
       

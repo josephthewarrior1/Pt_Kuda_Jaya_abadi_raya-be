@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class CustomerDAO {
   constructor() {
     this.customersRootRef = db.collection('customer_data');
-    this.customerCountRef = db.collection('customer_counters');
+    this.counterRef = db.collection('counters');
   }
 
   // Get reference untuk customer collection user tertentu
@@ -14,16 +14,16 @@ class CustomerDAO {
   // Get next customer number untuk user
   async getNextCustomerNumber(userId) {
     try {
-      const docRef = this.customerCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().customerCount || 0) + 1;
       }
 
       // Update counter
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ customerCount: nextNumber }, { merge: true });
 
       return nextNumber;
     } catch (error) {
@@ -34,8 +34,8 @@ class CustomerDAO {
   // Get current customer number (tanpa increment)
   async getCurrentCustomerNumber(userId) {
     try {
-      const doc = await this.customerCountRef.doc(userId).get();
-      return doc.exists ? (doc.data().count || 0) : 0;
+      const doc = await this.counterRef.doc(userId).get();
+      return doc.exists ? (doc.data().customerCount || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get current customer number: ' + error.message);
     }
@@ -215,8 +215,8 @@ class CustomerDAO {
       const userCustomersRef = this.getUserCustomersRef(userId);
       // Wait, Firestore doesn't have an efficient count natively unless using count() query
       // but doc.data().count works if we use counter
-      const doc = await this.customerCountRef.doc(userId).get();
-      return doc.exists ? (doc.data().count || 0) : 0;
+      const doc = await this.counterRef.doc(userId).get();
+      return doc.exists ? (doc.data().customerCount || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get customer count: ' + error.message);
     }

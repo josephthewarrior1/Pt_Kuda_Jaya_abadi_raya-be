@@ -10,7 +10,7 @@ const generateNumber = () => {
 exports.createQuotation = async (req, res) => {
   try {
     const data = req.body;
-    const userId = req.user.uid;
+    const userId = req.user.username; // Multi-tenant structure assumes username
     
     if (!data.policyId) {
        return res.status(400).json({ success: false, error: 'Policy ID is required' });
@@ -22,7 +22,7 @@ exports.createQuotation = async (req, res) => {
       quotationNumber: data.quotationNumber || generateNumber()
     };
 
-    const quotation = await QuotationDAO.createQuotation(payload);
+    const quotation = await QuotationDAO.createQuotation(payload, userId);
     res.status(201).json({ success: true, quotation });
   } catch (error) {
     console.error('Error creating quotation:', error);
@@ -33,7 +33,8 @@ exports.createQuotation = async (req, res) => {
 exports.getQuotationsByPolicy = async (req, res) => {
   try {
     const { policyId } = req.params;
-    const quotations = await QuotationDAO.getQuotationsByPolicy(policyId);
+    const userId = req.user.username;
+    const quotations = await QuotationDAO.getQuotationsByPolicy(policyId, userId);
     res.status(200).json({ success: true, quotations });
   } catch (error) {
     console.error('Error getting quotations:', error);
@@ -44,8 +45,9 @@ exports.getQuotationsByPolicy = async (req, res) => {
 exports.acceptQuotation = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.username;
     
-    const quotation = await QuotationDAO.getQuotationById(id);
+    const quotation = await QuotationDAO.getQuotationById(id, userId);
     if (!quotation) {
       return res.status(404).json({ success: false, error: 'Quotation not found' });
     }
@@ -55,16 +57,16 @@ exports.acceptQuotation = async (req, res) => {
     }
 
     // 1. Update status to Accepted
-    await QuotationDAO.updateQuotation(id, { status: 'Accepted' });
+    await QuotationDAO.updateQuotation(id, { status: 'Accepted' }, userId);
 
     // 2. Delete all other pending quotes for the same policy
     if (quotation.policyId) {
-        await QuotationDAO.deletePendingQuotationsExcept(quotation.policyId, id);
+        await QuotationDAO.deletePendingQuotationsExcept(quotation.policyId, id, userId);
     }
 
     // 3. Update the Car/Policy with the chosen insurance data
     if (quotation.policyType === 'car' && quotation.policyId) {
-       const car = await CarDAO.getCarById(quotation.policyId);
+       const car = await CarDAO.getCarById(quotation.policyId, userId);
        if (car) {
           const enabledCoverages = quotation.coverages 
              ? Object.keys(quotation.coverages).filter(k => quotation.coverages[k].enabled) 
@@ -78,7 +80,7 @@ exports.acceptQuotation = async (req, res) => {
                 insuranceType: quotation.insuranceType || '',
                 coverageExtensions: enabledCoverages
              }
-          });
+          }, userId);
        }
     }
 
@@ -92,7 +94,8 @@ exports.acceptQuotation = async (req, res) => {
 exports.deleteQuotation = async (req, res) => {
   try {
     const { id } = req.params;
-    await QuotationDAO.deleteQuotation(id);
+    const userId = req.user.username;
+    await QuotationDAO.deleteQuotation(id, userId);
     res.status(200).json({ success: true, message: 'Quotation deleted' });
   } catch (error) {
     console.error('Error deleting quotation:', error);
@@ -103,7 +106,8 @@ exports.deleteQuotation = async (req, res) => {
 exports.getQuotationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const quotation = await QuotationDAO.getQuotationById(id);
+    const userId = req.user.username;
+    const quotation = await QuotationDAO.getQuotationById(id, userId);
     if (!quotation) {
       return res.status(404).json({ success: false, error: 'Quotation not found' });
     }

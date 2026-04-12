@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class CarDAO {
   constructor() {
     this.carsRootRef = db.collection('car_data');
-    this.carCountRef = db.collection('car_counters');
+    this.counterRef = db.collection('counters');
   }
 
   // Get reference for user's car collection
@@ -14,16 +14,16 @@ class CarDAO {
   // Get next car number for user
   async getNextCarNumber(userId) {
     try {
-      const docRef = this.carCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().carCount || 0) + 1;
       }
 
       // Update counter
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ carCount: nextNumber }, { merge: true });
 
       return nextNumber;
     } catch (error) {
@@ -34,8 +34,8 @@ class CarDAO {
   // Get current car number (without incrementing)
   async getCurrentCarNumber(userId) {
     try {
-      const doc = await this.carCountRef.doc(userId).get();
-      return doc.exists ? (doc.data().count || 0) : 0;
+      const doc = await this.counterRef.doc(userId).get();
+      return doc.exists ? (doc.data().carCount || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get current car number: ' + error.message);
     }
@@ -66,11 +66,6 @@ class CarDAO {
             color: '',
             year: '',
             startDate: null,
-          },
-          documentStatus: carData.documentStatus || {
-            hasSTNK: false,
-            hasSIM: false,
-            hasKTP: false
           },
           carPhotos: carData.carPhotos || {
             leftSide: '',
@@ -141,11 +136,6 @@ class CarDAO {
           year: '',
           startDate: null,
         },
-        documentStatus: carData.documentStatus || {
-          hasSTNK: false,
-          hasSIM: false,
-          hasKTP: false
-        },
         carPhotos: carData.carPhotos || {
           leftSide: '',
           rightSide: '',
@@ -181,7 +171,7 @@ class CarDAO {
       const nextNumber = await this.getNextCarNumber(createdBy);
 
       // Generate car ID: {username}-{number} (Note: for uniqueness, this counter is independent of customers)
-      const carId = `${createdBy}-car-${nextNumber}`;
+      const carId = `${createdBy}-CAR-${nextNumber.toString().padStart(4, '0')}`;
 
       // Remove createdBy so we don't duplicate it in saved data
       const { createdBy: _, ...carDataWithoutCreatedBy } = carInputData;
@@ -202,11 +192,6 @@ class CarDAO {
           color: '',
           year: '',
           startDate: null,
-        },
-        documentStatus: carDataWithoutCreatedBy.documentStatus || {
-          hasSTNK: false,
-          hasSIM: false,
-          hasKTP: false
         },
         carPhotos: carDataWithoutCreatedBy.carPhotos || {
           leftSide: '',
@@ -273,13 +258,6 @@ class CarDAO {
         if (cd.coverageExtensions !== undefined) updates['carData.coverageExtensions'] = cd.coverageExtensions;
       }
 
-      // documentStatus
-      if (updateData.documentStatus) {
-        const ds = updateData.documentStatus;
-        if (ds.hasSTNK !== undefined) updates['documentStatus.hasSTNK'] = ds.hasSTNK;
-        if (ds.hasSIM !== undefined) updates['documentStatus.hasSIM'] = ds.hasSIM;
-        if (ds.hasKTP !== undefined) updates['documentStatus.hasKTP'] = ds.hasKTP;
-      }
 
       // carPhotos
       if (updateData.carPhotos) {
@@ -334,8 +312,8 @@ class CarDAO {
   // Get car count for user
   async getCarCount(userId) {
     try {
-      const doc = await this.carCountRef.doc(userId).get();
-      return doc.exists ? (doc.data().count || 0) : 0;
+      const doc = await this.counterRef.doc(userId).get();
+      return doc.exists ? (doc.data().carCount || 0) : 0;
     } catch (error) {
       throw new Error('Failed to get car count: ' + error.message);
     }

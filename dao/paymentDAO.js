@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class PaymentDAO {
   constructor() {
     this.paymentsRootRef = db.collection('payment_records');
-    this.paymentCountRef = db.collection('payment_counters');
+    this.counterRef = db.collection('counters');
   }
 
   getUserPaymentsRef(userId) {
@@ -12,15 +12,15 @@ class PaymentDAO {
 
   async getNextPaymentNumber(userId) {
     try {
-      const docRef = this.paymentCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().paymentCount || 0) + 1;
       }
 
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ paymentCount: nextNumber }, { merge: true });
       return nextNumber;
     } catch (error) {
       throw new Error('Failed to get next payment number: ' + error.message);

@@ -152,11 +152,6 @@ class CarController {
                     insuranceType: insuranceType ? insuranceType.trim() : '',
                     coverageExtensions: coverageExtensions || [],
                 },
-                documentStatus: {
-                    hasSTNK: false,
-                    hasSIM: false,
-                    hasKTP: false,
-                },
                 carPhotos: {
                     leftSide: '', rightSide: '', front: '', back: ''
                 },

@@ -3,7 +3,7 @@ const { db } = require('../config/firebase');
 class KwitansiDAO {
   constructor() {
     this.kwitansiRootRef = db.collection('kwitansi_records');
-    this.kwitansiCountRef = db.collection('kwitansi_counters');
+    this.counterRef = db.collection('counters');
   }
 
   getUserKwitansiRef(userId) {
@@ -13,15 +13,15 @@ class KwitansiDAO {
   // Get next kwitansi number for user
   async getNextKwitansiNumber(userId) {
     try {
-      const docRef = this.kwitansiCountRef.doc(userId);
+      const docRef = this.counterRef.doc(userId);
       const doc = await docRef.get();
 
       let nextNumber = 1;
       if (doc.exists) {
-        nextNumber = (doc.data().count || 0) + 1;
+        nextNumber = (doc.data().kwitansiCount || 0) + 1;
       }
 
-      await docRef.set({ count: nextNumber });
+      await docRef.set({ kwitansiCount: nextNumber }, { merge: true });
 
       return nextNumber;
     } catch (error) {

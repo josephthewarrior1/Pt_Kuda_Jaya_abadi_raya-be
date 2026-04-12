@@ -9,7 +9,6 @@ require('./config/firebase');
 // Import routes
 const authRoutes = require('./routes/userRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const propertyRoutes = require('./routes/propertyRoutes');
 const carRoutes = require('./routes/carRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
@@ -90,7 +89,6 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api', authRoutes);
 app.use('/api', customerRoutes);
-app.use('/api', propertyRoutes);
 app.use('/api', carRoutes);
 app.use('/api', companyRoutes);
 app.use('/api', reminderRoutes);

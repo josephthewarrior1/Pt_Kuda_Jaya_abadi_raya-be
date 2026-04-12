@@ -58,9 +58,6 @@ async function migrateData() {
                             dueDate: customer.carData.dueDate || null,
                             carPrice: customer.carData.carPrice || 0
                         },
-                        documentStatus: customer.documentStatus || {
-                            hasSTNK: false, hasSIM: false, hasKTP: false
-                        },
                         carPhotos: customer.carPhotos || {
                             leftSide: '', rightSide: '', front: '', back: ''
                         },
