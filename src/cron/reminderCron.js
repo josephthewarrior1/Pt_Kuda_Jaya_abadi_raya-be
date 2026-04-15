@@ -1,20 +1,8 @@
 const userDAO = require('../../dao/userDAO');
-const customerDAO = require('../../dao/customerDAO');
 const carDAO = require('../../dao/carDAO');
-const propertyDAO = require('../../dao/propertyDAO');
 const { sendReminderEmail, getDaysLeft } = require('../services/Emailservice');
 
 const REMINDER_DAYS = 30;
-
-const attachCustomerNames = async (userId, items) => {
-  const customers = await customerDAO.getAllCustomersByUser(userId);
-  const customerNameMap = new Map(customers.map(customer => [customer.id, customer.name || '']));
-
-  return items.map(item => ({
-    ...item,
-    customerName: customerNameMap.get(item.customerId) || '',
-  }));
-};
 
 const filterVehicleItems = (cars) => {
   const expiringSoon = [];
@@ -32,22 +20,6 @@ const filterVehicleItems = (cars) => {
   return { expiringSoon, expiredItems };
 };
 
-const filterPropertyItems = (properties) => {
-  const expiringSoon = [];
-  const expiredItems = [];
-
-  properties.forEach(property => {
-    if (property.status === 'Cancelled') return;
-    const daysLeft = getDaysLeft(property.insuranceData?.endDate);
-    if (daysLeft === null) return;
-    if (daysLeft < 0) expiredItems.push(property);
-    else if (daysLeft <= REMINDER_DAYS) expiringSoon.push(property);
-  });
-
-  expiringSoon.sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
-  return { expiringSoon, expiredItems };
-};
-
 const sendRemindersForUser = async (username, user) => {
   if (!user.email) {
     console.log(`Skipping ${username}: no email`);
@@ -57,14 +29,8 @@ const sendRemindersForUser = async (username, user) => {
   console.log(`Processing reminders for ${username}`);
 
   try {
-    const [cars, properties] = await Promise.all([
-      carDAO.getAllCarsByUser(username),
-      propertyDAO.getAllPropertiesByUser(username),
-    ]);
-    const enrichedProperties = await attachCustomerNames(username, properties);
-
+    const cars = await carDAO.getAllCarsByUser(username);
     const vehicleData = filterVehicleItems(cars);
-    const propertyData = filterPropertyItems(enrichedProperties);
 
     if (vehicleData.expiringSoon.length > 0 || vehicleData.expiredItems.length > 0) {
       await sendReminderEmail({
@@ -76,18 +42,8 @@ const sendRemindersForUser = async (username, user) => {
       });
     }
 
-    if (propertyData.expiringSoon.length > 0 || propertyData.expiredItems.length > 0) {
-      await sendReminderEmail({
-        to: user.email,
-        agentName: user.fullName || username,
-        expiringSoon: propertyData.expiringSoon,
-        expiredItems: propertyData.expiredItems,
-        type: 'property',
-      });
-    }
-
     console.log(
-      `Done ${username}: vehicle ${vehicleData.expiringSoon.length} soon, ${vehicleData.expiredItems.length} expired | property ${propertyData.expiringSoon.length} soon, ${propertyData.expiredItems.length} expired`
+      `Done ${username}: vehicle ${vehicleData.expiringSoon.length} soon, ${vehicleData.expiredItems.length} expired`
     );
   } catch (err) {
     console.error(`Failed for ${username}:`, err.message);

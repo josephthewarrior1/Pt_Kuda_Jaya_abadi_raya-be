@@ -1,20 +1,8 @@
-const customerDAO = require('../dao/customerDAO');
 const carDAO = require('../dao/carDAO');
-const propertyDAO = require('../dao/propertyDAO');
 const { sendReminderEmail, getDaysLeft } = require('../src/services/Emailservice');
 const { runDailyReminders } = require('../src/cron/reminderCron');
 
 const REMINDER_DAYS = 30;
-
-const attachCustomerNames = async (userId, items) => {
-  const customers = await customerDAO.getAllCustomersByUser(userId);
-  const customerNameMap = new Map(customers.map(customer => [customer.id, customer.name || '']));
-
-  return items.map(item => ({
-    ...item,
-    customerName: customerNameMap.get(item.customerId) || '',
-  }));
-};
 
 class ReminderController {
   async sendMyReminder(req, res) {
@@ -29,11 +17,7 @@ class ReminderController {
         });
       }
 
-      const [cars, properties] = await Promise.all([
-        carDAO.getAllCarsByUser(userId),
-        propertyDAO.getAllPropertiesByUser(userId),
-      ]);
-      const enrichedProperties = await attachCustomerNames(userId, properties);
+      const cars = await carDAO.getAllCarsByUser(userId);
 
       const vehicleExpiringSoon = cars.filter(car => {
         if (car.status === 'Cancelled') return false;
@@ -47,18 +31,6 @@ class ReminderController {
         return daysLeft !== null && daysLeft < 0;
       });
 
-      const propertyExpiringSoon = enrichedProperties.filter(property => {
-        if (property.status === 'Cancelled') return false;
-        const daysLeft = getDaysLeft(property.insuranceData?.endDate);
-        return daysLeft !== null && daysLeft >= 0 && daysLeft <= REMINDER_DAYS;
-      }).sort((a, b) => getDaysLeft(a.insuranceData?.endDate) - getDaysLeft(b.insuranceData?.endDate));
-
-      const propertyExpired = enrichedProperties.filter(property => {
-        if (property.status === 'Cancelled') return false;
-        const daysLeft = getDaysLeft(property.insuranceData?.endDate);
-        return daysLeft !== null && daysLeft < 0;
-      });
-
       await sendReminderEmail({
         to: userEmail,
         agentName: req.user.fullName || userId,
@@ -67,20 +39,11 @@ class ReminderController {
         type: 'vehicle',
       });
 
-      await sendReminderEmail({
-        to: userEmail,
-        agentName: req.user.fullName || userId,
-        expiringSoon: propertyExpiringSoon,
-        expiredItems: propertyExpired,
-        type: 'property',
-      });
-
       res.status(200).json({
         success: true,
         message: `Reminder dikirim ke ${userEmail}`,
         summary: {
           vehicle: { expiringSoon: vehicleExpiringSoon.length, expired: vehicleExpired.length },
-          property: { expiringSoon: propertyExpiringSoon.length, expired: propertyExpired.length },
         }
       });
     } catch (error) {

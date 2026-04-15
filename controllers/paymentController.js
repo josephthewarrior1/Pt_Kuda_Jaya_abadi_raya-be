@@ -1,12 +1,11 @@
 const paymentDAO = require('../dao/paymentDAO');
 const customerDAO = require('../dao/customerDAO');
 const carDAO = require('../dao/carDAO');
-const propertyDAO = require('../dao/propertyDAO');
 const invoiceDAO = require('../dao/invoiceDAO');
 const renewalDAO = require('../dao/renewalDAO');
 const cloudinary = require('../config/cloudinary');
 
-const ALLOWED_POLICY_TYPES = ['car', 'property'];
+const ALLOWED_POLICY_TYPES = ['car'];
 const ALLOWED_STATUSES = ['Pending', 'Paid', 'Overdue', 'Cancelled'];
 
 // ─── Helper: Auto-complete a Renewal when its Payment is marked Paid ──────────
@@ -21,11 +20,6 @@ const autoCompleteRenewal = async (payment, userId) => {
   if (renewal.policyType === 'car') {
     await carDAO.updateCar(renewal.policyId, {
       carData: { startDate: renewal.newStartDate, dueDate: renewal.newEndDate },
-      status: 'Active',
-    }, userId);
-  } else if (renewal.policyType === 'property') {
-    await propertyDAO.updateProperty(renewal.policyId, {
-      insuranceData: { startDate: renewal.newStartDate, endDate: renewal.newEndDate, premium: renewal.premium },
       status: 'Active',
     }, userId);
   }
@@ -67,10 +61,6 @@ const getPolicyRecord = async (policyType, policyId, userId) => {
     return carDAO.getCarById(policyId, userId);
   }
 
-  if (policyType === 'property') {
-    return propertyDAO.getPropertyById(policyId, userId);
-  }
-
   return null;
 };
 
@@ -85,13 +75,6 @@ const enrichPayments = async (payments, userId) => {
       const car = await carDAO.getCarById(payment.policyId, userId);
       if (car) {
         policySummary = `${car.carData?.ownerName || '-'} - ${car.carData?.carBrand || ''} ${car.carData?.carModel || ''}`.trim();
-      }
-    }
-
-    if (payment.policyType === 'property' && payment.policyId) {
-      const property = await propertyDAO.getPropertyById(payment.policyId, userId);
-      if (property) {
-        policySummary = `${property.propertyData?.propertyType || '-'} - ${property.propertyData?.city || ''}`.trim();
       }
     }
 
@@ -228,7 +211,7 @@ class PaymentController {
       if (!policyType || !ALLOWED_POLICY_TYPES.includes(policyType)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid policy type. Use: car or property',
+          error: 'Invalid policy type. Use: car',
         });
       }
 
@@ -312,7 +295,7 @@ class PaymentController {
       if (policyType !== undefined && !ALLOWED_POLICY_TYPES.includes(policyType)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid policy type. Use: car or property',
+          error: 'Invalid policy type. Use: car',
         });
       }
 

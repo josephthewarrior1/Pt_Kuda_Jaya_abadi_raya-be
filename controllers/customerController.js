@@ -68,7 +68,6 @@ class CustomerController {
       // Firestore query via DAO implicitly scopes by userId, ensuring secure access.
 
       const carDAO = require('../dao/carDAO');
-      const propertyDAO = require('../dao/propertyDAO');
       const customer = await customerDAO.getCustomerById(id, userId);
 
       if (!customer) {
@@ -79,13 +78,11 @@ class CustomerController {
       }
 
       const cars = await carDAO.getCarsByCustomerId(id, userId);
-      const properties = await propertyDAO.getPropertiesByCustomerId(id, userId);
 
       res.status(200).json({
         success: true,
         customer,
         cars,
-        properties
       });
     } catch (error) {
       console.error('❌ Get customer error:', error);

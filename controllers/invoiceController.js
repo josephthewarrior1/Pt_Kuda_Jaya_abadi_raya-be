@@ -16,9 +16,6 @@ exports.createInvoice = async (req, res) => {
     if (invoiceData.carId) {
       parsedPolicyType = 'car';
       parsedPolicyId = invoiceData.carId;
-    } else if (invoiceData.propertyId) {
-      parsedPolicyType = 'property';
-      parsedPolicyId = invoiceData.propertyId;
     }
 
     if (parsedPolicyType && parsedPolicyId) {
@@ -26,7 +23,7 @@ exports.createInvoice = async (req, res) => {
       if (existingUnpaid) {
         return res.status(409).json({
           success: false,
-          error: `Terdapat Invoice yang belum dibayar (${existingUnpaid.invoiceNumber}) untuk ${parsedPolicyType === 'car' ? 'Kendaraan' : 'Properti'} ini. Selesaikan atau batalkan invoice tersebut terlebih dahulu!`,
+          error: `Terdapat Invoice yang belum dibayar (${existingUnpaid.invoiceNumber}) untuk Kendaraan ini. Selesaikan atau batalkan invoice tersebut terlebih dahulu!`,
           existingInvoiceId: existingUnpaid.id
         });
       }
@@ -41,9 +38,6 @@ exports.createInvoice = async (req, res) => {
       if (newInvoice.carId) {
         policyType = 'car';
         policyId = newInvoice.carId;
-      } else if (newInvoice.propertyId) {
-        policyType = 'property';
-        policyId = newInvoice.propertyId;
       }
 
       const paymentData = {

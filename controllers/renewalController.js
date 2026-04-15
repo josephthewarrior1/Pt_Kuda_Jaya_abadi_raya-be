@@ -1,19 +1,14 @@
 const renewalDAO = require('../dao/renewalDAO');
 const customerDAO = require('../dao/customerDAO');
 const carDAO = require('../dao/carDAO');
-const propertyDAO = require('../dao/propertyDAO');
 const paymentDAO = require('../dao/paymentDAO');
 
-const ALLOWED_POLICY_TYPES = ['car', 'property'];
+const ALLOWED_POLICY_TYPES = ['car'];
 const ALLOWED_RENEWAL_STATUSES = ['Pending', 'Approved', 'Paid', 'Completed', 'Cancelled'];
 
 const getPolicyRecord = async (policyType, policyId, userId) => {
   if (policyType === 'car') {
     return carDAO.getCarById(policyId, userId);
-  }
-
-  if (policyType === 'property') {
-    return propertyDAO.getPropertyById(policyId, userId);
   }
 
   return null;
@@ -28,8 +23,8 @@ const getPolicyDates = (policyType, policy) => {
   }
 
   return {
-    startDate: policy.insuranceData?.startDate || null,
-    endDate: policy.insuranceData?.endDate || null,
+    startDate: null,
+    endDate: null,
   };
 };
 
@@ -43,10 +38,6 @@ const enrichRenewals = async (renewals, userId) => {
 
     if (renewal.policyType === 'car' && policy) {
       policySummary = `${policy.carData?.ownerName || '-'} - ${policy.carData?.carBrand || ''} ${policy.carData?.carModel || ''}`.trim();
-    }
-
-    if (renewal.policyType === 'property' && policy) {
-      policySummary = `${policy.propertyData?.propertyType || '-'} - ${policy.propertyData?.city || ''}`.trim();
     }
 
     return {
@@ -173,7 +164,7 @@ class RenewalController {
       }
 
       if (!policyType || !ALLOWED_POLICY_TYPES.includes(policyType)) {
-        return res.status(400).json({ success: false, error: 'Invalid policy type. Use: car or property' });
+        return res.status(400).json({ success: false, error: 'Invalid policy type. Use: car' });
       }
 
       if (!policyId || !policyId.trim()) {
@@ -377,15 +368,6 @@ class RenewalController {
           carData: {
             startDate: renewal.newStartDate,
             dueDate: renewal.newEndDate,
-          },
-          status: 'Active',
-        }, userId);
-      } else {
-        await propertyDAO.updateProperty(renewal.policyId, {
-          insuranceData: {
-            startDate: renewal.newStartDate,
-            endDate: renewal.newEndDate,
-            premium: renewal.premium,
           },
           status: 'Active',
         }, userId);
