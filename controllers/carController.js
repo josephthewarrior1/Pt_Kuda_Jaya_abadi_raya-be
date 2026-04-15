@@ -34,15 +34,27 @@ class CarController {
     async getAllCars(req, res) {
         try {
             const userId = req.user.username;
+            const customerDAO = require('../dao/customerDAO');
 
             console.log('🚗 Getting all cars for user:', userId);
 
             const cars = await carDAO.getAllCarsByUser(userId);
+            const customers = await customerDAO.getAllCustomersByUser(userId);
+
+            const customerMap = {};
+            for (const c of customers) {
+                customerMap[c.id] = c.name;
+            }
+
+            const enrichedCars = cars.map(car => ({
+                ...car,
+                customerName: customerMap[car.customerId] || null
+            }));
 
             res.status(200).json({
                 success: true,
-                count: cars.length,
-                cars,
+                count: enrichedCars.length,
+                cars: enrichedCars,
             });
         } catch (error) {
             console.error('❌ Get all cars error:', error);
