@@ -39,6 +39,7 @@ class InvoiceDAO {
       customerName: invoiceData.customerName || '',
       carId: invoiceData.carId || '',
       plateNumber: invoiceData.plateNumber || '',
+      quotationId: invoiceData.quotationId || '',
       items: invoiceData.items || [],
       subTotal: invoiceData.subTotal || 0,
       discount: invoiceData.discount || 0,
@@ -128,6 +129,7 @@ class InvoiceDAO {
         customerName: invoiceData.customerName || '',
         carId: invoiceData.carId || '',
         plateNumber: invoiceData.plateNumber || '',
+        quotationId: invoiceData.quotationId || '',
         items: invoiceData.items || [],
         subTotal: invoiceData.subTotal || 0,
         discount: invoiceData.discount || 0,
@@ -177,6 +179,16 @@ class InvoiceDAO {
       };
     } catch (error) {
       throw new Error('Failed to update invoice: ' + error.message);
+    }
+  }
+  // Delete invoice
+  async deleteInvoice(invoiceId, userId) {
+    try {
+      const invoiceRef = this.getUserInvoicesRef(userId).doc(invoiceId);
+      await invoiceRef.delete();
+      return true;
+    } catch (error) {
+      throw new Error('Failed to delete invoice: ' + error.message);
     }
   }
 }

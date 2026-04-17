@@ -507,14 +507,17 @@ class PaymentController {
         });
       }
 
-      // Check if invoice needs to be updated? Maybe not required for delete, 
-      // but good practice to clear the invoice status logically.
-      if (existingPayment.status === 'Paid' && existingPayment.invoiceNumber) {
+      if (existingPayment.invoiceNumber) {
         try {
-          // If a payment is deleted, the invoice might become Pending again
-          await invoiceDAO.updateInvoice(existingPayment.invoiceNumber, { status: 'Pending' }, userId);
+          if (existingPayment.status === 'Paid') {
+            // If a paid payment is deleted, the invoice becomes Unpaid again
+            await invoiceDAO.updateInvoice(existingPayment.invoiceNumber, { status: 'Unpaid' }, userId);
+          } else {
+            // If an unpaid/pending payment is deleted, delete the orphaned invoice completely
+            await invoiceDAO.deleteInvoice(existingPayment.invoiceNumber, userId);
+          }
         } catch (invoiceErr) {
-          console.error('Failed to revert Invoice status upon payment deletion:', invoiceErr);
+          console.error('Failed to update/delete Invoice upon payment deletion:', invoiceErr);
         }
       }
 
