@@ -43,12 +43,14 @@ class CarController {
 
             const customerMap = {};
             for (const c of customers) {
-                customerMap[c.id] = c.name;
+                customerMap[c.id] = c;
             }
 
             const enrichedCars = cars.map(car => ({
                 ...car,
-                customerName: customerMap[car.customerId] || null
+                customerName: customerMap[car.customerId]?.name || null,
+                customerAddress: customerMap[car.customerId]?.address || null,
+                customerData: customerMap[car.customerId] || null
             }));
 
             res.status(200).json({
