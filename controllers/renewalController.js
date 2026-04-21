@@ -4,7 +4,7 @@ const carDAO = require('../dao/carDAO');
 const paymentDAO = require('../dao/paymentDAO');
 
 const ALLOWED_POLICY_TYPES = ['car'];
-const ALLOWED_RENEWAL_STATUSES = ['Pending', 'Approved', 'Paid', 'Completed', 'Cancelled'];
+const ALLOWED_RENEWAL_STATUSES = ['Pending', 'Approved', 'Completed', 'Cancelled'];
 
 const getPolicyRecord = async (policyType, policyId, userId) => {
   if (policyType === 'car') {
@@ -123,7 +123,7 @@ class RenewalController {
       if (!ALLOWED_RENEWAL_STATUSES.includes(status)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid status. Use: Pending, Approved, Paid, Completed, or Cancelled',
+          error: 'Invalid status. Use: Pending, Approved, Completed, or Cancelled',
         });
       }
 
@@ -254,7 +254,7 @@ class RenewalController {
       if (status !== undefined && !ALLOWED_RENEWAL_STATUSES.includes(status)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid status. Use: Pending, Approved, Paid, Completed, or Cancelled',
+          error: 'Invalid status. Use: Pending, Approved, Completed, or Cancelled',
         });
       }
 
