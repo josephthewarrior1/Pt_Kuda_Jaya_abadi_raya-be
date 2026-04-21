@@ -44,6 +44,7 @@ exports.createInvoice = async (req, res) => {
         customerId: newInvoice.customerId,
         policyType: policyType,
         policyId: policyId,
+        renewalId: newInvoice.renewalId || '',
         invoiceNumber: newInvoice.id, // Store Invoice ID for relational tracking
         amount: newInvoice.grandTotal,
         dueDate: newInvoice.dueDate,

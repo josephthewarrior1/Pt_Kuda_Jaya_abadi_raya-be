@@ -112,6 +112,7 @@ class PaymentDAO {
         customerId: paymentData.customerId || '',
         policyType: paymentData.policyType || '',
         policyId: paymentData.policyId || '',
+        renewalId: paymentData.renewalId || '',
         invoiceNumber: paymentData.invoiceNumber || '',
         amount: paymentData.amount || 0,
         dueDate: paymentData.dueDate || null,

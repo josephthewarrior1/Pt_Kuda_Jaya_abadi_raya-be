@@ -1,5 +1,9 @@
 const QuotationDAO = require('../dao/quotationDAO');
 const CarDAO = require('../dao/carDAO');
+const RenewalDAO = require('../dao/renewalDAO');
+const InvoiceDAO = require('../dao/invoiceDAO');
+const PaymentDAO = require('../dao/paymentDAO');
+const CustomerDAO = require('../dao/customerDAO');
 
 const generateNumber = () => {
     const d = new Date();
@@ -56,8 +60,36 @@ exports.acceptQuotation = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Quotation is already accepted' });
     }
 
+    // Pre-checks for Renewal-linked quotations BEFORE marking Accepted
+    if (quotation.renewalId) {
+      const renewalId = String(quotation.renewalId).trim();
+      const renewal = await RenewalDAO.getRenewalById(renewalId, userId);
+      if (!renewal) {
+        return res.status(404).json({
+          success: false,
+          error: 'Linked renewal not found',
+        });
+      }
+
+      if (renewal.policyType !== quotation.policyType || renewal.policyId !== quotation.policyId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Renewal does not match quotation policy',
+        });
+      }
+
+      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByPolicy('car', quotation.policyId, userId);
+      if (existingUnpaid) {
+        return res.status(409).json({
+          success: false,
+          error: `Terdapat Invoice yang belum dibayar (${existingUnpaid.invoiceNumber}) untuk Kendaraan ini. Selesaikan atau batalkan invoice tersebut terlebih dahulu!`,
+          existingInvoiceId: existingUnpaid.id,
+        });
+      }
+    }
+
     // 1. Update status to Accepted
-    await QuotationDAO.updateQuotation(id, { status: 'Accepted' }, userId);
+    const acceptedQuotation = await QuotationDAO.updateQuotation(id, { status: 'Accepted' }, userId);
 
     // 2. Delete all other pending quotes for the same policy
     if (quotation.policyId) {
@@ -84,7 +116,74 @@ exports.acceptQuotation = async (req, res) => {
        }
     }
 
-    res.status(200).json({ success: true, message: 'Quotation accepted successfully', quotation });
+    // 4. Renewal flow: only after Quotation Accepted → create Invoice + Payment
+    if (acceptedQuotation.renewalId) {
+      const renewalId = String(acceptedQuotation.renewalId).trim();
+      const renewal = await RenewalDAO.getRenewalById(renewalId, userId);
+      const customer = await CustomerDAO.getCustomerById(renewal.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ success: false, error: 'Customer not found for renewal' });
+      }
+
+      const policy = await CarDAO.getCarById(acceptedQuotation.policyId, userId);
+      const car = policy?.car || policy;
+      const plateNumber = car?.carData?.plateNumber || car?.carData?.nopol || '';
+
+      const amountCandidate = acceptedQuotation.premium
+        ?? acceptedQuotation.totalPremium
+        ?? acceptedQuotation.grandTotal
+        ?? acceptedQuotation.total
+        ?? acceptedQuotation.price
+        ?? renewal.premium
+        ?? 0;
+      const amount = Number.parseFloat(amountCandidate) || 0;
+
+      const issueDate = Date.now();
+      const dueDate = renewal.newEndDate || Date.now();
+
+      const newInvoice = await InvoiceDAO.createInvoice({
+        invoiceNumber: '',
+        customerId: renewal.customerId,
+        customerName: customer.name || '',
+        carId: acceptedQuotation.policyId,
+        plateNumber,
+        quotationId: acceptedQuotation.id || id,
+        renewalId: renewalId,
+        items: acceptedQuotation.items || [
+          { name: 'Renewal Premium', qty: 1, price: amount, total: amount },
+        ],
+        subTotal: acceptedQuotation.subTotal ?? amount,
+        discount: acceptedQuotation.discount ?? 0,
+        grandTotal: amount,
+        issueDate,
+        dueDate,
+        status: 'Unpaid',
+        notes: `Auto-generated from accepted Quotation ${acceptedQuotation.quotationNumber || acceptedQuotation.id}`,
+        createdBy: userId,
+        createdAt: issueDate,
+        updatedAt: issueDate,
+      });
+
+      const newPayment = await PaymentDAO.createPayment({
+        customerId: renewal.customerId,
+        policyType: 'car',
+        policyId: acceptedQuotation.policyId,
+        renewalId: renewalId,
+        invoiceNumber: newInvoice.id,
+        amount: newInvoice.grandTotal,
+        dueDate: newInvoice.dueDate,
+        status: 'Pending',
+        notes: `Auto-generated from Invoice ${newInvoice.invoiceNumber}`,
+        createdBy: userId,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      // Link payment back to renewal (so manual completeRenewal still works)
+      await RenewalDAO.updateRenewal(renewalId, { paymentId: newPayment.id, status: 'Approved' }, userId);
+    }
+
+    res.status(200).json({ success: true, message: 'Quotation accepted successfully', quotation: acceptedQuotation });
   } catch (error) {
     console.error('Error accepting quotation:', error);
     res.status(500).json({ success: false, error: 'Failed to accept quotation' });

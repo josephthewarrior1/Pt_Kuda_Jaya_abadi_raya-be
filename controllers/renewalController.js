@@ -151,7 +151,6 @@ class RenewalController {
         customerId,
         policyType,
         policyId,
-        paymentId,
         newStartDate,
         newEndDate,
         premium,
@@ -202,7 +201,7 @@ class RenewalController {
         customerId: customerId.trim(),
         policyType,
         policyId: policyId.trim(),
-        paymentId: '',  // Will be set after auto-creating payment
+        paymentId: '', // optional legacy field (kept empty)
         oldStartDate: oldDates.startDate,
         oldEndDate: oldDates.endDate,
         newStartDate,
@@ -215,28 +214,6 @@ class RenewalController {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
-
-      // Auto-create a linked Pending Payment
-      try {
-        const autoPayment = await paymentDAO.createPayment({
-          customerId: customerId.trim(),
-          policyType,
-          policyId: policyId.trim(),
-          renewalId: renewal.id,
-          amount: premium ? parseFloat(premium) : 0,
-          dueDate: newEndDate || null,
-          status: 'Pending',
-          notes: `Auto-generated dari Renewal ${renewal.id}`,
-          createdBy: userId,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        // Save paymentId back to renewal
-        await renewalDAO.updateRenewal(renewal.id, { paymentId: autoPayment.id }, userId);
-        renewal.paymentId = autoPayment.id;
-      } catch (payErr) {
-        console.error('Warning: failed to auto-create payment for renewal:', payErr);
-      }
 
       res.status(201).json({
         success: true,
