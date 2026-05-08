@@ -76,7 +76,8 @@ class CarDAO {
           documentPhotos: carData.documentPhotos || {
             stnk: '',
             sim: '',
-            ktp: ''
+            ktp: '',
+            polis: ''
           },
           status: carData.status || 'Active',
           notes: carData.notes || '',
@@ -274,6 +275,7 @@ class CarDAO {
         if (dp.stnk !== undefined) updates['documentPhotos.stnk'] = dp.stnk;
         if (dp.sim !== undefined) updates['documentPhotos.sim'] = dp.sim;
         if (dp.ktp !== undefined) updates['documentPhotos.ktp'] = dp.ktp;
+        if (dp.polis !== undefined) updates['documentPhotos.polis'] = dp.polis;
       }
 
       updates['updatedAt'] = Date.now();

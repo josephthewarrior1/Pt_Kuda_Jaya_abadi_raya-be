@@ -15,6 +15,7 @@ const upload = multer({
     // Terima image dan PDF untuk dokumen
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
       cb(null, true);
+
     } else {
       cb(new Error('Only image and PDF files are allowed!'), false);
     }
@@ -29,11 +30,12 @@ const uploadCarPhotos = upload.fields([
   { name: 'back', maxCount: 1 }
 ]);
 
-// Middleware untuk dokumen (STNK, SIM, KTP) - OPSIONAL
+// Middleware untuk dokumen (STNK, SIM, KTP, POLIS) - OPSIONAL
 const uploadDocuments = upload.fields([
   { name: 'stnk', maxCount: 1 },
   { name: 'sim', maxCount: 1 },
-  { name: 'ktp', maxCount: 1 }
+  { name: 'ktp', maxCount: 1 },
+  { name: 'polis', maxCount: 1 }
 ]);
 
 // Upload property photos (8 photos)

@@ -218,8 +218,6 @@ class CustomerController {
     }
   }
 
-
-
   // Delete customer
   async deleteCustomer(req, res) {
     try {
@@ -231,6 +229,17 @@ class CustomerController {
         return res.status(400).json({
           success: false,
           error: 'Invalid customer ID format. Expected: {username}-{number}',
+        });
+      }
+
+      // Cek apakah customer masih punya kendaraan
+      const carDAO = require('../dao/carDAO');
+      const cars = await carDAO.getCarsByCustomerId(id, userId);
+      
+      if (cars && cars.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Customer tidak bisa dihapus karena masih memiliki data Kendaraan. Silakan hapus atau pindahkan kendaraannya terlebih dahulu.',
         });
       }
 

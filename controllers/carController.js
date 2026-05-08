@@ -170,7 +170,7 @@ class CarController {
                     leftSide: '', rightSide: '', front: '', back: ''
                 },
                 documentPhotos: {
-                    stnk: '', sim: '', ktp: ''
+                    stnk: '', sim: '', ktp: '', polis: ''
                 },
                 notes: notes ? notes.trim() : '',
                 status: status || 'Active',
@@ -358,7 +358,7 @@ class CarController {
             const uploadedDocuments = {};
             const uploadPromises = [];
 
-            ['stnk', 'sim', 'ktp'].forEach(docType => {
+            ['stnk', 'sim', 'ktp', 'polis'].forEach(docType => {
                 if (files[docType] && files[docType][0]) {
                     uploadPromises.push(
                         new Promise((resolve, reject) => {
