@@ -167,7 +167,7 @@ class CarController {
                     coverageExtensions: coverageExtensions || [],
                 },
                 carPhotos: {
-                    leftSide: '', rightSide: '', front: '', back: ''
+                    leftSide: '', rightSide: '', front: '', back: '', dashboard: ''
                 },
                 documentPhotos: {
                     stnk: '', sim: '', ktp: '', polis: ''
@@ -289,7 +289,7 @@ class CarController {
 
             const uploadPromises = [];
 
-            ['leftSide', 'rightSide', 'front', 'back'].forEach(side => {
+            ['leftSide', 'rightSide', 'front', 'back', 'dashboard'].forEach(side => {
                 if (files[side] && files[side][0]) {
                     uploadPromises.push(
                         new Promise((resolve, reject) => {

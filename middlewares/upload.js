@@ -27,7 +27,8 @@ const uploadCarPhotos = upload.fields([
   { name: 'leftSide', maxCount: 1 },
   { name: 'rightSide', maxCount: 1 },
   { name: 'front', maxCount: 1 },
-  { name: 'back', maxCount: 1 }
+  { name: 'back', maxCount: 1 },
+  { name: 'dashboard', maxCount: 1 }
 ]);
 
 // Middleware untuk dokumen (STNK, SIM, KTP, POLIS) - OPSIONAL

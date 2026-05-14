@@ -67,11 +67,13 @@ class CarDAO {
             year: '',
             startDate: null,
           },
-          carPhotos: carData.carPhotos || {
+          carPhotos: {
             leftSide: '',
             rightSide: '',
             front: '',
-            back: ''
+            back: '',
+            dashboard: '',
+            ...(carData.carPhotos || {})
           },
           documentPhotos: carData.documentPhotos || {
             stnk: '',
@@ -137,11 +139,13 @@ class CarDAO {
           year: '',
           startDate: null,
         },
-        carPhotos: carData.carPhotos || {
+        carPhotos: {
           leftSide: '',
           rightSide: '',
           front: '',
-          back: ''
+          back: '',
+          dashboard: '',
+          ...(carData.carPhotos || {})
         },
         documentPhotos: carData.documentPhotos || {
           stnk: '',
@@ -194,11 +198,13 @@ class CarDAO {
           year: '',
           startDate: null,
         },
-        carPhotos: carDataWithoutCreatedBy.carPhotos || {
+        carPhotos: {
           leftSide: '',
           rightSide: '',
           front: '',
-          back: ''
+          back: '',
+          dashboard: '',
+          ...(carDataWithoutCreatedBy.carPhotos || {})
         },
         documentPhotos: carDataWithoutCreatedBy.documentPhotos || {
           stnk: '',
@@ -267,6 +273,7 @@ class CarDAO {
         if (cp.rightSide !== undefined) updates['carPhotos.rightSide'] = cp.rightSide;
         if (cp.front !== undefined) updates['carPhotos.front'] = cp.front;
         if (cp.back !== undefined) updates['carPhotos.back'] = cp.back;
+        if (cp.dashboard !== undefined) updates['carPhotos.dashboard'] = cp.dashboard;
       }
 
       // documentPhotos

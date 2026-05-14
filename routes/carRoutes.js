@@ -37,7 +37,7 @@ router.put('/cars/:id', authMiddleware, userAndPaidUserOnly, (req, res) =>
     carController.updateCar(req, res)
 );
 
-// Upload car photos (4 photos: left, right, front, back)
+// Upload car photos (5 photos: left, right, front, back, dashboard)
 router.post('/cars/:id/upload-photos',
     authMiddleware,
     userAndPaidUserOnly,
