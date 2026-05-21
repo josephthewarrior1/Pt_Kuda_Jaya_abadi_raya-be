@@ -8,17 +8,50 @@ const USER_ROLES = {
   PAID_USER: 'paid_user'
 };
 
+const FIREBASE_WEB_API_KEY =
+  process.env.FIREBASE_WEB_API_KEY ||
+  process.env.FIREBASE_API_KEY ||
+  'AIzaSyBg72_imTZRZ9RaZs9_9X3eRdDLVrHmuag';
+
+const signInWithFirebasePassword = async (email, password) => {
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_WEB_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        returnSecureToken: true,
+      }),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    const code = result.error && result.error.message;
+    const error = new Error(code || 'Firebase sign-in failed');
+    error.status = 401;
+    throw error;
+  }
+
+  return result;
+};
+
 class UserController {
   // Sign Up
   async signUp(req, res) {
     try {
       const { fullName, username, password, role, email } = req.body;
+      const normalizedUsername = username ? username.trim() : '';
+      const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
       // Validation
-      if (!fullName || !username || !password) {
+      if (!fullName || !username || !password || !normalizedEmail) {
         return res.status(400).json({
           success: false,
-          error: 'Full name, username and password are required',
+          error: 'Full name, username, email and password are required',
         });
       }
 
@@ -31,7 +64,7 @@ class UserController {
       }
 
       // Validate username length
-      if (username.length < 4) {
+      if (normalizedUsername.length < 4) {
         return res.status(400).json({
           success: false,
           error: 'Username must be at least 4 characters',
@@ -39,7 +72,7 @@ class UserController {
       }
 
       // Validate email format kalau diisi
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
         return res.status(400).json({
           success: false,
           error: 'Invalid email format',
@@ -47,11 +80,19 @@ class UserController {
       }
 
       // Check if username already exists
-      const usernameExists = await userDAO.usernameExists(username);
+      const usernameExists = await userDAO.usernameExists(normalizedUsername);
       if (usernameExists) {
         return res.status(400).json({
           success: false,
           error: 'Username already taken',
+        });
+      }
+
+      const emailExists = await userDAO.emailExists(normalizedEmail);
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email already registered',
         });
       }
 
@@ -67,10 +108,11 @@ class UserController {
         userRole = role;
       }
 
-      // Create user in Firebase Auth with uid equal to username
+      // Create user in Firebase Auth with uid equal to username.
+      // Login by username is handled by the backend by mapping username -> email.
       const userRecord = await admin.auth().createUser({
-        uid: username.trim(),
-        email: email ? email.trim().toLowerCase() : `${username.trim()}@kudajaya.local`,
+        uid: normalizedUsername,
+        email: normalizedEmail,
         password: password,
         displayName: fullName.trim(),
       });
@@ -84,17 +126,23 @@ class UserController {
       // Create new user profile in Firestore
       const newUser = await userDAO.createUser({
         fullName: fullName.trim(),
-        username: username.trim(),
+        username: normalizedUsername,
         role: userRole,
-        email: email ? email.trim().toLowerCase() : '',
+        email: normalizedEmail,
+        firebaseEmail: normalizedEmail,
         firebaseUid: uid,
       });
 
       console.log('✅ New user registered in Firebase and Firestore:', newUser.username, 'Role:', userRole);
 
+      const firebaseSession = await signInWithFirebasePassword(normalizedEmail, password);
+
       res.status(201).json({
         success: true,
         message: 'Account created successfully',
+        token: firebaseSession.idToken,
+        refreshToken: firebaseSession.refreshToken,
+        expiresIn: firebaseSession.expiresIn,
         user: {
           id: newUser.id,
           fullName: newUser.fullName,
@@ -137,12 +185,29 @@ class UserController {
         });
       }
 
-      // Login flow is now handled directly by the frontend using Firebase Web SDK. 
-      // But we provide a minimal fallback check if absolutely necessary.
-      // Usually hitting this endpoint means they are using the old flow.
-      res.status(400).json({
-        success: false,
-        error: 'Login should be performed directly via Firebase client SDK.',
+      const authEmail = user.firebaseEmail || user.email;
+      if (!authEmail) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials',
+        });
+      }
+
+      const firebaseSession = await signInWithFirebasePassword(authEmail, password);
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        token: firebaseSession.idToken,
+        refreshToken: firebaseSession.refreshToken,
+        expiresIn: firebaseSession.expiresIn,
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          username: user.username,
+          role: user.role,
+          email: user.email || '',
+        },
       });
     } catch (error) {
       console.error('❌ Login error:', error);

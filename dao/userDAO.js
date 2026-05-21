@@ -129,6 +129,16 @@ class UserDAO {
     }
   }
 
+  // Check if email exists
+  async emailExists(email) {
+    try {
+      const user = await this.findByEmail(email);
+      return user !== null;
+    } catch (error) {
+      throw new Error('Failed to check email: ' + error.message);
+    }
+  }
+
   // Delete user
   async deleteUser(username) {
     try {
