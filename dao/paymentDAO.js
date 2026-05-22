@@ -10,6 +10,11 @@ class PaymentDAO {
     return this.paymentsRootRef.doc(userId).collection('payments');
   }
 
+  getIdSequence(id) {
+    const match = String(id).match(/(?:^|-)pay-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
   async getNextPaymentNumber(userId) {
     try {
       const docRef = this.counterRef.doc(userId);
@@ -61,9 +66,7 @@ class PaymentDAO {
       });
 
       payments.sort((a, b) => {
-        const numA = parseInt((a.id.split('-pay-')[1] || '0'), 10);
-        const numB = parseInt((b.id.split('-pay-')[1] || '0'), 10);
-        return numB - numA;
+        return this.getIdSequence(b.id) - this.getIdSequence(a.id);
       });
 
       return payments.map((payment) => ({
@@ -107,7 +110,7 @@ class PaymentDAO {
     try {
       const { createdBy } = paymentData;
       const nextNumber = await this.getNextPaymentNumber(createdBy);
-      const paymentId = `${createdBy}-pay-${nextNumber}`;
+      const paymentId = `pay-${nextNumber}`;
       const paymentToSave = {
         customerId: paymentData.customerId || '',
         policyType: paymentData.policyType || '',

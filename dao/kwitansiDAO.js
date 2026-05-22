@@ -7,7 +7,16 @@ class KwitansiDAO {
   }
 
   getUserKwitansiRef(userId) {
+    return this.kwitansiRootRef.doc(userId).collection('kwitansi');
+  }
+
+  getLegacyUserKwitansiRef(userId) {
     return this.kwitansiRootRef.doc(userId).collection('kwitansis');
+  }
+
+  getIdSequence(id) {
+    const match = String(id).match(/(?:^|-)kwt-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   // Get next kwitansi number for user
@@ -45,24 +54,36 @@ class KwitansiDAO {
 
   async getAllKwitansiByUser(userId) {
     try {
-      const snapshot = await this.getUserKwitansiRef(userId).get();
-      const kwitansis = [];
+      const [snapshot, legacySnapshot] = await Promise.all([
+        this.getUserKwitansiRef(userId).get(),
+        this.getLegacyUserKwitansiRef(userId).get(),
+      ]);
+
+      const kwitansiById = new Map();
 
       snapshot.forEach((docSnap) => {
-        kwitansis.push({
+        kwitansiById.set(docSnap.id, {
           id: docSnap.id,
           ...docSnap.data(),
         });
       });
 
-      // Sort descending
-      kwitansis.sort((a, b) => {
-        const numA = parseInt((a.id.split('-kwt-')[1] || '0'), 10);
-        const numB = parseInt((b.id.split('-kwt-')[1] || '0'), 10);
-        return numB - numA;
+      legacySnapshot.forEach((docSnap) => {
+        if (!kwitansiById.has(docSnap.id)) {
+          kwitansiById.set(docSnap.id, {
+            id: docSnap.id,
+            ...docSnap.data(),
+          });
+        }
       });
 
-      return kwitansis.map(k => this.normalizeKwitansi(k.id, k, userId));
+      // Sort descending
+      const kwitansiList = Array.from(kwitansiById.values());
+      kwitansiList.sort((a, b) => {
+        return this.getIdSequence(b.id) - this.getIdSequence(a.id);
+      });
+
+      return kwitansiList.map(k => this.normalizeKwitansi(k.id, k, userId));
     } catch (error) {
       throw new Error('Failed to fetch kwitansi by user: ' + error.message);
     }
@@ -70,10 +91,13 @@ class KwitansiDAO {
 
   async getKwitansiById(kwitansiId, userId) {
     try {
-      const doc = await this.getUserKwitansiRef(userId).doc(kwitansiId).get();
+      let doc = await this.getUserKwitansiRef(userId).doc(kwitansiId).get();
 
       if (!doc.exists) {
-        return null;
+        doc = await this.getLegacyUserKwitansiRef(userId).doc(kwitansiId).get();
+        if (!doc.exists) {
+          return null;
+        }
       }
 
       return this.normalizeKwitansi(kwitansiId, doc.data(), userId);
@@ -96,7 +120,7 @@ class KwitansiDAO {
       const { createdBy } = kwitansiData;
       const nextNumber = await this.getNextKwitansiNumber(createdBy);
       
-      const kwitansiId = `${createdBy}-kwt-${nextNumber}`;
+      const kwitansiId = `kwt-${nextNumber}`;
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -125,11 +149,15 @@ class KwitansiDAO {
 
   async incrementPrintCount(kwitansiId, userId) {
     try {
-      const kwitansiRef = this.getUserKwitansiRef(userId).doc(kwitansiId);
-      const doc = await kwitansiRef.get();
+      let kwitansiRef = this.getUserKwitansiRef(userId).doc(kwitansiId);
+      let doc = await kwitansiRef.get();
 
       if (!doc.exists) {
-        throw new Error('Kwitansi not found');
+        kwitansiRef = this.getLegacyUserKwitansiRef(userId).doc(kwitansiId);
+        doc = await kwitansiRef.get();
+        if (!doc.exists) {
+          throw new Error('Kwitansi not found');
+        }
       }
 
       const existingData = doc.data();

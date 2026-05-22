@@ -10,6 +10,11 @@ class InvoiceDAO {
     return this.invoicesRootRef.doc(userId).collection('invoices');
   }
 
+  getIdSequence(id) {
+    const match = String(id).match(/(?:^|-)inv-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
   // Get next invoice number for user
   async getNextInvoiceNumber(userId) {
     try {
@@ -90,9 +95,7 @@ class InvoiceDAO {
 
       // Sort descending by id sequence
       invoices.sort((a, b) => {
-        const numA = parseInt((a.id.split('-inv-')[1] || '0'), 10);
-        const numB = parseInt((b.id.split('-inv-')[1] || '0'), 10);
-        return numB - numA;
+        return this.getIdSequence(b.id) - this.getIdSequence(a.id);
       });
 
       return invoices.map((invoice) => this.normalizeInvoice(invoice.id, invoice, userId));
@@ -122,7 +125,7 @@ class InvoiceDAO {
       const { createdBy } = invoiceData;
       const nextNumber = await this.getNextInvoiceNumber(createdBy);
       
-      const invoiceId = `${createdBy}-inv-${nextNumber}`;
+      const invoiceId = `inv-${nextNumber}`;
       
       const invoiceToSave = {
         invoiceNumber: invoiceData.invoiceNumber || `INV-${nextNumber}`,

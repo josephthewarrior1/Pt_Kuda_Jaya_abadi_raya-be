@@ -10,6 +10,11 @@ class RenewalDAO {
     return this.renewalsRootRef.doc(userId).collection('renewals');
   }
 
+  getIdSequence(id) {
+    const match = String(id).match(/(?:^|-)ren-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
   async getNextRenewalNumber(userId) {
     try {
       const docRef = this.counterRef.doc(userId);
@@ -58,9 +63,7 @@ class RenewalDAO {
       });
 
       renewals.sort((a, b) => {
-        const numA = parseInt((a.id.split('-ren-')[1] || '0'), 10);
-        const numB = parseInt((b.id.split('-ren-')[1] || '0'), 10);
-        return numB - numA;
+        return this.getIdSequence(b.id) - this.getIdSequence(a.id);
       });
 
       return renewals;
@@ -85,7 +88,7 @@ class RenewalDAO {
   async createRenewal(renewalData) {
     try {
       const nextNumber = await this.getNextRenewalNumber(renewalData.createdBy);
-      const renewalId = `${renewalData.createdBy}-ren-${nextNumber}`;
+      const renewalId = `ren-${nextNumber}`;
       const renewalToSave = this.normalizeRenewal(renewalId, renewalData, renewalData.createdBy);
 
       await this.getUserRenewalsRef(renewalData.createdBy).doc(renewalId).set({
