@@ -60,7 +60,6 @@ const runDailyReminders = async () => {
 
     for (const username of usernames) {
       const user = allUsers[username];
-      if (user.role === 'admin') continue;
       await sendRemindersForUser(username, user);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }

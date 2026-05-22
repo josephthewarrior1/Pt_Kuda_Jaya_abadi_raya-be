@@ -1,4 +1,4 @@
-const { admin, auth, db } = require('./config/firebase');
+const { auth } = require('./config/firebase');
 const customerDAO = require('./dao/customerDAO');
 const carDAO = require('./dao/carDAO');
 const userDAO = require('./dao/userDAO');
@@ -98,7 +98,6 @@ async function resetAndSeed() {
             email: targetEmail,
             password: hashedPassword,
             firebaseUid: userRecord.uid,
-            role: 'admin',
             status: 'Active'
         });
         console.log('Firestore user created:', targetUsername);

@@ -10,7 +10,16 @@ const nestedMap = {
   'kwitansi_records': 'kwitansi'
 };
 
-const flatCollections = ['company_profiles', 'users', 'admins', 'quotations', 'car_references'];
+const skippedCollections = new Set(['admins']);
+
+const stripRemovedFields = (colName, docData) => {
+  if (colName !== 'users' || !docData || typeof docData !== 'object') {
+    return docData;
+  }
+
+  const { role, ...userData } = docData;
+  return userData;
+};
 
 async function migrate() {
   try {
@@ -22,6 +31,10 @@ async function migrate() {
 
     for (const [colName, colData] of Object.entries(data)) {
       if (typeof colData !== 'object' || !colData) continue;
+      if (skippedCollections.has(colName)) {
+        console.log(`Skipping removed collection ${colName}`);
+        continue;
+      }
       
       console.log(`Processing ${colName}...`);
       
@@ -39,7 +52,7 @@ async function migrate() {
            if (typeof userItems !== 'object') continue;
            for (const [itemId, itemData] of Object.entries(userItems)) {
               if (itemData && typeof itemData === 'object') {
-                  await db.collection(colName).doc(userId).collection(subcol).doc(itemId).set(itemData);
+                  await db.collection(colName).doc(userId).collection(subcol).doc(itemId).set(stripRemovedFields(colName, itemData));
                   colCount++;
               }
            }
@@ -49,7 +62,7 @@ async function migrate() {
         // Flat collections (users, company_profiles, quotations, car_references, customers, etc)
         for (const [docId, docData] of Object.entries(colData)) {
            if (typeof docData === 'object' && docData) {
-             await db.collection(colName).doc(docId).set(docData, { merge: true });
+             await db.collection(colName).doc(docId).set(stripRemovedFields(colName, docData), { merge: true });
              colCount++;
            } else if (typeof docData === 'boolean' || typeof docData === 'string' || typeof docData === 'number') {
              // Edge case for primitives at root

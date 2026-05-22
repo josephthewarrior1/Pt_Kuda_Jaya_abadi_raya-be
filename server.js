@@ -137,20 +137,20 @@ app.listen(PORT, () => {
   console.log('  PUT    /api/users/profile         - Update profile (protected)');
   console.log('  PUT    /api/users/change-password - Change password (protected)');
   console.log('');
-  console.log('👥 CUSTOMER ENDPOINTS (User & Paid User Only):');
+  console.log('👥 CUSTOMER ENDPOINTS:');
   console.log('  GET    /api/customers             - Get all customers');
   console.log('  GET    /api/customers/:id         - Get customer by ID');
   console.log('  POST   /api/customers             - Create new customer');
   console.log('  PUT    /api/customers/:id         - Update customer');
   console.log('  DELETE /api/customers/:id         - Delete customer');
   console.log('');
-  console.log('🧾 INVOICE ENDPOINTS (User & Paid User Only):');
+  console.log('🧾 INVOICE ENDPOINTS:');
   console.log('  GET    /api/invoices              - Get all invoices');
   console.log('  GET    /api/invoices/:id          - Get invoice by ID');
   console.log('  POST   /api/invoices              - Create new invoice');
   console.log('  PUT    /api/invoices/:id          - Update invoice');
   console.log('');
-  console.log('💳 PAYMENT ENDPOINTS (User & Paid User Only):');
+  console.log('💳 PAYMENT ENDPOINTS:');
   console.log('  GET    /api/payments                 - Get all payment records');
   console.log('  GET    /api/payments/:id             - Get payment by ID');
   console.log('  GET    /api/payments/customer/:id    - Get payments by customer');
@@ -159,17 +159,17 @@ app.listen(PORT, () => {
   console.log('  PUT    /api/payments/:id             - Update payment record');
   console.log('  POST   /api/payments/:id/upload-proof - Upload payment proof');
   console.log('');
-  console.log('📄 KWITANSI ENDPOINTS (User & Paid User Only):');
+  console.log('📄 KWITANSI ENDPOINTS:');
   console.log('  POST   /api/kwitansi/generate        - Generate or update kwitansi');
   console.log('  GET    /api/kwitansi                 - Get all kwitansi');
   console.log('  GET    /api/kwitansi/:id             - Get kwitansi by ID');
   console.log('');
-  console.log('📝 QUOTATION ENDPOINTS (User & Paid User Only):');
+  console.log('📝 QUOTATION ENDPOINTS:');
   console.log('  POST   /api/quotations               - Create quotation');
   console.log('  GET    /api/quotations/policy/:id    - Get quotations by policy');
   console.log('  POST   /api/quotations/:id/accept    - Accept quotation (syncs to Car)');
   console.log('');
-  console.log('🔄 RENEWAL ENDPOINTS (User & Paid User Only):');
+  console.log('🔄 RENEWAL ENDPOINTS:');
   console.log('  GET    /api/renewals                  - Get all renewals');
   console.log('  GET    /api/renewals/:id              - Get renewal by ID');
   console.log('  GET    /api/renewals/customer/:id     - Get renewals by customer');
@@ -180,7 +180,6 @@ app.listen(PORT, () => {
   console.log('');
   console.log('📧 REMINDER ENDPOINTS:');
   console.log('  POST   /api/reminders/send        - Send reminder to self');
-  console.log('  POST   /api/reminders/trigger-all - Trigger all reminders (admin)');
   console.log('');
 
   // Start cron job

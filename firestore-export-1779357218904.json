@@ -1,0 +1,521 @@
+{
+  "exportedAt": "2026-05-21T09:53:35.836Z",
+  "projectId": "pt-kuda-jaya-abadi",
+  "collections": {
+    "admins": {
+      "VlEhlWIToVSu1T8N1buInRBhmxK2": {
+        "id": "VlEhlWIToVSu1T8N1buInRBhmxK2",
+        "data": {
+          "email": "testbot@example.com",
+          "name": "Test Bot",
+          "role": "Superadmin",
+          "createdAt": "2026-04-07T02:25:45.576Z"
+        }
+      },
+      "tester123": {
+        "id": "tester123",
+        "data": {
+          "username": "tester123",
+          "password": "$2b$10$fm0W.Qq/6eQXya6RVOSwOOuvdcCZb8MJmQM3DZcarN7B7sinau7T6",
+          "role": "superadmin"
+        }
+      }
+    },
+    "car_data": {},
+    "car_references": {
+      "BMW": {
+        "id": "BMW",
+        "data": {
+          "_brandExists": true,
+          "X1": true,
+          "Series 5": true,
+          "X3": true,
+          "Series 3": true,
+          "X5": true,
+          "X8": true
+        }
+      },
+      "BYD": {
+        "id": "BYD",
+        "data": {
+          "ATTO": true,
+          "_brandExists": true
+        }
+      },
+      "Chevrolet": {
+        "id": "Chevrolet",
+        "data": {
+          "Trax": true,
+          "_brandExists": true,
+          "Spin": true,
+          "Colorado": true,
+          "Captiva": true
+        }
+      },
+      "Daihatsu": {
+        "id": "Daihatsu",
+        "data": {
+          "Luxio": true,
+          "Gran Max": true,
+          "Ayla": true,
+          "Sigra": true,
+          "_brandExists": true,
+          "Rocky": true,
+          "Sirion": true,
+          "Terios": true,
+          "Xenia": true
+        }
+      },
+      "Ford": {
+        "id": "Ford",
+        "data": {
+          "Ranger": true,
+          "_brandExists": true,
+          "Fiesta": true,
+          "Everest": true,
+          "EcoSport": true,
+          "avanza": true
+        }
+      },
+      "Honda": {
+        "id": "Honda",
+        "data": {
+          "HR-V": true,
+          "_brandExists": true,
+          "BR-V": true,
+          "CR-V": true,
+          "Brio": true,
+          "Mobilio": true,
+          "City": true,
+          "Civic": true,
+          "Accord": true,
+          "WR-V": true
+        }
+      },
+      "Hyundai": {
+        "id": "Hyundai",
+        "data": {
+          "Santa Fe": true,
+          "_brandExists": true,
+          "Ioniq 5": true,
+          "Creta": true,
+          "Ioniq 6": true,
+          "Stargazer": true,
+          "Palisade": true
+        }
+      },
+      "Isuzu": {
+        "id": "Isuzu",
+        "data": {
+          "_brandExists": true,
+          "Panther": true,
+          "MU-X": true,
+          "D-Max": true,
+          "Traga": true,
+          "Elf": true
+        }
+      },
+      "Kia": {
+        "id": "Kia",
+        "data": {
+          "Carnival": true,
+          "_brandExists": true,
+          "Sonet": true,
+          "Carens": true,
+          "Seltos": true
+        }
+      },
+      "Mazda": {
+        "id": "Mazda",
+        "data": {
+          "CX-5": true,
+          "_brandExists": true,
+          "CX-3": true,
+          "Mazda3": true,
+          "Mazda2": true,
+          "CX-9": true,
+          "CX-8": true
+        }
+      },
+      "Mercedes-Benz": {
+        "id": "Mercedes-Benz",
+        "data": {
+          "C-Class": true,
+          "GLE": true,
+          "_brandExists": true,
+          "E-Class": true,
+          "GLA": true,
+          "GLC": true
+        }
+      },
+      "Mitsubishi": {
+        "id": "Mitsubishi",
+        "data": {
+          "Xpander": true,
+          "Pajero Sport": true,
+          "_brandExists": true,
+          "L300": true,
+          "Outlander": true,
+          "Triton": true,
+          "Xpander Cross": true
+        }
+      },
+      "Nissan": {
+        "id": "Nissan",
+        "data": {
+          "X-Trail": true,
+          "_brandExists": true,
+          "Magnite": true,
+          "Livina": true,
+          "Serena": true,
+          "Kicks": true,
+          "Terra": true
+        }
+      },
+      "Suzuki": {
+        "id": "Suzuki",
+        "data": {
+          "Baleno": true,
+          "XL7": true,
+          "_brandExists": true,
+          "S-Presso": true,
+          "Carry": true,
+          "APV": true,
+          "Ertiga": true,
+          "Jimny": true,
+          "Ignis": true,
+          "Blindvan GC415": true
+        }
+      },
+      "Toyota": {
+        "id": "Toyota",
+        "data": {
+          "_brandExists": true,
+          "Avanza": true,
+          "Agya": true,
+          "Innova": true,
+          "Veloz": true,
+          "Corolla Cross": true,
+          "Raize": true,
+          "Fortuner": true,
+          "Yaris": true,
+          "Alphard": true,
+          "Calya": true,
+          "Camry": true,
+          "Rush": true,
+          "Vios": true,
+          "Grand New Kijang Innova 2.0 G A/T / MINIBUS": true
+        }
+      },
+      "Wuling": {
+        "id": "Wuling",
+        "data": {
+          "Air EV": true,
+          "_brandExists": true,
+          "Cortez": true,
+          "Alvez": true,
+          "Confero": true,
+          "BinguoEV": true,
+          "Almaz": true
+        }
+      }
+    },
+    "company_profiles": {
+      "tester123": {
+        "id": "tester123",
+        "data": {
+          "companyName": "PT.JAYAINDO ARTHA SUKSES",
+          "companySubtitle": "INSURANCE AGENCY",
+          "companyCity": "Jakarta",
+          "companyLogo": {
+            "format": "jpg",
+            "width": 400,
+            "uploadedAt": 1770438885559,
+            "publicId": "company-logos/tester123/fkz2sfqfigjzemtoy2jw",
+            "url": "https://res.cloudinary.com/dfxajqmhz/image/upload/v1770438885/company-logos/tester123/fkz2sfqfigjzemtoy2jw.jpg",
+            "height": 400
+          },
+          "updatedAt": 1775542711154,
+          "createdAt": 1770106946486
+        }
+      }
+    },
+    "counters": {
+      "Josep": {
+        "id": "Josep",
+        "data": {
+          "carCount": 5,
+          "customerCount": 5,
+          "invoiceCount": 1,
+          "paymentCount": 1,
+          "kwitansiCount": 1
+        }
+      },
+      "gareth71": {
+        "id": "gareth71",
+        "data": {
+          "customerCount": 1,
+          "carCount": 1,
+          "paymentCount": 1,
+          "renewalCount": 1
+        }
+      },
+      "hery123": {
+        "id": "hery123",
+        "data": {
+          "invoiceCount": 4,
+          "paymentCount": 5,
+          "renewalCount": 1,
+          "customerCount": 3,
+          "carCount": 3
+        }
+      },
+      "josep": {
+        "id": "josep",
+        "data": {
+          "customerCount": 70,
+          "carCount": 70
+        }
+      },
+      "kuda123": {
+        "id": "kuda123",
+        "data": {
+          "carCount": 4,
+          "customerCount": 10
+        }
+      },
+      "sian191990": {
+        "id": "sian191990",
+        "data": {
+          "customerCount": 1,
+          "carCount": 1
+        }
+      },
+      "tester123": {
+        "id": "tester123",
+        "data": {
+          "customerCount": 19,
+          "carCount": 24,
+          "kwitansiCount": 2,
+          "invoiceCount": 12,
+          "paymentCount": 14,
+          "renewalCount": 5
+        }
+      },
+      "testing123456": {
+        "id": "testing123456",
+        "data": {
+          "customerCount": 210,
+          "carCount": 210
+        }
+      },
+      "tonylim77": {
+        "id": "tonylim77",
+        "data": {
+          "customerCount": 1,
+          "carCount": 1,
+          "paymentCount": 1
+        }
+      }
+    },
+    "customer_data": {},
+    "invoice_records": {},
+    "kwitansi_records": {},
+    "payment_records": {},
+    "quotation_records": {},
+    "renewal_records": {},
+    "users": {
+      "Herry1098": {
+        "id": "Herry1098",
+        "data": {
+          "fullName": "Herry",
+          "username": "Herry1098",
+          "role": "user",
+          "email": "herry.1098@gmail.com",
+          "firebaseUid": "Herry1098",
+          "createdAt": 1776733639934,
+          "updatedAt": 1776733639934
+        }
+      },
+      "Johan": {
+        "id": "Johan",
+        "data": {
+          "fullName": "Johannes",
+          "username": "Johan",
+          "role": "user",
+          "email": "johan@yopmail.com",
+          "firebaseUid": "Johan",
+          "createdAt": 1779167195187,
+          "updatedAt": 1779167195187
+        }
+      },
+      "Josep": {
+        "id": "Josep",
+        "data": {
+          "fullName": "Josep",
+          "username": "Josep",
+          "role": "user",
+          "email": "josep@gmail.com",
+          "firebaseUid": "Josep",
+          "createdAt": 1777433071877,
+          "updatedAt": 1777433071877
+        }
+      },
+      "admin": {
+        "id": "admin",
+        "data": {
+          "createdAt": 1766457073551,
+          "password": "$2b$10$dPinWAcr7qPo6XOqgkr2xefbSnmX82E0PwIUIfGgzgIkijkqY9FoS",
+          "role": "admin",
+          "fullName": "Admin User",
+          "updatedAt": 1766457073551,
+          "username": "admin"
+        }
+      },
+      "gareth71": {
+        "id": "gareth71",
+        "data": {
+          "fullName": "gareth",
+          "username": "gareth71",
+          "role": "user",
+          "email": "gareth71@gmail.com",
+          "firebaseEmail": "gareth71@gmail.com",
+          "firebaseUid": "gareth71",
+          "createdAt": 1779345617096,
+          "updatedAt": 1779345617096
+        }
+      },
+      "hery123": {
+        "id": "hery123",
+        "data": {
+          "fullName": "Hery Setiawan",
+          "username": "hery123",
+          "role": "user",
+          "email": "hery.2017@gmail.com",
+          "firebaseUid": "hery123",
+          "createdAt": 1778723205122,
+          "updatedAt": 1778723205122
+        }
+      },
+      "joseph": {
+        "id": "joseph",
+        "data": {
+          "createdAt": 1764144042352,
+          "password": "$2b$10$W5jRvkws2A.XcBQ5VkHdwu7sAvdRtNvzJftupFsDqWw2DmBNdU17W",
+          "fullName": "joseph",
+          "updatedAt": 1764144042352,
+          "username": "joseph"
+        }
+      },
+      "josephimanuel": {
+        "id": "josephimanuel",
+        "data": {
+          "createdAt": 1771988417894,
+          "password": "$2b$10$u1Wlx/1HGW92pTfnnAqMq.oi/hEYVf1BpGy826BP0yqph0Omz0q6G",
+          "role": "user",
+          "fullName": "joseph",
+          "email": "josephretiawan71@gmail.com",
+          "updatedAt": 1771988417894,
+          "username": "josephimanuel"
+        }
+      },
+      "josephsetiawan": {
+        "id": "josephsetiawan",
+        "data": {
+          "createdAt": 1770945944834,
+          "password": "$2b$10$Uo6kKkViFUaFUtYTpsOm/O6dEtWAel47EmRXr21RgqA/I1skeLTRi",
+          "role": "user",
+          "fullName": "joseph imanuel",
+          "updatedAt": 1770945944834,
+          "username": "josephsetiawan"
+        }
+      },
+      "kuda123": {
+        "id": "kuda123",
+        "data": {
+          "createdAt": 1766998548039,
+          "password": "$2b$10$fm4HNOrfCjxrM1QJELKj..krbVdUxeW.peExvYXNHovyb2a3zy0oa",
+          "role": "user",
+          "fullName": "kuda",
+          "updatedAt": 1766998548039,
+          "username": "kuda123"
+        }
+      },
+      "sian191990": {
+        "id": "sian191990",
+        "data": {
+          "fullName": "titin",
+          "username": "sian191990",
+          "role": "user",
+          "email": "tjhinsiannie18@gmail.com",
+          "firebaseUid": "sian191990",
+          "createdAt": 1776742552848,
+          "updatedAt": 1776742552848
+        }
+      },
+      "tester123": {
+        "id": "tester123",
+        "data": {
+          "id": "tester123",
+          "username": "tester123",
+          "role": "user",
+          "createdAt": 1766465533989,
+          "password": "$2b$10$kM9wFePW4wzoCeIlva/gXubGAwaHGMBwe1mgyXcUalrGZLrVhGzDK",
+          "fullName": "tester123",
+          "updatedAt": 1771984798837,
+          "email": "josephsetiawan71@gmail.com",
+          "firebaseUid": "TrR0DLargdckRbpg8yw0Mr851QJ2"
+        }
+      },
+      "testeruser1": {
+        "id": "testeruser1",
+        "data": {
+          "fullName": "Tester User",
+          "username": "testeruser1",
+          "role": "user",
+          "email": "testeruser1@example.com",
+          "firebaseUid": "testeruser1",
+          "createdAt": 1775529044601,
+          "updatedAt": 1775529044601
+        }
+      },
+      "testing123456": {
+        "id": "testing123456",
+        "data": {
+          "username": "testing123456",
+          "email": "testing123456@gmail.com",
+          "password": "$2b$10$2RNHZ8JtX6iiqWLGMVfK3OVWKYaaih6OnzWpjYW4rXFQXoGzZ4u06",
+          "firebaseUid": "V3UqIbYvFWOpwjV3Fur8HPtbVVY2",
+          "status": "Active",
+          "createdAt": 1778424186425,
+          "updatedAt": 1778424186425,
+          "role": "user"
+        }
+      },
+      "tonylim77": {
+        "id": "tonylim77",
+        "data": {
+          "fullName": "Tony Lim",
+          "username": "tonylim77",
+          "role": "user",
+          "email": "apraxiatm@gmail.com",
+          "firebaseUid": "tonylim77",
+          "createdAt": 1779011148915,
+          "updatedAt": 1779011148915
+        }
+      },
+      "wonton1": {
+        "id": "wonton1",
+        "data": {
+          "fullName": "Wonton",
+          "username": "wonton1",
+          "role": "user",
+          "email": "equinoxantarax@gmail.com",
+          "firebaseUid": "wonton1",
+          "createdAt": 1776397759641,
+          "updatedAt": 1776397759641
+        }
+      }
+    }
+  }
+}

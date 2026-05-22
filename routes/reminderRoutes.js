@@ -2,25 +2,17 @@ const express = require('express');
 const router = express.Router();
 const reminderController = require('../controllers/reminderController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { adminOnly, userAndPaidUserOnly } = require('../middlewares/roleMiddleware');
 
-// User kirim reminder ke diri sendiri sekarang (manual trigger)
-router.post('/reminders/send', authMiddleware, userAndPaidUserOnly, (req, res) =>
+router.post('/reminders/send', authMiddleware, (req, res) =>
   reminderController.sendMyReminder(req, res)
 );
 
-// Admin: trigger semua reminder sekarang (untuk testing)
-router.post('/reminders/trigger-all', authMiddleware, adminOnly, (req, res) =>
-  reminderController.triggerAllReminders(req, res)
-);
-
-// ✅ GANTI POST → GET, tambah security check
 router.get('/reminders/cron', (req, res) => {
   const authHeader = req.headers['authorization'];
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  reminderController.runCron(req, res);
+  return reminderController.runCron(req, res);
 });
 
 module.exports = router;
