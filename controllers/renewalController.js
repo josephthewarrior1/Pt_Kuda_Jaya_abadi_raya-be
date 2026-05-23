@@ -184,6 +184,20 @@ class RenewalController {
         return res.status(404).json({ success: false, error: 'Policy not found' });
       }
 
+      // ── Guard: block if policy expires in more than 30 days ──
+      if (policyType === 'car') {
+        const dueDate = policy.carData?.dueDate;
+        if (dueDate) {
+          const daysLeft = Math.round((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          if (daysLeft > 30) {
+            return res.status(400).json({
+              success: false,
+              error: `Tidak dapat membuat renewal. Sisa masa aktif polis kendaraan masih ${daysLeft} hari (> 30 hari).`,
+            });
+          }
+        }
+      }
+
       // ── Guard: block if there's already a Pending/Approved renewal for this vehicle ──
       const existingPendingRenewal = await renewalDAO.getActivePendingRenewalByPolicy(policyId.trim(), userId);
       if (existingPendingRenewal) {

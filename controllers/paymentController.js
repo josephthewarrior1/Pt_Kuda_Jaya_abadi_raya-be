@@ -238,6 +238,20 @@ class PaymentController {
         });
       }
 
+      // ── Guard: Prevent duplicate active payments on a vehicle/policy ──
+      if (policyType === 'car' && policyId) {
+        const allPayments = await paymentDAO.getAllPaymentsByUser(userId);
+        const activePayment = allPayments.find(
+          (p) => p.policyId === policyId.trim() && p.status !== 'Cancelled'
+        );
+        if (activePayment) {
+          return res.status(400).json({
+            success: false,
+            error: `Kendaraan ini sudah memiliki pembayaran aktif dengan status "${activePayment.status}" (ID: ${activePayment.id}). Harap selesaikan atau batalkan pembayaran tersebut terlebih dahulu.`,
+          });
+        }
+      }
+
       const normalizedStatus = resolvePaymentStatus({
         status,
         dueDate,
