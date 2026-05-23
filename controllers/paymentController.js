@@ -242,12 +242,21 @@ class PaymentController {
       if (policyType === 'car' && policyId) {
         const allPayments = await paymentDAO.getAllPaymentsByUser(userId);
         const activePayment = allPayments.find(
-          (p) => p.policyId === policyId.trim() && p.status !== 'Cancelled'
+          (p) => p.policyId === policyId.trim() && !['Paid', 'Cancelled'].includes(p.status)
         );
         if (activePayment) {
+          const carName = policy.carData 
+            ? `${policy.carData.carBrand || ''} ${policy.carData.carModel || ''}`.trim() 
+            : 'kendaraan';
+          const formattedAmount = new Intl.NumberFormat('id-ID', { 
+            style: 'currency', 
+            currency: 'IDR', 
+            minimumFractionDigits: 0 
+          }).format(activePayment.amount || 0);
+
           return res.status(400).json({
             success: false,
-            error: `Kendaraan ini sudah memiliki pembayaran aktif dengan status "${activePayment.status}" (ID: ${activePayment.id}). Harap selesaikan atau batalkan pembayaran tersebut terlebih dahulu.`,
+            error: `Pembayaran gagal dibuat. Mobil ${carName} sudah memiliki pembayaran aktif sebesar ${formattedAmount} dengan status "${activePayment.status}". Harap selesaikan atau batalkan pembayaran tersebut terlebih dahulu.`,
           });
         }
       }

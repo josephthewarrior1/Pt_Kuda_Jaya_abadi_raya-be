@@ -201,9 +201,12 @@ class RenewalController {
       // ── Guard: block if there's already a Pending/Approved renewal for this vehicle ──
       const existingPendingRenewal = await renewalDAO.getActivePendingRenewalByPolicy(policyId.trim(), userId);
       if (existingPendingRenewal) {
+        const carName = policy.carData 
+          ? `${policy.carData.carBrand || ''} ${policy.carData.carModel || ''}`.trim() 
+          : 'kendaraan';
         return res.status(409).json({
           success: false,
-          error: `Kendaraan ini sudah memiliki renewal aktif (${existingPendingRenewal.id}) dengan status "${existingPendingRenewal.status}". Selesaikan atau batalkan renewal tersebut terlebih dahulu.`,
+          error: `Mobil ${carName} sudah memiliki perpanjangan aktif dengan status "${existingPendingRenewal.status}". Selesaikan atau batalkan perpanjangan tersebut terlebih dahulu.`,
           existingRenewalId: existingPendingRenewal.id,
         });
       }
