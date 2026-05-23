@@ -180,7 +180,7 @@ exports.acceptQuotation = async (req, res) => {
       });
 
       // Link payment back to renewal (so manual completeRenewal still works)
-      await RenewalDAO.updateRenewal(renewalId, { paymentId: newPayment.id, status: 'Approved' }, userId);
+      await RenewalDAO.updateRenewal(renewalId, { paymentId: newPayment.id, status: 'Approved', premium: amount }, userId);
     }
 
     res.status(200).json({ success: true, message: 'Quotation accepted successfully', quotation: acceptedQuotation });
