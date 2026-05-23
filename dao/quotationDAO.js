@@ -24,9 +24,9 @@ class QuotationDAO {
     return newQuotation;
   }
 
-  async getQuotationsByPolicy(policyId, userId) {
+  async getQuotationsByCarId(carId, userId) {
     const snapshot = await this.getUserQuotationsRef(userId)
-      .where('policyId', '==', policyId)
+      .where('carId', '==', carId)
       .get();
     
     if (snapshot.empty) return [];
@@ -60,9 +60,9 @@ class QuotationDAO {
     return true;
   }
 
-  async deletePendingQuotationsExcept(policyId, keepId, userId) {
+  async deletePendingQuotationsExcept(carId, keepId, userId) {
     const snapshot = await this.getUserQuotationsRef(userId)
-      .where('policyId', '==', policyId)
+      .where('carId', '==', carId)
       .get();
       
     if (snapshot.empty) return 0;

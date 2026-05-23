@@ -60,14 +60,13 @@ class InvoiceDAO {
     };
   }
 
-  // Get active unpaid invoice for a specific policy (car or property)
-  async getUnpaidInvoiceByPolicy(policyType, policyId, userId) {
+  // Get active unpaid invoice for a specific car
+  async getUnpaidInvoiceByCar(carId, userId) {
     try {
-      const fieldName = policyType === 'car' ? 'carId' : 'propertyId';
-      if (!policyId) return null;
+      if (!carId) return null;
 
       const snapshot = await this.getUserInvoicesRef(userId)
-        .where(fieldName, '==', policyId)
+        .where('carId', '==', carId)
         .where('status', '==', 'Unpaid')
         .get();
 
@@ -76,7 +75,7 @@ class InvoiceDAO {
       const doc = snapshot.docs[0];
       return this.normalizeInvoice(doc.id, doc.data(), userId);
     } catch (error) {
-      throw new Error('Failed to fetch unpaid invoice for policy: ' + error.message);
+      throw new Error('Failed to fetch unpaid invoice for car: ' + error.message);
     }
   }
 
@@ -186,6 +185,7 @@ class InvoiceDAO {
       throw new Error('Failed to update invoice: ' + error.message);
     }
   }
+
   // Delete invoice
   async deleteInvoice(invoiceId, userId) {
     try {

@@ -39,10 +39,10 @@ erDiagram
     customer_data ||--o{ payment_records : "customer_data.customerId = payment_records.customerId"
     customer_data ||--o{ renewal_records : "customer_data.customerId = renewal_records.customerId"
 
-    car_data ||--o{ quotation_records : "car_data.carId = quotation_records.policyId"
+    car_data ||--o{ quotation_records : "car_data.carId = quotation_records.carId"
     car_data ||--o{ invoice_records : "car_data.carId = invoice_records.carId"
-    car_data ||--o{ payment_records : "car_data.carId = payment_records.policyId"
-    car_data ||--o{ renewal_records : "car_data.carId = renewal_records.policyId"
+    car_data ||--o{ payment_records : "car_data.carId = payment_records.carId"
+    car_data ||--o{ renewal_records : "car_data.carId = renewal_records.carId"
 
     quotation_records ||--o| invoice_records : "quotation_records.quotationId = invoice_records.quotationId"
     invoice_records ||--o{ payment_records : "invoice_records.invoiceId = payment_records.invoiceNumber"
@@ -114,8 +114,7 @@ erDiagram
         string quotationId PK
         string userId FK
         string customerId FK
-        string policyId FK
-        string policyType
+        string carId FK
         string renewalId FK
         string quotationNumber
         string insuranceProvider
@@ -151,8 +150,7 @@ erDiagram
         string paymentId PK
         string userId FK
         string customerId FK
-        string policyId FK
-        string policyType
+        string carId FK
         string renewalId FK
         string invoiceNumber FK
         number amount
@@ -182,8 +180,7 @@ erDiagram
         string renewalId PK
         string userId FK
         string customerId FK
-        string policyId FK
-        string policyType
+        string carId FK
         string paymentId FK
         date oldStartDate
         date oldEndDate
@@ -208,7 +205,7 @@ erDiagram
 - `userId` biasanya sama dengan username dan dipakai sebagai parent document, contoh `invoice_records/Josep/invoices/inv-1`.
 - Collection `admins` dan field `users.role` sudah tidak dipakai. Semua akun dianggap user biasa dan akses API cukup divalidasi lewat Firebase Auth token.
 - `customers.customerId` direferensikan oleh `cars.customerId`, `quotations.customerId`, `invoices.customerId`, `payments.customerId`, dan `renewals.customerId`.
-- `cars.carId` direferensikan sebagai `policyId` saat `policyType = "car"`, dan juga bisa muncul sebagai `invoices.carId`.
+- `cars.carId` direferensikan oleh semua collection yang berhubungan: `quotation_records.carId`, `invoice_records.carId`, `payment_records.carId`, dan `renewal_records.carId`.
 - `quotations.quotationId` masuk ke `invoices.quotationId` saat quotation diterima.
 - `payments.invoiceNumber` di kode berisi ID dokumen invoice, bukan nomor invoice display.
 - `kwitansi.paymentId` mengarah ke `payments.paymentId`.
@@ -216,18 +213,329 @@ erDiagram
 
 ## Detail Collection
 
-Walaupun sistem menggunakan Firestore yang bersifat NoSQL, setiap collection tetap dapat dijelaskan seperti tabel logical. Primary key pada detail di bawah mengacu pada document ID Firestore, sedangkan relationship dibaca dari field referensi seperti `userId`, `createdBy`, `customerId`, `carId`, `policyId`, `quotationId`, `paymentId`, dan `renewalId`.
+Although the system uses Firestore which is NoSQL in nature, each collection can still be described as a logical table. The primary key in the details below refers to the Firestore document ID, while relationships are read from reference fields such as `userId`, `createdBy`, `customerId`, `carId`, `policyId`, `quotationId`, `paymentId`, and `renewalId`.
 
-| Table Name | Components | Relationship of the Table |
-| --- | --- | --- |
-| users | 1. `id` as primary key, using the username or Firebase UID as the Firestore document ID.<br>2. `username` as the account username used for login and document grouping.<br>3. `fullName` as the full name of the user.<br>4. `email` as the email address of the user.<br>5. `password` as the hashed password for legacy/local authentication data.<br>6. `firebaseUid` as the user identifier from Firebase Authentication.<br>7. `firebaseEmail` as the email stored from Firebase Authentication, if available.<br>8. `role` as the legacy role field, usually stored as user/admin but no longer used for active authorization.<br>9. `status` as the activity status of the user, for example Active.<br>10. `createdAt` as the timestamp when the user was created.<br>11. `updatedAt` as the timestamp when the user data was last updated. | 1. One user can only have one company profile.<br>2. One user can only have one counter document.<br>3. One user can have many customers.<br>4. One user can have many car or policy records.<br>5. One user can create many quotations.<br>6. One user can create many invoices.<br>7. One user can create many payment records.<br>8. One user can print many kwitansi records.<br>9. One user can create many renewal records. |
-| company_profiles | 1. `userId` as primary key and reference to the user document ID.<br>2. `companyName` as the company name displayed on business documents.<br>3. `companySubtitle` as the company subtitle or supporting description.<br>4. `companyCity` as the company city location.<br>5. `companyLogo` as an object containing logo URL, Cloudinary public ID, upload time, width, height, and format.<br>6. `createdAt` as the timestamp when the company profile was created.<br>7. `updatedAt` as the timestamp when the company profile was last updated. | 1. One company profile can only belong to one user.<br>2. One user can only maintain one company profile. |
-| counters | 1. `userId` as primary key and reference to the user document ID.<br>2. `customerCount` as the latest sequence number used for customer IDs.<br>3. `carCount` as the latest sequence number used for car IDs.<br>4. `invoiceCount` as the latest sequence number used for invoice IDs.<br>5. `paymentCount` as the latest sequence number used for payment IDs.<br>6. `kwitansiCount` as the latest sequence number used for kwitansi IDs.<br>7. `renewalCount` as the latest sequence number used for renewal IDs. | 1. One counter document can only belong to one user.<br>2. One counter document is used to generate sequential IDs for the user's customer, car, invoice, payment, kwitansi, and renewal records. |
-| customer_data | 1. `id` as primary key, generated using the user ID and customer sequence number.<br>2. `name` as the customer name.<br>3. `email` as the customer email address.<br>4. `phone` as the customer phone number.<br>5. `address` as the customer address.<br>6. `notes` as additional notes about the customer.<br>7. `status` as the customer status.<br>8. `createdBy` as the user who created the customer record.<br>9. `createdAt` as the timestamp when the customer was created.<br>10. `updatedAt` as the timestamp when the customer was last updated. | 1. One customer can only be created by one user.<br>2. One customer can have many car or policy records.<br>3. One customer can have many quotations.<br>4. One customer can have many invoices.<br>5. One customer can have many payment records.<br>6. One customer can have many renewal records. |
-| car_data | 1. `id` as primary key, generated using the user ID and car sequence number.<br>2. `customerId` as the customer who owns the car or policy.<br>3. `carData.ownerName` as the vehicle owner name.<br>4. `carData.carBrand` as the car brand.<br>5. `carData.carModel` as the car model.<br>6. `carData.plateNumber` as the vehicle plate number.<br>7. `carData.chassisNumber` as the vehicle chassis number.<br>8. `carData.engineNumber` as the vehicle engine number.<br>9. `carData.startDate` as the insurance or policy start date.<br>10. `carData.dueDate` as the insurance or policy due date.<br>11. `carData.carPrice` as the insured vehicle price or TSI source value.<br>12. `carData.color` as the vehicle color.<br>13. `carData.year` as the vehicle production year.<br>14. `carData.insuranceProvider` as the selected insurance provider.<br>15. `carData.insuranceType` as the selected insurance type.<br>16. `carData.coverageExtensions` as additional coverage options.<br>17. `carPhotos` as an object containing vehicle photo URLs such as left side, right side, front, back, and dashboard.<br>18. `documentPhotos` as an object containing document photo URLs such as STNK, SIM, KTP, and policy document.<br>19. `status` as the car or policy status.<br>20. `notes` as additional notes about the car.<br>21. `createdBy` as the user who created the car record.<br>22. `createdAt` as the timestamp when the car was created.<br>23. `updatedAt` as the timestamp when the car was last updated. | 1. One car can only belong to one customer.<br>2. One car can only be created by one user.<br>3. One car can have many quotation records through `policyId`.<br>4. One car can have many invoice records through `carId`.<br>5. One car can have many payment records through `policyId`.<br>6. One car can have many renewal records through `policyId`. |
-| quotation_records | 1. `id` as primary key, generated by Firestore or stored as quotation document ID.<br>2. `customerId` as the customer related to the quotation.<br>3. `policyType` as the type of policy, for example car.<br>4. `policyId` as the related policy or car ID.<br>5. `renewalId` as the renewal record ID if the quotation is created from a renewal process.<br>6. `quotationNumber` as the displayed quotation number.<br>7. `tsi` as the total sum insured value.<br>8. `insuranceProvider` as the provider used in the quotation.<br>9. `insuranceType` as the type of insurance package.<br>10. `coverages` as an object containing coverage configuration, percentage, fixed amount flag, and free include flag.<br>11. `totalPremium` as the calculated total premium.<br>12. `userId` as the user related to the quotation.<br>13. `status` as the quotation status, such as Pending or Accepted.<br>14. `createdAt` as the timestamp when the quotation was created.<br>15. `updatedAt` as the timestamp when the quotation was last updated. | 1. One quotation can only be created by one user.<br>2. One quotation can only belong to one customer.<br>3. One quotation can only refer to one policy or car.<br>4. One quotation may belong to one renewal process.<br>5. One accepted quotation can generate one invoice.<br>6. One accepted quotation can generate one payment record. |
-| invoice_records | 1. `id` as primary key, generated from the invoice sequence number, for example `inv-1`.<br>2. `invoiceNumber` as the displayed invoice number.<br>3. `customerId` as the customer billed by the invoice.<br>4. `customerName` as the customer name snapshot for the invoice.<br>5. `carId` as the related car or policy ID.<br>6. `plateNumber` as the vehicle plate number snapshot.<br>7. `quotationId` as the quotation that generated the invoice.<br>8. `renewalId` as the renewal record related to the invoice, if available.<br>9. `items` as the list of invoice line items.<br>10. `subTotal` as the subtotal amount before discount.<br>11. `discount` as the discount amount.<br>12. `grandTotal` as the final invoice total.<br>13. `issueDate` as the date when the invoice was issued.<br>14. `dueDate` as the payment due date of the invoice.<br>15. `status` as the invoice status, for example Unpaid or Paid.<br>16. `notes` as additional invoice notes.<br>17. `createdBy` as the user who created the invoice.<br>18. `createdAt` as the timestamp when the invoice was created.<br>19. `updatedAt` as the timestamp when the invoice was last updated. | 1. One invoice can only be created by one user.<br>2. One invoice can only belong to one customer.<br>3. One invoice can refer to one car or policy.<br>4. One invoice can be generated from one quotation.<br>5. One invoice may be connected to one renewal process.<br>6. One invoice can be paid through one or more payment records depending on business flow. |
-| payment_records | 1. `id` as primary key, generated from the payment sequence number, for example `pay-1`.<br>2. `customerId` as the customer who makes the payment.<br>3. `policyType` as the related policy type, for example car.<br>4. `policyId` as the related policy or car ID.<br>5. `renewalId` as the renewal record related to the payment, if available.<br>6. `invoiceNumber` as the invoice document reference used by the backend.<br>7. `amount` as the payment amount.<br>8. `dueDate` as the due date of the payment.<br>9. `paidDate` as the date when payment was completed.<br>10. `paymentMethod` as the payment method used by the customer.<br>11. `status` as the payment status, for example Pending or Paid.<br>12. `proofUrl` as the uploaded proof of payment URL.<br>13. `notes` as additional payment notes.<br>14. `createdBy` as the user who created the payment record.<br>15. `createdAt` as the timestamp when the payment was created.<br>16. `updatedAt` as the timestamp when the payment was last updated. | 1. One payment can only be created by one user.<br>2. One payment can only belong to one customer.<br>3. One payment can refer to one car or policy.<br>4. One payment can refer to one invoice.<br>5. One payment may be connected to one renewal process.<br>6. One payment can have one kwitansi record as receipt. |
-| kwitansi_records | 1. `id` as primary key, generated from the kwitansi sequence number, for example `kwt-1`.<br>2. `kwitansiNumber` as the displayed receipt number.<br>3. `paymentId` as the payment record connected to the receipt.<br>4. `invoiceData` as a snapshot object of invoice information used when the kwitansi is printed.<br>5. `issuedDate` as the date when the kwitansi was issued.<br>6. `printedBy` as the user who printed the kwitansi.<br>7. `printCount` as the number of times the kwitansi has been printed.<br>8. `createdAt` as the timestamp when the kwitansi was created.<br>9. `updatedAt` as the timestamp when the kwitansi was last updated. | 1. One kwitansi can only be printed by one user.<br>2. One kwitansi can only belong to one payment record.<br>3. One payment can have one kwitansi as proof of receipt. |
-| renewal_records | 1. `id` as primary key, generated from the renewal sequence number, for example `ren-1`.<br>2. `customerId` as the customer who renews the policy.<br>3. `policyType` as the type of policy being renewed, for example car.<br>4. `policyId` as the policy or car ID being renewed.<br>5. `paymentId` as the payment record connected to the renewal, if available.<br>6. `oldStartDate` as the previous policy start date.<br>7. `oldEndDate` as the previous policy end date.<br>8. `newStartDate` as the new policy start date.<br>9. `newEndDate` as the new policy end date.<br>10. `premium` as the renewal premium amount.<br>11. `status` as the renewal status, such as Pending, Approved, Completed, or Cancelled.<br>12. `notes` as additional renewal notes.<br>13. `completedAt` as the timestamp when the renewal was completed.<br>14. `createdBy` as the user who created the renewal record.<br>15. `createdAt` as the timestamp when the renewal was created.<br>16. `updatedAt` as the timestamp when the renewal was last updated. | 1. One renewal can only be created by one user.<br>2. One renewal can only belong to one customer.<br>3. One renewal can only renew one policy or car.<br>4. One renewal can generate many quotation options.<br>5. One completed renewal may be connected to one invoice.<br>6. One completed renewal may be connected to one payment record. |
-| car_references | 1. `brand` as primary key and Firestore document ID.<br>2. `_brandExists` as a flag to ensure the brand document exists.<br>3. Dynamic model fields as available car models under the brand, stored with boolean values.<br>4. `models` as a logical representation of available model names when displayed by the application. | 1. One car reference brand can contain many car models.<br>2. One car record can use one brand and one model from car references.<br>3. Car references are used as master data to standardize car brand and model input. |
+<table>
+  <thead>
+    <tr>
+      <th>Table Name</th>
+      <th>Components</th>
+      <th>Relationship of the Table</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>users</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, using the username as the Firestore document ID.</li>
+          <li><code>username</code> as the account username used for login and document grouping.</li>
+          <li><code>fullName</code> as the full name of the user.</li>
+          <li><code>email</code> as the email address of the user.</li>
+          <li><code>password</code> as the hashed password for legacy or local authentication data.</li>
+          <li><code>firebaseUid</code> as the user identifier from Firebase Authentication.</li>
+          <li><code>firebaseEmail</code> as the email stored from Firebase Authentication, if available.</li>
+          <li><code>role</code> as the legacy role field, no longer used for active authorization.</li>
+          <li><code>status</code> as the activity status of the user, for example Active.</li>
+          <li><code>createdAt</code> as the timestamp when the user was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the user data was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One user can only have one company profile.</li>
+          <li>One user can only have one counter document.</li>
+          <li>One user can have many customers.</li>
+          <li>One user can have many car or policy records.</li>
+          <li>One user can create many quotations.</li>
+          <li>One user can create many invoices.</li>
+          <li>One user can create many payment records.</li>
+          <li>One user can print many kwitansi records.</li>
+          <li>One user can create many renewal records.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>company_profiles</strong></td>
+      <td>
+        <ol>
+          <li><code>userId</code> as primary key and reference to the user document ID.</li>
+          <li><code>companyName</code> as the company name displayed on business documents.</li>
+          <li><code>companySubtitle</code> as the company subtitle or supporting description.</li>
+          <li><code>companyCity</code> as the company city location.</li>
+          <li><code>companyLogo</code> as an object containing logo URL, Cloudinary public ID, upload time, width, height, and format.</li>
+          <li><code>createdAt</code> as the timestamp when the company profile was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the company profile was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One company profile can only belong to one user.</li>
+          <li>One user can only maintain one company profile.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>counters</strong></td>
+      <td>
+        <ol>
+          <li><code>userId</code> as primary key and reference to the user document ID.</li>
+          <li><code>customerCount</code> as the latest sequence number used for customer IDs.</li>
+          <li><code>carCount</code> as the latest sequence number used for car IDs.</li>
+          <li><code>invoiceCount</code> as the latest sequence number used for invoice IDs.</li>
+          <li><code>paymentCount</code> as the latest sequence number used for payment IDs.</li>
+          <li><code>kwitansiCount</code> as the latest sequence number used for kwitansi IDs.</li>
+          <li><code>renewalCount</code> as the latest sequence number used for renewal IDs.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One counter document can only belong to one user.</li>
+          <li>One counter document is used to generate sequential IDs for the user's customer, car, invoice, payment, kwitansi, and renewal records.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>customer_data</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated using the user ID and customer sequence number.</li>
+          <li><code>name</code> as the customer name.</li>
+          <li><code>email</code> as the customer email address.</li>
+          <li><code>phone</code> as the customer phone number.</li>
+          <li><code>address</code> as the customer address.</li>
+          <li><code>notes</code> as additional notes about the customer.</li>
+          <li><code>status</code> as the customer status.</li>
+          <li><code>createdBy</code> as the user who created the customer record.</li>
+          <li><code>createdAt</code> as the timestamp when the customer was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the customer was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One customer can only be created by one user.</li>
+          <li>One customer can have many car or policy records.</li>
+          <li>One customer can have many quotations.</li>
+          <li>One customer can have many invoices.</li>
+          <li>One customer can have many payment records.</li>
+          <li>One customer can have many renewal records.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>car_data</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated using the user ID and car sequence number.</li>
+          <li><code>customerId</code> as the customer who owns the car or policy.</li>
+          <li><code>carData.ownerName</code> as the vehicle owner name.</li>
+          <li><code>carData.carBrand</code> as the car brand.</li>
+          <li><code>carData.carModel</code> as the car model.</li>
+          <li><code>carData.plateNumber</code> as the vehicle plate number.</li>
+          <li><code>carData.chassisNumber</code> as the vehicle chassis number.</li>
+          <li><code>carData.engineNumber</code> as the vehicle engine number.</li>
+          <li><code>carData.startDate</code> as the insurance or policy start date.</li>
+          <li><code>carData.dueDate</code> as the insurance or policy due date.</li>
+          <li><code>carData.carPrice</code> as the insured vehicle price or TSI source value.</li>
+          <li><code>carData.color</code> as the vehicle color.</li>
+          <li><code>carData.year</code> as the vehicle production year.</li>
+          <li><code>carData.insuranceProvider</code> as the selected insurance provider.</li>
+          <li><code>carData.insuranceType</code> as the selected insurance type.</li>
+          <li><code>carData.coverageExtensions</code> as additional coverage options.</li>
+          <li><code>carPhotos</code> as an object containing vehicle photo URLs such as left side, right side, front, back, and dashboard.</li>
+          <li><code>documentPhotos</code> as an object containing document photo URLs such as STNK, SIM, KTP, and policy document.</li>
+          <li><code>status</code> as the car or policy status.</li>
+          <li><code>notes</code> as additional notes about the car.</li>
+          <li><code>createdBy</code> as the user who created the car record.</li>
+          <li><code>createdAt</code> as the timestamp when the car was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the car was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One car can only belong to one customer.</li>
+          <li>One car can only be created by one user.</li>
+          <li>One car can have many quotation records through <code>policyId</code>.</li>
+          <li>One car can have many invoice records through <code>carId</code>.</li>
+          <li>One car can have many payment records through <code>policyId</code>.</li>
+          <li>One car can have many renewal records through <code>policyId</code>.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>quotation_records</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, stored as the quotation document ID.</li>
+          <li><code>customerId</code> as the customer related to the quotation.</li>
+          <li><code>policyType</code> as the type of policy, for example car.</li>
+          <li><code>policyId</code> as the related policy or car ID.</li>
+          <li><code>renewalId</code> as the renewal record ID if the quotation is created from a renewal process.</li>
+          <li><code>quotationNumber</code> as the displayed quotation number.</li>
+          <li><code>tsi</code> as the total sum insured value.</li>
+          <li><code>insuranceProvider</code> as the provider used in the quotation.</li>
+          <li><code>insuranceType</code> as the type of insurance package.</li>
+          <li><code>coverages</code> as an object containing coverage configuration, percentage, fixed amount flag, and free include flag.</li>
+          <li><code>totalPremium</code> as the calculated total premium.</li>
+          <li><code>userId</code> as the user related to the quotation.</li>
+          <li><code>status</code> as the quotation status, such as Pending or Accepted.</li>
+          <li><code>createdAt</code> as the timestamp when the quotation was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the quotation was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One quotation can only be created by one user.</li>
+          <li>One quotation can only belong to one customer.</li>
+          <li>One quotation can only refer to one policy or car.</li>
+          <li>One quotation may belong to one renewal process.</li>
+          <li>One accepted quotation can generate one invoice.</li>
+          <li>One accepted quotation can generate one payment record.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>invoice_records</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated from the invoice sequence number, for example <code>inv-1</code>.</li>
+          <li><code>invoiceNumber</code> as the displayed invoice number.</li>
+          <li><code>customerId</code> as the customer billed by the invoice.</li>
+          <li><code>customerName</code> as the customer name snapshot for the invoice.</li>
+          <li><code>carId</code> as the related car or policy ID.</li>
+          <li><code>plateNumber</code> as the vehicle plate number snapshot.</li>
+          <li><code>quotationId</code> as the quotation that generated the invoice.</li>
+          <li><code>renewalId</code> as the renewal record related to the invoice, if available.</li>
+          <li><code>items</code> as the list of invoice line items.</li>
+          <li><code>subTotal</code> as the subtotal amount before discount.</li>
+          <li><code>discount</code> as the discount amount.</li>
+          <li><code>grandTotal</code> as the final invoice total.</li>
+          <li><code>issueDate</code> as the date when the invoice was issued.</li>
+          <li><code>dueDate</code> as the payment due date of the invoice.</li>
+          <li><code>status</code> as the invoice status, for example Unpaid or Paid.</li>
+          <li><code>notes</code> as additional invoice notes.</li>
+          <li><code>createdBy</code> as the user who created the invoice.</li>
+          <li><code>createdAt</code> as the timestamp when the invoice was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the invoice was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One invoice can only be created by one user.</li>
+          <li>One invoice can only belong to one customer.</li>
+          <li>One invoice can refer to one car or policy.</li>
+          <li>One invoice can be generated from one quotation.</li>
+          <li>One invoice may be connected to one renewal process.</li>
+          <li>One invoice can be paid through one or more payment records depending on business flow.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>payment_records</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated from the payment sequence number, for example <code>pay-1</code>.</li>
+          <li><code>customerId</code> as the customer who makes the payment.</li>
+          <li><code>policyType</code> as the related policy type, for example car.</li>
+          <li><code>policyId</code> as the related policy or car ID.</li>
+          <li><code>renewalId</code> as the renewal record related to the payment, if available.</li>
+          <li><code>invoiceNumber</code> as the invoice document reference used by the backend.</li>
+          <li><code>amount</code> as the payment amount.</li>
+          <li><code>dueDate</code> as the due date of the payment.</li>
+          <li><code>paidDate</code> as the date when payment was completed.</li>
+          <li><code>paymentMethod</code> as the payment method used by the customer.</li>
+          <li><code>status</code> as the payment status, for example Pending or Paid.</li>
+          <li><code>proofUrl</code> as the uploaded proof of payment URL.</li>
+          <li><code>notes</code> as additional payment notes.</li>
+          <li><code>createdBy</code> as the user who created the payment record.</li>
+          <li><code>createdAt</code> as the timestamp when the payment was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the payment was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One payment can only be created by one user.</li>
+          <li>One payment can only belong to one customer.</li>
+          <li>One payment can refer to one car or policy.</li>
+          <li>One payment can refer to one invoice.</li>
+          <li>One payment may be connected to one renewal process.</li>
+          <li>One payment can have one kwitansi record as receipt.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>kwitansi_records</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated from the kwitansi sequence number, for example <code>kwt-1</code>.</li>
+          <li><code>kwitansiNumber</code> as the displayed receipt number.</li>
+          <li><code>paymentId</code> as the payment record connected to the receipt.</li>
+          <li><code>invoiceData</code> as a snapshot object of invoice information used when the kwitansi is printed.</li>
+          <li><code>issuedDate</code> as the date when the kwitansi was issued.</li>
+          <li><code>printedBy</code> as the user who printed the kwitansi.</li>
+          <li><code>printCount</code> as the number of times the kwitansi has been printed.</li>
+          <li><code>createdAt</code> as the timestamp when the kwitansi was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the kwitansi was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One kwitansi can only be printed by one user.</li>
+          <li>One kwitansi can only belong to one payment record.</li>
+          <li>One payment can have one kwitansi as proof of receipt.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>renewal_records</strong></td>
+      <td>
+        <ol>
+          <li><code>id</code> as primary key, generated from the renewal sequence number, for example <code>ren-1</code>.</li>
+          <li><code>customerId</code> as the customer who renews the policy.</li>
+          <li><code>policyType</code> as the type of policy being renewed, for example car.</li>
+          <li><code>policyId</code> as the policy or car ID being renewed.</li>
+          <li><code>paymentId</code> as the payment record connected to the renewal, if available.</li>
+          <li><code>oldStartDate</code> as the previous policy start date.</li>
+          <li><code>oldEndDate</code> as the previous policy end date.</li>
+          <li><code>newStartDate</code> as the new policy start date.</li>
+          <li><code>newEndDate</code> as the new policy end date.</li>
+          <li><code>premium</code> as the renewal premium amount.</li>
+          <li><code>status</code> as the renewal status, such as Pending, Approved, Completed, or Cancelled.</li>
+          <li><code>notes</code> as additional renewal notes.</li>
+          <li><code>completedAt</code> as the timestamp when the renewal was completed.</li>
+          <li><code>createdBy</code> as the user who created the renewal record.</li>
+          <li><code>createdAt</code> as the timestamp when the renewal was created.</li>
+          <li><code>updatedAt</code> as the timestamp when the renewal was last updated.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One renewal can only be created by one user.</li>
+          <li>One renewal can only belong to one customer.</li>
+          <li>One renewal can only renew one policy or car.</li>
+          <li>One renewal can generate many quotation options.</li>
+          <li>One completed renewal may be connected to one invoice.</li>
+          <li>One completed renewal may be connected to one payment record.</li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>car_references</strong></td>
+      <td>
+        <ol>
+          <li><code>brand</code> as primary key and Firestore document ID.</li>
+          <li><code>_brandExists</code> as a flag to ensure the brand document exists.</li>
+          <li>Dynamic model fields as available car models under the brand, stored with boolean values.</li>
+          <li><code>models</code> as a logical representation of available model names when displayed by the application.</li>
+        </ol>
+      </td>
+      <td>
+        <ol>
+          <li>One car reference brand can contain many car models.</li>
+          <li>One car record can use one brand and one model from car references.</li>
+          <li>Car references are used as master data to standardize car brand and model input.</li>
+        </ol>
+      </td>
+    </tr>
+  </tbody>
+</table>

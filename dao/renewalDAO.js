@@ -36,8 +36,7 @@ class RenewalDAO {
     return {
       id: renewalId,
       customerId: renewalData.customerId || '',
-      policyType: renewalData.policyType || '',
-      policyId: renewalData.policyId || '',
+      carId: renewalData.carId || '',
       paymentId: renewalData.paymentId || '',
       oldStartDate: renewalData.oldStartDate || null,
       oldEndDate: renewalData.oldEndDate || null,
@@ -93,8 +92,7 @@ class RenewalDAO {
 
       await this.getUserRenewalsRef(renewalData.createdBy).doc(renewalId).set({
         customerId: renewalToSave.customerId,
-        policyType: renewalToSave.policyType,
-        policyId: renewalToSave.policyId,
+        carId: renewalToSave.carId,
         paymentId: renewalToSave.paymentId,
         oldStartDate: renewalToSave.oldStartDate,
         oldEndDate: renewalToSave.oldEndDate,
@@ -159,11 +157,11 @@ class RenewalDAO {
     }
   }
 
-  // Returns the first active (Pending/Approved) renewal for a given policyId
-  async getActivePendingRenewalByPolicy(policyId, userId) {
+  // Returns the first active (Pending/Approved) renewal for a given carId
+  async getActivePendingRenewalByCar(carId, userId) {
     try {
       const snapshot = await this.getUserRenewalsRef(userId)
-        .where('policyId', '==', policyId)
+        .where('carId', '==', carId)
         .where('status', 'in', ['Pending', 'Approved'])
         .get();
 

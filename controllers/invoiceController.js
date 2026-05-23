@@ -10,16 +10,9 @@ exports.createInvoice = async (req, res) => {
       createdBy: userId,
     };
 
-    // Strict Rule: Block if an Unpaid invoice already exists for this policy
-    let parsedPolicyType = null;
-    let parsedPolicyId = null;
+    // Strict Rule: Block if an Unpaid invoice already exists for this car
     if (invoiceData.carId) {
-      parsedPolicyType = 'car';
-      parsedPolicyId = invoiceData.carId;
-    }
-
-    if (parsedPolicyType && parsedPolicyId) {
-      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByPolicy(parsedPolicyType, parsedPolicyId, userId);
+      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByCar(invoiceData.carId, userId);
       if (existingUnpaid) {
         return res.status(409).json({
           success: false,
@@ -33,17 +26,9 @@ exports.createInvoice = async (req, res) => {
 
     // Auto-generate Payment with Pending status
     try {
-      let policyType = '';
-      let policyId = '';
-      if (newInvoice.carId) {
-        policyType = 'car';
-        policyId = newInvoice.carId;
-      }
-
       const paymentData = {
         customerId: newInvoice.customerId,
-        policyType: policyType,
-        policyId: policyId,
+        carId: newInvoice.carId || '',
         renewalId: newInvoice.renewalId || '',
         invoiceNumber: newInvoice.id, // Store Invoice ID for relational tracking
         amount: newInvoice.grandTotal,

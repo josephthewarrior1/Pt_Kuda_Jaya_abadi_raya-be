@@ -5,7 +5,6 @@ const invoiceDAO = require('../dao/invoiceDAO');
 const renewalDAO = require('../dao/renewalDAO');
 const cloudinary = require('../config/cloudinary');
 
-const ALLOWED_POLICY_TYPES = ['car'];
 const ALLOWED_STATUSES = ['Pending', 'Paid', 'Overdue', 'Cancelled'];
 
 // ─── Helper: Auto-complete a Renewal when its Payment is marked Paid ──────────
@@ -16,9 +15,9 @@ const autoCompleteRenewal = async (payment, userId) => {
 
   if (!renewal.newStartDate || !renewal.newEndDate) return;
 
-  // Update the car/policy with new dates
-  if (renewal.policyType === 'car') {
-    await carDAO.updateCar(renewal.policyId, {
+  // Update the car with new dates
+  if (renewal.carId) {
+    await carDAO.updateCar(renewal.carId, {
       carData: { startDate: renewal.newStartDate, dueDate: renewal.newEndDate },
       status: 'Active',
     }, userId);
@@ -29,7 +28,7 @@ const autoCompleteRenewal = async (payment, userId) => {
     completedAt: new Date().toISOString(),
   }, userId);
 
-  console.log(`✅ Auto-completed Renewal ${renewal.id} → Car/Policy updated to Active`);
+  console.log(`✅ Auto-completed Renewal ${renewal.id} → Car updated to Active`);
 };
 
 const isPastDue = (dueDate) => {
@@ -56,32 +55,24 @@ const resolvePaymentStatus = ({ status, dueDate, paidDate }) => {
   return 'Pending';
 };
 
-const getPolicyRecord = async (policyType, policyId, userId) => {
-  if (policyType === 'car') {
-    return carDAO.getCarById(policyId, userId);
-  }
-
-  return null;
-};
-
 const enrichPayments = async (payments, userId) => {
   const customers = await customerDAO.getAllCustomersByUser(userId);
   const customerMap = new Map(customers.map((customer) => [customer.id, customer.name || '']));
 
   return Promise.all(payments.map(async (payment) => {
-    let policySummary = '';
+    let carSummary = '';
 
-    if (payment.policyType === 'car' && payment.policyId) {
-      const car = await carDAO.getCarById(payment.policyId, userId);
+    if (payment.carId) {
+      const car = await carDAO.getCarById(payment.carId, userId);
       if (car) {
-        policySummary = `${car.carData?.ownerName || '-'} - ${car.carData?.carBrand || ''} ${car.carData?.carModel || ''}`.trim();
+        carSummary = `${car.carData?.ownerName || '-'} - ${car.carData?.carBrand || ''} ${car.carData?.carModel || ''}`.trim();
       }
     }
 
     return {
       ...payment,
       customerName: customerMap.get(payment.customerId) || '',
-      policySummary,
+      carSummary,
     };
   }));
 };
@@ -190,8 +181,7 @@ class PaymentController {
       const userId = req.user.username;
       const {
         customerId,
-        policyType,
-        policyId,
+        carId,
         invoiceNumber,
         amount,
         dueDate,
@@ -208,17 +198,10 @@ class PaymentController {
         });
       }
 
-      if (!policyType || !ALLOWED_POLICY_TYPES.includes(policyType)) {
+      if (!carId || !carId.trim()) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid policy type. Use: car',
-        });
-      }
-
-      if (!policyId || !policyId.trim()) {
-        return res.status(400).json({
-          success: false,
-          error: 'Policy ID is required',
+          error: 'Car ID is required',
         });
       }
 
@@ -230,35 +213,33 @@ class PaymentController {
         });
       }
 
-      const policy = await getPolicyRecord(policyType, policyId.trim(), userId);
-      if (!policy) {
+      const car = await carDAO.getCarById(carId.trim(), userId);
+      if (!car) {
         return res.status(404).json({
           success: false,
-          error: 'Policy not found',
+          error: 'Car not found',
         });
       }
 
-      // ── Guard: Prevent duplicate active payments on a vehicle/policy ──
-      if (policyType === 'car' && policyId) {
-        const allPayments = await paymentDAO.getAllPaymentsByUser(userId);
-        const activePayment = allPayments.find(
-          (p) => p.policyId === policyId.trim() && !['Paid', 'Cancelled'].includes(p.status)
-        );
-        if (activePayment) {
-          const carName = policy.carData 
-            ? `${policy.carData.carBrand || ''} ${policy.carData.carModel || ''}`.trim() 
-            : 'kendaraan';
-          const formattedAmount = new Intl.NumberFormat('id-ID', { 
-            style: 'currency', 
-            currency: 'IDR', 
-            minimumFractionDigits: 0 
-          }).format(activePayment.amount || 0);
+      // ── Guard: Prevent duplicate active payments on a car ──
+      const allPayments = await paymentDAO.getAllPaymentsByUser(userId);
+      const activePayment = allPayments.find(
+        (p) => p.carId === carId.trim() && !['Paid', 'Cancelled'].includes(p.status)
+      );
+      if (activePayment) {
+        const carName = car.carData 
+          ? `${car.carData.carBrand || ''} ${car.carData.carModel || ''}`.trim() 
+          : 'kendaraan';
+        const formattedAmount = new Intl.NumberFormat('id-ID', { 
+          style: 'currency', 
+          currency: 'IDR', 
+          minimumFractionDigits: 0 
+        }).format(activePayment.amount || 0);
 
-          return res.status(400).json({
-            success: false,
-            error: `Pembayaran gagal dibuat. Mobil ${carName} sudah memiliki pembayaran aktif sebesar ${formattedAmount} dengan status "${activePayment.status}". Harap selesaikan atau batalkan pembayaran tersebut terlebih dahulu.`,
-          });
-        }
+        return res.status(400).json({
+          success: false,
+          error: `Pembayaran gagal dibuat. Mobil ${carName} sudah memiliki pembayaran aktif sebesar ${formattedAmount} dengan status "${activePayment.status}". Harap selesaikan atau batalkan pembayaran tersebut terlebih dahulu.`,
+        });
       }
 
       const normalizedStatus = resolvePaymentStatus({
@@ -269,8 +250,7 @@ class PaymentController {
 
       const newPayment = await paymentDAO.createPayment({
         customerId: customerId.trim(),
-        policyType,
-        policyId: policyId.trim(),
+        carId: carId.trim(),
         invoiceNumber: invoiceNumber ? invoiceNumber.trim() : '',
         amount: amount ? parseFloat(amount) : 0,
         dueDate: dueDate || null,
@@ -304,8 +284,7 @@ class PaymentController {
       const { id } = req.params;
       const {
         customerId,
-        policyType,
-        policyId,
+        carId,
         invoiceNumber,
         amount,
         dueDate,
@@ -314,13 +293,6 @@ class PaymentController {
         status,
         notes,
       } = req.body;
-
-      if (policyType !== undefined && !ALLOWED_POLICY_TYPES.includes(policyType)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid policy type. Use: car',
-        });
-      }
 
       if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
         return res.status(400).json({
@@ -338,8 +310,7 @@ class PaymentController {
       }
 
       const nextCustomerId = customerId !== undefined ? customerId.trim() : existingPayment.customerId;
-      const nextPolicyType = policyType !== undefined ? policyType : existingPayment.policyType;
-      const nextPolicyId = policyId !== undefined ? policyId.trim() : existingPayment.policyId;
+      const nextCarId = carId !== undefined ? carId.trim() : existingPayment.carId;
 
       if (customerId !== undefined) {
         const customer = await customerDAO.getCustomerById(nextCustomerId, userId);
@@ -351,12 +322,12 @@ class PaymentController {
         }
       }
 
-      if (policyType !== undefined || policyId !== undefined) {
-        const policy = await getPolicyRecord(nextPolicyType, nextPolicyId, userId);
-        if (!policy) {
+      if (carId !== undefined) {
+        const car = await carDAO.getCarById(nextCarId, userId);
+        if (!car) {
           return res.status(404).json({
             success: false,
-            error: 'Policy not found',
+            error: 'Car not found',
           });
         }
       }
@@ -371,8 +342,7 @@ class PaymentController {
 
       const updateData = {
         customerId: customerId !== undefined ? customerId.trim() : undefined,
-        policyType,
-        policyId: policyId !== undefined ? policyId.trim() : undefined,
+        carId: carId !== undefined ? carId.trim() : undefined,
         invoiceNumber: invoiceNumber !== undefined ? invoiceNumber.trim() : undefined,
         amount: amount !== undefined ? parseFloat(amount) || 0 : undefined,
         dueDate: dueDate !== undefined ? dueDate : undefined,
@@ -408,15 +378,14 @@ class PaymentController {
         }
       }
 
-      // Auto-Activate Policy if it was Nonaktif
-      if (updatedPayment.status === 'Paid' && updatedPayment.policyType === 'car' && updatedPayment.policyId) {
+      // Auto-Activate Car if it was Nonaktif
+      if (updatedPayment.status === 'Paid' && updatedPayment.carId) {
         try {
-          const carData = await carDAO.getCarById(updatedPayment.policyId, userId);
+          const carData = await carDAO.getCarById(updatedPayment.carId, userId);
           if (carData) {
-            // carDAO sometimes returns {success:true, car: {...}} or directly the object, handle both:
             const car = carData.car || carData;
             if (car.status === 'Nonaktif') {
-              await carDAO.updateCar(updatedPayment.policyId, { status: 'Active' }, userId);
+              await carDAO.updateCar(updatedPayment.carId, { status: 'Active' }, userId);
             }
           }
         } catch (autoActivateErr) {

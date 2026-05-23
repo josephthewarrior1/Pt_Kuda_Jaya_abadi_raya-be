@@ -3,28 +3,12 @@ const customerDAO = require('../dao/customerDAO');
 const carDAO = require('../dao/carDAO');
 const paymentDAO = require('../dao/paymentDAO');
 
-const ALLOWED_POLICY_TYPES = ['car'];
 const ALLOWED_RENEWAL_STATUSES = ['Pending', 'Approved', 'Completed', 'Cancelled'];
 
-const getPolicyRecord = async (policyType, policyId, userId) => {
-  if (policyType === 'car') {
-    return carDAO.getCarById(policyId, userId);
-  }
-
-  return null;
-};
-
-const getPolicyDates = (policyType, policy) => {
-  if (policyType === 'car') {
-    return {
-      startDate: policy.carData?.startDate || null,
-      endDate: policy.carData?.dueDate || null,
-    };
-  }
-
+const getCarDates = (car) => {
   return {
-    startDate: null,
-    endDate: null,
+    startDate: car.carData?.startDate || null,
+    endDate: car.carData?.dueDate || null,
   };
 };
 
@@ -33,17 +17,17 @@ const enrichRenewals = async (renewals, userId) => {
   const customerMap = new Map(customers.map((customer) => [customer.id, customer.name || '']));
 
   return Promise.all(renewals.map(async (renewal) => {
-    const policy = renewal.policyId ? await getPolicyRecord(renewal.policyType, renewal.policyId, userId) : null;
-    let policySummary = '';
+    const car = renewal.carId ? await carDAO.getCarById(renewal.carId, userId) : null;
+    let carSummary = '';
 
-    if (renewal.policyType === 'car' && policy) {
-      policySummary = `${policy.carData?.ownerName || '-'} - ${policy.carData?.carBrand || ''} ${policy.carData?.carModel || ''}`.trim();
+    if (car) {
+      carSummary = `${car.carData?.ownerName || '-'} - ${car.carData?.carBrand || ''} ${car.carData?.carModel || ''}`.trim();
     }
 
     return {
       ...renewal,
       customerName: customerMap.get(renewal.customerId) || '',
-      policySummary,
+      carSummary,
     };
   }));
 };
@@ -149,8 +133,7 @@ class RenewalController {
       const userId = req.user.username;
       const {
         customerId,
-        policyType,
-        policyId,
+        carId,
         newStartDate,
         newEndDate,
         premium,
@@ -162,12 +145,8 @@ class RenewalController {
         return res.status(400).json({ success: false, error: 'Customer ID is required' });
       }
 
-      if (!policyType || !ALLOWED_POLICY_TYPES.includes(policyType)) {
-        return res.status(400).json({ success: false, error: 'Invalid policy type. Use: car' });
-      }
-
-      if (!policyId || !policyId.trim()) {
-        return res.status(400).json({ success: false, error: 'Policy ID is required' });
+      if (!carId || !carId.trim()) {
+        return res.status(400).json({ success: false, error: 'Car ID is required' });
       }
 
       if (!newStartDate || !newEndDate) {
@@ -179,30 +158,28 @@ class RenewalController {
         return res.status(404).json({ success: false, error: 'Customer not found' });
       }
 
-      const policy = await getPolicyRecord(policyType, policyId.trim(), userId);
-      if (!policy) {
-        return res.status(404).json({ success: false, error: 'Policy not found' });
+      const car = await carDAO.getCarById(carId.trim(), userId);
+      if (!car) {
+        return res.status(404).json({ success: false, error: 'Car not found' });
       }
 
-      // ── Guard: block if policy expires in more than 30 days ──
-      if (policyType === 'car') {
-        const dueDate = policy.carData?.dueDate;
-        if (dueDate) {
-          const daysLeft = Math.round((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-          if (daysLeft > 30) {
-            return res.status(400).json({
-              success: false,
-              error: `Tidak dapat membuat renewal. Sisa masa aktif polis kendaraan masih ${daysLeft} hari (> 30 hari).`,
-            });
-          }
+      // ── Guard: block if car expires in more than 30 days ──
+      const dueDate = car.carData?.dueDate;
+      if (dueDate) {
+        const daysLeft = Math.round((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (daysLeft > 30) {
+          return res.status(400).json({
+            success: false,
+            error: `Tidak dapat membuat renewal. Sisa masa aktif polis kendaraan masih ${daysLeft} hari (> 30 hari).`,
+          });
         }
       }
 
-      // ── Guard: block if there's already a Pending/Approved renewal for this vehicle ──
-      const existingPendingRenewal = await renewalDAO.getActivePendingRenewalByPolicy(policyId.trim(), userId);
+      // ── Guard: block if there's already a Pending/Approved renewal for this car ──
+      const existingPendingRenewal = await renewalDAO.getActivePendingRenewalByCar(carId.trim(), userId);
       if (existingPendingRenewal) {
-        const carName = policy.carData 
-          ? `${policy.carData.carBrand || ''} ${policy.carData.carModel || ''}`.trim() 
+        const carName = car.carData 
+          ? `${car.carData.carBrand || ''} ${car.carData.carModel || ''}`.trim() 
           : 'kendaraan';
         return res.status(409).json({
           success: false,
@@ -211,13 +188,12 @@ class RenewalController {
         });
       }
 
-      const oldDates = getPolicyDates(policyType, policy);
+      const oldDates = getCarDates(car);
       const normalizedStatus = status && ALLOWED_RENEWAL_STATUSES.includes(status) ? status : 'Pending';
 
       const renewal = await renewalDAO.createRenewal({
         customerId: customerId.trim(),
-        policyType,
-        policyId: policyId.trim(),
+        carId: carId.trim(),
         paymentId: '', // optional legacy field (kept empty)
         oldStartDate: oldDates.startDate,
         oldEndDate: oldDates.endDate,
@@ -357,8 +333,8 @@ class RenewalController {
         });
       }
 
-      if (renewal.policyType === 'car') {
-        await carDAO.updateCar(renewal.policyId, {
+      if (renewal.carId) {
+        await carDAO.updateCar(renewal.carId, {
           carData: {
             startDate: renewal.newStartDate,
             dueDate: renewal.newEndDate,

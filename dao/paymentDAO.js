@@ -36,8 +36,7 @@ class PaymentDAO {
     return {
       id: paymentId,
       customerId: paymentData.customerId || '',
-      policyType: paymentData.policyType || '',
-      policyId: paymentData.policyId || '',
+      carId: paymentData.carId || '',
       renewalId: paymentData.renewalId || '',
       invoiceNumber: paymentData.invoiceNumber || '',
       amount: paymentData.amount || 0,
@@ -72,8 +71,7 @@ class PaymentDAO {
       return payments.map((payment) => ({
         id: payment.id,
         customerId: payment.customerId || '',
-        policyType: payment.policyType || '',
-        policyId: payment.policyId || '',
+        carId: payment.carId || '',
         renewalId: payment.renewalId || '',
         invoiceNumber: payment.invoiceNumber || '',
         amount: payment.amount || 0,
@@ -113,8 +111,7 @@ class PaymentDAO {
       const paymentId = `pay-${nextNumber}`;
       const paymentToSave = {
         customerId: paymentData.customerId || '',
-        policyType: paymentData.policyType || '',
-        policyId: paymentData.policyId || '',
+        carId: paymentData.carId || '',
         renewalId: paymentData.renewalId || '',
         invoiceNumber: paymentData.invoiceNumber || '',
         amount: paymentData.amount || 0,

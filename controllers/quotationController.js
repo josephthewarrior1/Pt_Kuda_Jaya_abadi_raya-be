@@ -14,10 +14,10 @@ const generateNumber = () => {
 exports.createQuotation = async (req, res) => {
   try {
     const data = req.body;
-    const userId = req.user.username; // Multi-tenant structure assumes username
+    const userId = req.user.username;
     
-    if (!data.policyId) {
-       return res.status(400).json({ success: false, error: 'Policy ID is required' });
+    if (!data.carId) {
+       return res.status(400).json({ success: false, error: 'Car ID is required' });
     }
 
     const payload = {
@@ -34,11 +34,11 @@ exports.createQuotation = async (req, res) => {
   }
 };
 
-exports.getQuotationsByPolicy = async (req, res) => {
+exports.getQuotationsByCarId = async (req, res) => {
   try {
-    const { policyId } = req.params;
+    const { carId } = req.params;
     const userId = req.user.username;
-    const quotations = await QuotationDAO.getQuotationsByPolicy(policyId, userId);
+    const quotations = await QuotationDAO.getQuotationsByCarId(carId, userId);
     res.status(200).json({ success: true, quotations });
   } catch (error) {
     console.error('Error getting quotations:', error);
@@ -71,14 +71,14 @@ exports.acceptQuotation = async (req, res) => {
         });
       }
 
-      if (renewal.policyType !== quotation.policyType || renewal.policyId !== quotation.policyId) {
+      if (renewal.carId !== quotation.carId) {
         return res.status(400).json({
           success: false,
-          error: 'Renewal does not match quotation policy',
+          error: 'Renewal does not match quotation car',
         });
       }
 
-      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByPolicy('car', quotation.policyId, userId);
+      const existingUnpaid = await InvoiceDAO.getUnpaidInvoiceByCar(quotation.carId, userId);
       if (existingUnpaid) {
         return res.status(409).json({
           success: false,
@@ -91,20 +91,20 @@ exports.acceptQuotation = async (req, res) => {
     // 1. Update status to Accepted
     const acceptedQuotation = await QuotationDAO.updateQuotation(id, { status: 'Accepted' }, userId);
 
-    // 2. Delete all other pending quotes for the same policy
-    if (quotation.policyId) {
-        await QuotationDAO.deletePendingQuotationsExcept(quotation.policyId, id, userId);
+    // 2. Delete all other pending quotes for the same car
+    if (quotation.carId) {
+        await QuotationDAO.deletePendingQuotationsExcept(quotation.carId, id, userId);
     }
 
-    // 3. Update the Car/Policy with the chosen insurance data
-    if (quotation.policyType === 'car' && quotation.policyId) {
-       const car = await CarDAO.getCarById(quotation.policyId, userId);
+    // 3. Update the Car with the chosen insurance data
+    if (quotation.carId) {
+       const car = await CarDAO.getCarById(quotation.carId, userId);
        if (car) {
           const enabledCoverages = quotation.coverages 
              ? Object.keys(quotation.coverages).filter(k => quotation.coverages[k].enabled) 
              : [];
           
-          await CarDAO.updateCar(quotation.policyId, {
+          await CarDAO.updateCar(quotation.carId, {
              ...car,
              carData: {
                 ...car.carData,
@@ -125,8 +125,7 @@ exports.acceptQuotation = async (req, res) => {
         return res.status(404).json({ success: false, error: 'Customer not found for renewal' });
       }
 
-      const policy = await CarDAO.getCarById(acceptedQuotation.policyId, userId);
-      const car = policy?.car || policy;
+      const car = await CarDAO.getCarById(acceptedQuotation.carId, userId);
       const plateNumber = car?.carData?.plateNumber || car?.carData?.nopol || '';
 
       const amountCandidate = acceptedQuotation.premium
@@ -145,7 +144,7 @@ exports.acceptQuotation = async (req, res) => {
         invoiceNumber: '',
         customerId: renewal.customerId,
         customerName: customer.name || '',
-        carId: acceptedQuotation.policyId,
+        carId: acceptedQuotation.carId,
         plateNumber,
         quotationId: acceptedQuotation.id || id,
         renewalId: renewalId,
@@ -166,8 +165,7 @@ exports.acceptQuotation = async (req, res) => {
 
       const newPayment = await PaymentDAO.createPayment({
         customerId: renewal.customerId,
-        policyType: 'car',
-        policyId: acceptedQuotation.policyId,
+        carId: acceptedQuotation.carId,
         renewalId: renewalId,
         invoiceNumber: newInvoice.id,
         amount: newInvoice.grandTotal,
