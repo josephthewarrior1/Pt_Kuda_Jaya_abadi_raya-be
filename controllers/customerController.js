@@ -232,35 +232,98 @@ class CustomerController {
         });
       }
 
-      // Cek apakah customer masih punya kendaraan
-      const carDAO = require('../dao/carDAO');
-      const cars = await carDAO.getCarsByCustomerId(id, userId);
-      
-      if (cars && cars.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Customer tidak bisa dihapus karena masih memiliki data Kendaraan. Silakan hapus atau pindahkan kendaraannya terlebih dahulu.',
-        });
-      }
-
-      // Firestore query via DAO implicitly scopes by userId, ensuring secure access.
-
-      await customerDAO.deleteCustomer(id, userId);
-
-      console.log('✅ Customer deleted:', id, 'by user:', userId);
-
-      res.status(200).json({
-        success: true,
-        message: 'Customer deleted successfully',
-      });
-    } catch (error) {
-      console.error('❌ Delete customer error:', error);
-      if (error.message === 'Customer not found') {
+      // Cek apakah customer exist
+      const customer = await customerDAO.getCustomerById(id, userId);
+      if (!customer) {
         return res.status(404).json({
           success: false,
           error: 'Customer not found',
         });
       }
+
+      const { db } = require('../config/firebase');
+      const batch = db.batch();
+
+      // 1. Referensi dokumen customer
+      const customerRef = customerDAO.getUserCustomersRef(userId).doc(id);
+      batch.delete(customerRef);
+
+      // 2. Cari semua data Kendaraan (Cars) milik customer
+      const carDAO = require('../dao/carDAO');
+      const userCarsRef = carDAO.getUserCarsRef(userId);
+      const carsSnapshot = await userCarsRef.where('customerId', '==', id).get();
+      carsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // 3. Cari semua data Penawaran (Quotations) milik customer
+      const quotationDAO = require('../dao/quotationDAO');
+      const userQuotationsRef = quotationDAO.getUserQuotationsRef(userId);
+      const quotationsSnapshot = await userQuotationsRef.where('customerId', '==', id).get();
+      quotationsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // 4. Cari semua data Invoice milik customer
+      const invoiceDAO = require('../dao/invoiceDAO');
+      const userInvoicesRef = invoiceDAO.getUserInvoicesRef(userId);
+      const invoicesSnapshot = await userInvoicesRef.where('customerId', '==', id).get();
+      invoicesSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // 5. Cari semua data Pembayaran (Payments) milik customer
+      const paymentDAO = require('../dao/paymentDAO');
+      const userPaymentsRef = paymentDAO.getUserPaymentsRef(userId);
+      const paymentsSnapshot = await userPaymentsRef.where('customerId', '==', id).get();
+      
+      const paymentIds = [];
+      paymentsSnapshot.forEach((doc) => {
+        paymentIds.push(doc.id);
+        batch.delete(doc.ref);
+      });
+
+      // 6. Cari semua Kwitansi milik customer (berdasarkan paymentId)
+      if (paymentIds.length > 0) {
+        const kwitansiDAO = require('../dao/kwitansiDAO');
+        // Cari di subcollection aktif 'kwitansi'
+        const kwitansiRef = kwitansiDAO.getUserKwitansiRef(userId);
+        const kwitansiSnapshot = await kwitansiRef.get();
+        kwitansiSnapshot.forEach((doc) => {
+          if (paymentIds.includes(doc.data().paymentId)) {
+            batch.delete(doc.ref);
+          }
+        });
+
+        // Cari di subcollection legacy 'kwitansis'
+        const legacyKwitansiRef = kwitansiDAO.getLegacyUserKwitansiRef(userId);
+        const legacyKwitansiSnapshot = await legacyKwitansiRef.get();
+        legacyKwitansiSnapshot.forEach((doc) => {
+          if (paymentIds.includes(doc.data().paymentId)) {
+            batch.delete(doc.ref);
+          }
+        });
+      }
+
+      // 7. Cari semua data Renewal milik customer
+      const renewalDAO = require('../dao/renewalDAO');
+      const userRenewalsRef = renewalDAO.getUserRenewalsRef(userId);
+      const renewalsSnapshot = await userRenewalsRef.where('customerId', '==', id).get();
+      renewalsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // Commit semua penghapusan secara sekaligus (atomic)
+      await batch.commit();
+
+      console.log('✅ Cascade deleted Customer and all associated data:', id, 'by user:', userId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Customer and all associated data deleted successfully',
+      });
+    } catch (error) {
+      console.error('❌ Delete customer error:', error);
       res.status(500).json({
         success: false,
         error: 'Server error while deleting customer',
