@@ -39,7 +39,10 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, curl, Postman, etc.)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // Check if origin is in allowedOrigins or matches Vercel preview deployment URLs
+    const isAllowedVercel = /^https:\/\/customer-management-insurance(-[a-zA-Z0-9-]+)?\.vercel\.app$/.test(origin);
+
+    if (allowedOrigins.includes(origin) || isAllowedVercel) {
       callback(null, true);
     } else {
       console.warn('🚫 CORS blocked for origin:', origin);
