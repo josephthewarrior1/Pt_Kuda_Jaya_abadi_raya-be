@@ -413,25 +413,80 @@ class CarController {
             const userId = req.user.username;
             const { id } = req.params;
 
-            await carDAO.deleteCar(id, userId);
-
-            console.log('✅ Car deleted:', id, 'by user:', userId);
-
-            res.status(200).json({
-                success: true,
-                message: 'Car deleted successfully',
-            });
-        } catch (error) {
-            console.error('❌ Delete car error:', error);
-            if (error.message === 'Car not found') {
+            // 1. Check if car exists
+            const car = await carDAO.getCarById(id, userId);
+            if (!car) {
                 return res.status(404).json({
                     success: false,
                     error: 'Car not found',
                 });
             }
+
+            // 2. Query all payment records for this user to check if this car has any Paid payments
+            const paymentDAO = require('../dao/paymentDAO');
+            const allPayments = await paymentDAO.getAllPaymentsByUser(userId);
+            const paidPayment = allPayments.find(p => p.carId === id && p.status === 'Paid');
+
+            if (paidPayment) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Kendaraan tidak dapat dihapus karena memiliki transaksi pembayaran (Payment) yang sudah lunas. Silakan ubah status kendaraan menjadi "Batal/Cancelled" pada menu Edit Mobil sebagai gantinya.',
+                });
+            }
+
+            // 3. Perform a cascade delete for ONLY unpaid/pending records to clean up the database
+            const { db } = require('../config/firebase');
+            const batch = db.batch();
+
+            // Delete quotations associated with the car
+            const quotationDAO = require('../dao/quotationDAO');
+            const userQuotationsRef = quotationDAO.getUserQuotationsRef(userId);
+            const quotationsSnapshot = await userQuotationsRef.where('carId', '==', id).get();
+            quotationsSnapshot.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            // Delete invoices associated with the car
+            const invoiceDAO = require('../dao/invoiceDAO');
+            const userInvoicesRef = invoiceDAO.getUserInvoicesRef(userId);
+            const invoicesSnapshot = await userInvoicesRef.where('carId', '==', id).get();
+            invoicesSnapshot.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            // Delete unpaid payments associated with the car
+            const userPaymentsRef = paymentDAO.getUserPaymentsRef(userId);
+            const paymentsSnapshot = await userPaymentsRef.where('carId', '==', id).get();
+            paymentsSnapshot.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            // Delete renewals associated with the car
+            const renewalDAO = require('../dao/renewalDAO');
+            const userRenewalsRef = renewalDAO.getUserRenewalsRef(userId);
+            const renewalsSnapshot = await userRenewalsRef.where('carId', '==', id).get();
+            renewalsSnapshot.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            // Delete the car document itself
+            const carRef = carDAO.getUserCarsRef(userId).doc(id);
+            batch.delete(carRef);
+
+            // Execute the batch transaction atomically
+            await batch.commit();
+
+            console.log('✅ Car and associated pending data deleted successfully:', id, 'by user:', userId);
+
+            res.status(200).json({
+                success: true,
+                message: 'Car and associated pending records deleted successfully',
+            });
+        } catch (error) {
+            console.error('❌ Delete car error:', error);
             res.status(500).json({
                 success: false,
-                error: 'Server error while deleting car',
+                error: error.message || 'Server error while deleting car',
             });
         }
     }

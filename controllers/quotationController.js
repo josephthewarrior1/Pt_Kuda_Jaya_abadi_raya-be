@@ -138,10 +138,10 @@ exports.acceptQuotation = async (req, res) => {
       const amount = Number.parseFloat(amountCandidate) || 0;
 
       const issueDate = Date.now();
-      const dueDate = renewal.newEndDate || Date.now();
+      // Invoice dueDate should be payment deadline (e.g., 14 days from now), not the 1-year policy end date
+      const dueDate = issueDate + (14 * 24 * 60 * 60 * 1000); 
 
       const newInvoice = await InvoiceDAO.createInvoice({
-        invoiceNumber: '',
         customerId: renewal.customerId,
         customerName: customer.name || '',
         carId: acceptedQuotation.carId,

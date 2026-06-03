@@ -213,7 +213,7 @@ erDiagram
 
 ## Detail Collection
 
-Although the system uses Firestore which is NoSQL in nature, each collection can still be described as a logical table. The primary key in the details below refers to the Firestore document ID, while relationships are read from reference fields such as `userId`, `createdBy`, `customerId`, `carId`, `policyId`, `quotationId`, `paymentId`, and `renewalId`.
+Although the system uses Firestore which is NoSQL in nature, each collection can still be described as a logical table. The primary key in the details below refers to the Firestore document ID, while relationships are read from reference fields such as `userId`, `createdBy`, `customerId`, `carId`, `quotationId`, `paymentId`, and `renewalId`.
 
 <table>
   <thead>
@@ -355,10 +355,10 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One car can only belong to one customer.</li>
           <li>One car can only be created by one user.</li>
-          <li>One car can have many quotation records through <code>policyId</code>.</li>
+          <li>One car can have many quotation records through <code>carId</code>.</li>
           <li>One car can have many invoice records through <code>carId</code>.</li>
-          <li>One car can have many payment records through <code>policyId</code>.</li>
-          <li>One car can have many renewal records through <code>policyId</code>.</li>
+          <li>One car can have many payment records through <code>carId</code>.</li>
+          <li>One car can have many renewal records through <code>carId</code>.</li>
         </ol>
       </td>
     </tr>
@@ -368,14 +368,13 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li><code>id</code> as primary key, stored as the quotation document ID.</li>
           <li><code>customerId</code> as the customer related to the quotation.</li>
-          <li><code>policyType</code> as the type of policy, for example car.</li>
-          <li><code>policyId</code> as the related policy or car ID.</li>
+          <li><code>carId</code> as the related car ID.</li>
           <li><code>renewalId</code> as the renewal record ID if the quotation is created from a renewal process.</li>
           <li><code>quotationNumber</code> as the displayed quotation number.</li>
           <li><code>tsi</code> as the total sum insured value.</li>
           <li><code>insuranceProvider</code> as the provider used in the quotation.</li>
           <li><code>insuranceType</code> as the type of insurance package.</li>
-          <li><code>coverages</code> as an object containing coverage configuration, percentage, fixed amount flag, and free include flag.</li>
+          <li><code>coverages</code> as an object containing coverage configuration.</li>
           <li><code>totalPremium</code> as the calculated total premium.</li>
           <li><code>userId</code> as the user related to the quotation.</li>
           <li><code>status</code> as the quotation status, such as Pending or Accepted.</li>
@@ -387,7 +386,7 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One quotation can only be created by one user.</li>
           <li>One quotation can only belong to one customer.</li>
-          <li>One quotation can only refer to one policy or car.</li>
+          <li>One quotation can only refer to one car.</li>
           <li>One quotation may belong to one renewal process.</li>
           <li>One accepted quotation can generate one invoice.</li>
           <li>One accepted quotation can generate one payment record.</li>
@@ -402,7 +401,7 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
           <li><code>invoiceNumber</code> as the displayed invoice number.</li>
           <li><code>customerId</code> as the customer billed by the invoice.</li>
           <li><code>customerName</code> as the customer name snapshot for the invoice.</li>
-          <li><code>carId</code> as the related car or policy ID.</li>
+          <li><code>carId</code> as the related car ID.</li>
           <li><code>plateNumber</code> as the vehicle plate number snapshot.</li>
           <li><code>quotationId</code> as the quotation that generated the invoice.</li>
           <li><code>renewalId</code> as the renewal record related to the invoice, if available.</li>
@@ -423,10 +422,10 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One invoice can only be created by one user.</li>
           <li>One invoice can only belong to one customer.</li>
-          <li>One invoice can refer to one car or policy.</li>
+          <li>One invoice can refer to one car.</li>
           <li>One invoice can be generated from one quotation.</li>
           <li>One invoice may be connected to one renewal process.</li>
-          <li>One invoice can be paid through one or more payment records depending on business flow.</li>
+          <li>One invoice can be paid through one or more payment records.</li>
         </ol>
       </td>
     </tr>
@@ -436,15 +435,14 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li><code>id</code> as primary key, generated from the payment sequence number, for example <code>pay-1</code>.</li>
           <li><code>customerId</code> as the customer who makes the payment.</li>
-          <li><code>policyType</code> as the related policy type, for example car.</li>
-          <li><code>policyId</code> as the related policy or car ID.</li>
+          <li><code>carId</code> as the related car ID.</li>
           <li><code>renewalId</code> as the renewal record related to the payment, if available.</li>
-          <li><code>invoiceNumber</code> as the invoice document reference used by the backend.</li>
+          <li><code>invoiceNumber</code> as the invoice document reference.</li>
           <li><code>amount</code> as the payment amount.</li>
           <li><code>dueDate</code> as the due date of the payment.</li>
           <li><code>paidDate</code> as the date when payment was completed.</li>
-          <li><code>paymentMethod</code> as the payment method used by the customer.</li>
-          <li><code>status</code> as the payment status, for example Pending or Paid.</li>
+          <li><code>paymentMethod</code> as the payment method used.</li>
+          <li><code>status</code> as the payment status.</li>
           <li><code>proofUrl</code> as the uploaded proof of payment URL.</li>
           <li><code>notes</code> as additional payment notes.</li>
           <li><code>createdBy</code> as the user who created the payment record.</li>
@@ -456,7 +454,7 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One payment can only be created by one user.</li>
           <li>One payment can only belong to one customer.</li>
-          <li>One payment can refer to one car or policy.</li>
+          <li>One payment can refer to one car.</li>
           <li>One payment can refer to one invoice.</li>
           <li>One payment may be connected to one renewal process.</li>
           <li>One payment can have one kwitansi record as receipt.</li>
@@ -470,10 +468,10 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
           <li><code>id</code> as primary key, generated from the kwitansi sequence number, for example <code>kwt-1</code>.</li>
           <li><code>kwitansiNumber</code> as the displayed receipt number.</li>
           <li><code>paymentId</code> as the payment record connected to the receipt.</li>
-          <li><code>invoiceData</code> as a snapshot object of invoice information used when the kwitansi is printed.</li>
-          <li><code>issuedDate</code> as the date when the kwitansi was issued.</li>
-          <li><code>printedBy</code> as the user who printed the kwitansi.</li>
+          <li><code>invoiceData</code> as a snapshot object of invoice information.</li>
           <li><code>printCount</code> as the number of times the kwitansi has been printed.</li>
+          <li><code>printedBy</code> as the user who printed the kwitansi.</li>
+          <li><code>issuedDate</code> as the date when the kwitansi was issued.</li>
           <li><code>createdAt</code> as the timestamp when the kwitansi was created.</li>
           <li><code>updatedAt</code> as the timestamp when the kwitansi was last updated.</li>
         </ol>
@@ -482,7 +480,6 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One kwitansi can only be printed by one user.</li>
           <li>One kwitansi can only belong to one payment record.</li>
-          <li>One payment can have one kwitansi as proof of receipt.</li>
         </ol>
       </td>
     </tr>
@@ -492,15 +489,14 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li><code>id</code> as primary key, generated from the renewal sequence number, for example <code>ren-1</code>.</li>
           <li><code>customerId</code> as the customer who renews the policy.</li>
-          <li><code>policyType</code> as the type of policy being renewed, for example car.</li>
-          <li><code>policyId</code> as the policy or car ID being renewed.</li>
+          <li><code>carId</code> as the car ID being renewed.</li>
           <li><code>paymentId</code> as the payment record connected to the renewal, if available.</li>
           <li><code>oldStartDate</code> as the previous policy start date.</li>
           <li><code>oldEndDate</code> as the previous policy end date.</li>
           <li><code>newStartDate</code> as the new policy start date.</li>
           <li><code>newEndDate</code> as the new policy end date.</li>
           <li><code>premium</code> as the renewal premium amount.</li>
-          <li><code>status</code> as the renewal status, such as Pending, Approved, Completed, or Cancelled.</li>
+          <li><code>status</code> as the renewal status.</li>
           <li><code>notes</code> as additional renewal notes.</li>
           <li><code>completedAt</code> as the timestamp when the renewal was completed.</li>
           <li><code>createdBy</code> as the user who created the renewal record.</li>
@@ -512,10 +508,8 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
         <ol>
           <li>One renewal can only be created by one user.</li>
           <li>One renewal can only belong to one customer.</li>
-          <li>One renewal can only renew one policy or car.</li>
+          <li>One renewal can only renew one car.</li>
           <li>One renewal can generate many quotation options.</li>
-          <li>One completed renewal may be connected to one invoice.</li>
-          <li>One completed renewal may be connected to one payment record.</li>
         </ol>
       </td>
     </tr>
@@ -524,16 +518,12 @@ Although the system uses Firestore which is NoSQL in nature, each collection can
       <td>
         <ol>
           <li><code>brand</code> as primary key and Firestore document ID.</li>
-          <li><code>_brandExists</code> as a flag to ensure the brand document exists.</li>
-          <li>Dynamic model fields as available car models under the brand, stored with boolean values.</li>
-          <li><code>models</code> as a logical representation of available model names when displayed by the application.</li>
+          <li><code>models</code> as an object containing model names.</li>
         </ol>
       </td>
       <td>
         <ol>
-          <li>One car reference brand can contain many car models.</li>
-          <li>One car record can use one brand and one model from car references.</li>
-          <li>Car references are used as master data to standardize car brand and model input.</li>
+          <li>Used as master data to standardize car brand and model input.</li>
         </ol>
       </td>
     </tr>
