@@ -513,6 +513,19 @@ class PaymentController {
         }
       }
 
+      // Clear paymentId reference from any Renewal that points to this payment
+      if (existingPayment.renewalId) {
+        try {
+          const renewal = await renewalDAO.getRenewalById(existingPayment.renewalId, userId);
+          if (renewal && renewal.paymentId === id) {
+            await renewalDAO.updateRenewal(existingPayment.renewalId, { paymentId: '' }, userId);
+            console.log(`🧹 Cleared paymentId from Renewal ${existingPayment.renewalId}`);
+          }
+        } catch (renewalErr) {
+          console.error('Failed to clear paymentId from Renewal upon payment deletion:', renewalErr);
+        }
+      }
+
       await paymentDAO.deletePayment(id, userId);
 
       res.status(200).json({

@@ -20,6 +20,44 @@ exports.createQuotation = async (req, res) => {
        return res.status(400).json({ success: false, error: 'Car ID is required' });
     }
 
+    // ── Guard Logic ──
+    if (data.renewalId) {
+      // It's a renewal quotation: block if THIS renewal already has an Accepted quotation
+      const existingQuotations = await QuotationDAO.getQuotationsByCarId(data.carId, userId);
+      const acceptedForRenewal = existingQuotations.find(q => q.renewalId === data.renewalId && q.status === 'Accepted');
+      if (acceptedForRenewal) {
+        return res.status(409).json({
+          success: false,
+          error: `Renewal ini sudah memiliki Quotation yang disetujui (${acceptedForRenewal.quotationNumber || acceptedForRenewal.id}). Tidak dapat membuat Quotation baru.`,
+        });
+      }
+    } else {
+      // It's a new policy quotation (no renewal)
+      
+      // 1. Block if the car ALREADY has an active policy (> 30 days left)
+      const car = await CarDAO.getCarById(data.carId, userId);
+      if (car && car.carData && car.carData.dueDate) {
+        const daysLeft = Math.round((new Date(car.carData.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (daysLeft > 30) {
+          const carName = `${car.carData.carBrand || ''} ${car.carData.carModel || ''}`.trim();
+          return res.status(409).json({
+            success: false,
+            error: `Kendaraan ${carName} sudah memiliki polis aktif (sisa ${daysLeft} hari). Gunakan fitur Renewal untuk perpanjangan, bukan Quotation baru.`,
+          });
+        }
+      }
+      
+      // 2. Block if there is ALREADY an Accepted quotation for this new car
+      const existingQuotations = await QuotationDAO.getQuotationsByCarId(data.carId, userId);
+      const acceptedNewPolicyQuotation = existingQuotations.find(q => !q.renewalId && q.status === 'Accepted');
+      if (acceptedNewPolicyQuotation) {
+        return res.status(409).json({
+          success: false,
+          error: `Kendaraan ini sudah memiliki Quotation baru yang disetujui (${acceptedNewPolicyQuotation.quotationNumber || acceptedNewPolicyQuotation.id}). Selesaikan pembayaran tersebut atau batalkan terlebih dahulu.`,
+        });
+      }
+    }
+
     const payload = {
       ...data,
       userId,
