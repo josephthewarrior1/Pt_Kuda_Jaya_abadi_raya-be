@@ -34,15 +34,16 @@ exports.createQuotation = async (req, res) => {
     } else {
       // It's a new policy quotation (no renewal)
       
-      // 1. Block if the car ALREADY has an active policy (> 30 days left)
+      // 1. Block if the car ALREADY has an active policy (> 30 days left) in our system
       const car = await CarDAO.getCarById(data.carId, userId);
-      if (car && car.carData && car.carData.dueDate) {
+      // We only block if there is a dueDate AND an existing insuranceProvider
+      if (car && car.carData && car.carData.dueDate && car.carData.insuranceProvider) {
         const daysLeft = Math.round((new Date(car.carData.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         if (daysLeft > 30) {
           const carName = `${car.carData.carBrand || ''} ${car.carData.carModel || ''}`.trim();
           return res.status(409).json({
             success: false,
-            error: `Kendaraan ${carName} sudah memiliki polis aktif (sisa ${daysLeft} hari). Gunakan fitur Renewal untuk perpanjangan, bukan Quotation baru.`,
+            error: `Kendaraan ${carName} sudah memiliki polis aktif dari ${car.carData.insuranceProvider} (sisa ${daysLeft} hari). Gunakan fitur Renewal untuk perpanjangan, bukan Quotation baru.`,
           });
         }
       }
