@@ -227,6 +227,74 @@ exports.acceptQuotation = async (req, res) => {
   }
 };
 
+exports.cancelQuotation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.username;
+    
+    const quotation = await QuotationDAO.getQuotationById(id, userId);
+    if (!quotation) {
+      return res.status(404).json({ success: false, error: 'Quotation not found' });
+    }
+    
+    if (quotation.status !== 'Accepted') {
+      return res.status(400).json({ success: false, error: 'Hanya Quotation yang sudah di-Accept yang bisa di-Cancel' });
+    }
+
+    // 1. Check for Paid Invoices
+    const allInvoices = await InvoiceDAO.getAllInvoicesByUser(userId);
+    const linkedInvoices = allInvoices.filter(inv => inv.quotationId === id || (quotation.renewalId && inv.renewalId === quotation.renewalId));
+    
+    const hasPaidInvoice = linkedInvoices.some(inv => inv.status === 'Paid');
+    if (hasPaidInvoice) {
+       return res.status(409).json({ success: false, error: 'Tidak dapat membatalkan Quotation karena sudah ada Invoice yang berstatus Paid.' });
+    }
+
+    // 2. Revert Car Data (Remove Insurance Data)
+    if (quotation.carId) {
+       const car = await CarDAO.getCarById(quotation.carId, userId);
+       if (car) {
+          await CarDAO.updateCar(quotation.carId, {
+             ...car,
+             carData: {
+                ...car.carData,
+                insuranceProvider: '',
+                insuranceType: '',
+                coverageExtensions: []
+             }
+          }, userId);
+       }
+    }
+
+    // 3. Cancel/Delete Invoices and Payments
+    for (const inv of linkedInvoices) {
+       // Delete Invoice
+       await InvoiceDAO.deleteInvoice(inv.id, userId);
+       
+       // Find and Delete linked Payments
+       const allPayments = await PaymentDAO.getAllPaymentsByUser(userId);
+       const linkedPayments = allPayments.filter(p => p.invoiceNumber === inv.id);
+       for (const p of linkedPayments) {
+          await PaymentDAO.deletePayment(p.id, userId);
+       }
+    }
+
+    // 4. Revert Renewal Status if applicable
+    if (quotation.renewalId) {
+       const renewalId = String(quotation.renewalId).trim();
+       await RenewalDAO.updateRenewal(renewalId, { status: 'Pending', paymentId: null, premium: 0 }, userId);
+    }
+
+    // 5. Update Quotation Status
+    const cancelledQuotation = await QuotationDAO.updateQuotation(id, { status: 'Cancelled' }, userId);
+
+    res.status(200).json({ success: true, message: 'Quotation berhasil dibatalkan', quotation: cancelledQuotation });
+  } catch (error) {
+    console.error('Error cancelling quotation:', error);
+    res.status(500).json({ success: false, error: 'Failed to cancel quotation' });
+  }
+};
+
 exports.deleteQuotation = async (req, res) => {
   try {
     const { id } = req.params;
